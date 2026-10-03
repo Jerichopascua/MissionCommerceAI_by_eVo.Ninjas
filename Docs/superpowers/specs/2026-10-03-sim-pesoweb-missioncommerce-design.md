@@ -104,6 +104,28 @@ A vertical template (LLM-generated once, validated) defines catalog size range, 
 
 Electronics is roadmap (serial/warranty logic is not in PesoWeb). High-ticket verticals show cash variance and shrinkage at a different scale (a missing high-value item rather than a low-value perishable), supporting the "works across business types" claim.
 
+### Customer population sizing
+
+Customers have two layers. **Archetypes** are LLM-written personality templates (office worker after work, student on a budget, night-shift nurse, parent doing a weekly shop, motorcycle commuter, and so on). **Individuals** are named customers instantiated from an archetype, each with their own wallet, habits, home area, favourite branch and history. Individuals must persist, because repeat visits, loyalty and churn are what Mission Detection looks for.
+
+Archetypes come from a coverage grid (age band x income band x occupation x household x mobility x time pattern) that the LLM fills cell by cell; near-duplicates are removed by text similarity. The library fails validation if the grid has empty cells or archetypes cluster too tightly.
+
+Regular-customer pool per branch: `pool ~ daily_txns x regular_share x avg_days_between_visits`. Example: 400 txns/day x 0.65 x 3 = ~780 regulars. `regular_share` and `avg_days_between_visits` are tunable design parameters per vertical, not measured facts. Anonymous walk-ins are drawn from archetype mix on top of the pool.
+
+The design target is the **full** profile, because real supermarkets serve thousands of distinct customers a day. The hackathon build runs the **starter** profile. Both use the same code; a `population_profile` setting changes only the numbers.
+
+| Parameter | `starter` (hackathon build) | `full` (design target) |
+|---|---|---|
+| Customer archetypes | ~40 (convenience 15, grocery/pharmacy 15, motorcycle 10; mixed and sports reuse) | ~150 (about 30 each for Tier A verticals) |
+| Day-to-Day world | ~3 tenants, ~6 branches | ~5 tenants, ~12 branches (size set by measured PesoWeb API throughput) |
+| Named individuals, Day-to-Day | ~3,000 | ~10,000 |
+| Hero actors (LLM day scripts) | ~100 | ~300 |
+| Supermarket branch (high traffic) | ~2,000 txns/day, ~5,000 regulars | ~10,000 txns/day, ~25,000 regulars (10,000 x 0.5 x 5) |
+| Quick Sim individuals (GPU rows) | ~100,000 | ~1-2 million |
+| Micro-store free tier | Archetype-mix counts only | Archetype-mix counts only (aggregated, labelled) |
+
+The starter profile caps hackathon cost, mainly LLM generation time and API throughput. It does not cap the model: every actor type, mission and incident works at either size.
+
 ### Reproducibility
 
 Every run takes a seed. The same seed and scenario give an identical event log (hash-checked). The Week 0 vs Week 3 comparison runs the same seed with and without AI actions.
