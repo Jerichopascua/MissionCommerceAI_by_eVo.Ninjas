@@ -1,0 +1,400 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sim.PesoWeb Prototype</title>
+<style>
+:root{--bg:#f4f6fb;--card:#fff;--ink:#0f1b2d;--mut:#66758c;--line:#e3e8f1;--pri:#1861ac;--pri2:#258cfb;--soft:#e8f1fb;--ok:#1f9d55;--okbg:#e5f6ec;--bad:#d6334a;--badbg:#fdecef;--warn:#d98200;--warnbg:#fff3df;--side:#ffffff;--shadow:0 1px 2px rgba(15,27,45,.06),0 6px 20px rgba(15,27,45,.05)}
+:root[data-theme="dark"]{--bg:#04100b;--card:rgba(8,32,22,.9);--ink:#eafff3;--mut:#8fc3a8;--line:rgba(61,255,143,.2);--pri:#2fdc82;--pri2:#3dff8f;--soft:rgba(61,255,143,.1);--ok:#3dff8f;--okbg:rgba(61,255,143,.12);--bad:#ff6b7a;--badbg:rgba(255,59,74,.14);--warn:#ffb02e;--warnbg:rgba(255,106,43,.14);--side:#06180f;--shadow:0 0 14px rgba(61,255,143,.12)}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);color:var(--ink);font-family:"Segoe UI",Inter,system-ui,Arial,sans-serif;font-size:14px;overflow:hidden}
+.app{display:grid;grid-template-columns:248px 1fr;height:100vh}
+.side{background:var(--side);border-right:1px solid var(--line);display:flex;flex-direction:column;padding:16px 12px}
+.logo{display:flex;align-items:center;gap:10px;padding:4px 8px 14px}
+.logo i{width:32px;height:32px;border-radius:10px;background:conic-gradient(from 210deg,var(--pri2),var(--pri),#ff6a2b,var(--pri2));display:block;position:relative}
+.logo i:after{content:"";position:absolute;inset:8px;border-radius:50%;background:var(--side)}
+.logo b{font-size:16px;letter-spacing:.2px}.logo small{display:block;color:var(--mut);font-size:11px;margin-top:-2px}
+.env{margin:2px 6px 12px;padding:10px;border:1px solid var(--line);border-radius:12px;background:var(--soft)}
+.env label{font-size:11px;color:var(--mut);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:.6px}
+.env select{width:100%;padding:7px 8px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-size:13px}
+.nav a{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:10px;color:var(--ink);text-decoration:none;margin:2px 0;font-weight:500;cursor:pointer}
+.nav a:hover{background:var(--soft)}
+.nav a.on{background:var(--soft);color:var(--pri);font-weight:700}
+.nav a span.ic{width:20px;text-align:center}
+.nav h6{margin:14px 10px 4px;font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.7px}
+.runs a{font-size:12.5px;color:var(--mut)}
+.runs a b{color:var(--ink);font-weight:600}
+.me{margin-top:auto;display:flex;gap:10px;align-items:center;padding:10px;border-top:1px solid var(--line)}
+.me .av{width:30px;height:30px;border-radius:50%;background:var(--pri);color:#fff;display:grid;place-items:center;font-weight:700;font-size:12px}
+.main{display:flex;flex-direction:column;min-width:0;height:100vh}
+.top{height:60px;flex:none;display:flex;align-items:center;gap:14px;padding:0 24px;border-bottom:1px solid var(--line);background:var(--side)}
+.top h2{font-size:18px;font-weight:700}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:600;background:var(--soft);color:var(--pri);border:1px solid var(--line)}
+.pill.ok{background:var(--okbg);color:var(--ok)}.pill.bad{background:var(--badbg);color:var(--bad)}.pill.warn{background:var(--warnbg);color:var(--warn)}
+.pill.mock{background:var(--warnbg);color:var(--warn);border-color:var(--warn)}
+.sp{flex:1}
+.clock{font-variant-numeric:tabular-nums;font-weight:700;font-size:15px}
+.btn{border:1px solid var(--line);background:var(--card);color:var(--ink);padding:8px 14px;border-radius:10px;font-weight:600;cursor:pointer;font-size:13px}
+.btn.pri{background:var(--pri);color:#fff;border-color:var(--pri)}
+:root[data-theme="dark"] .btn.pri{color:#04100b}
+.btn.sm{padding:5px 10px;font-size:12px}
+.content{flex:1;min-height:0;position:relative}
+.screen{position:absolute;inset:0;padding:20px 24px;display:none;overflow:hidden}
+.screen.on{display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:16px}
+.card h3{font-size:14px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.card h3 small{color:var(--mut);font-weight:500;margin-left:auto}
+.grid{display:grid;gap:16px}
+.mut{color:var(--mut)}
+.kpi{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.kpi .v{font-size:26px;font-weight:800;font-variant-numeric:tabular-nums}
+.kpi .l{color:var(--mut);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.kpi .d{font-size:12px;margin-top:2px}
+.up{color:var(--ok)}.dn{color:var(--bad)}
+table{width:100%;border-collapse:collapse}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--mut);text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}
+td{padding:8px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+.chip{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11.5px;font-weight:700}
+.chip.ok{background:var(--okbg);color:var(--ok)}.chip.bad{background:var(--badbg);color:var(--bad)}.chip.warn{background:var(--warnbg);color:var(--warn)}.chip.n{background:var(--soft);color:var(--pri)}
+.feed{height:100%;overflow:hidden;display:flex;flex-direction:column;gap:6px}
+.row{display:grid;grid-template-columns:54px 1fr auto;gap:10px;padding:8px 10px;border:1px solid var(--line);border-radius:12px;align-items:center;animation:in .35s ease}
+.row.inj{border-color:var(--warn);background:var(--warnbg)}
+@keyframes in{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+.t{font-variant-numeric:tabular-nums;color:var(--mut);font-weight:600}
+.bar{height:10px;border-radius:99px;background:var(--line);overflow:hidden}
+.bar>i{display:block;height:100%;background:linear-gradient(90deg,var(--pri),var(--pri2));border-radius:99px;transition:width .4s}
+.bar.o>i{background:linear-gradient(90deg,#ff6a2b,#ffb02e)}
+.mode{cursor:pointer;border:2px solid var(--line);transition:.15s}
+.mode:hover{border-color:var(--pri2)}
+.mode.sel{border-color:var(--pri);background:var(--soft)}
+.mode .ico{font-size:26px}.mode h4{font-size:17px;margin:6px 0 4px}
+.mode p{color:var(--mut);font-size:13px;line-height:1.4}
+.field{margin-bottom:12px}.field label{display:block;font-size:12px;color:var(--mut);font-weight:600;margin-bottom:5px}
+.field input[type=text],.field select,.field textarea{width:100%;padding:8px 10px;border-radius:9px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-size:13px;font-family:inherit}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.seg button{padding:7px 14px;border:0;background:transparent;color:var(--ink);cursor:pointer;font-weight:600;font-size:13px}
+.seg button.on{background:var(--pri);color:#fff}
+:root[data-theme="dark"] .seg button.on{color:#04100b}
+.chips span{margin:0 6px 6px 0}
+.steps{display:flex;flex-direction:column;gap:12px;margin-top:6px}
+.step{display:grid;grid-template-columns:34px 1fr auto;gap:12px;align-items:center;opacity:.35;transition:.3s}
+.step.on{opacity:1}
+.step .ic{width:34px;height:34px;border-radius:50%;background:var(--pri);color:#fff;display:grid;place-items:center;font-size:15px}
+:root[data-theme="dark"] .step .ic{color:#04100b}
+.step b{display:block;font-size:14px}.step small{color:var(--mut)}
+.step .ck{width:20px;height:20px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;font-size:12px;color:transparent}
+.step.done .ck{background:var(--ok);border-color:var(--ok);color:#fff}
+.spin{animation:sp 1s linear infinite;display:inline-block}
+@keyframes sp{to{transform:rotate(360deg)}}
+.bubble{background:var(--pri);color:#fff;padding:9px 16px;border-radius:18px 18px 4px 18px;display:inline-block;font-weight:600}
+:root[data-theme="dark"] .bubble{color:#04100b}
+.drawer{position:absolute;top:0;right:0;bottom:0;width:560px;background:var(--card);border-left:1px solid var(--line);box-shadow:-12px 0 30px rgba(15,27,45,.12);padding:20px;transform:translateX(105%);transition:.35s;z-index:5}
+.drawer.on{transform:none}
+.heat{display:grid;grid-template-columns:repeat(24,1fr);gap:2px;margin-top:6px}
+.heat i{height:22px;border-radius:4px;background:var(--soft)}
+.legend{display:flex;justify-content:space-between;font-size:10px;color:var(--mut);margin-top:2px}
+pre.y{font:12.5px/1.5 Consolas,Menlo,monospace;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px;white-space:pre;overflow:hidden;color:var(--ink)}
+.gauge{display:grid;grid-template-columns:90px 1fr 50px;gap:8px;align-items:center;margin:8px 0;font-size:13px}
+.title-card{position:absolute;inset:0;display:none;place-items:center;background:var(--bg);z-index:20;text-align:center}
+.title-card.on{display:grid}
+.title-card h1{font-size:64px;font-weight:800;letter-spacing:-1px}
+.title-card h1 em{color:var(--pri);font-style:normal}
+.title-card p{color:var(--mut);margin-top:10px;font-size:20px}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="logo"><i></i><div><b>Sim.PesoWeb</b><small>MissionCommerce AI</small></div></div>
+    <div class="env"><label>Environment</label>
+      <select id="envSel"><option>🧪 Sim · Starter</option><option>🧪 Sim · Full</option><option>🏪 Live · Sunrise</option></select></div>
+    <nav class="nav">
+      <h6>Simulate</h6>
+      <a data-s="control"><span class="ic">🎛️</span>Control Center</a>
+      <a data-s="live"><span class="ic">🌍</span>Day-to-Day Live</a>
+      <a data-s="quick"><span class="ic">⚡</span>Quick Sim</a>
+      <a data-s="scenario"><span class="ic">🔥</span>Scenario Builder</a>
+      <h6>Understand</h6>
+      <a data-s="caught"><span class="ic">🛡️</span>Caught vs Missed</a>
+      <a data-s="missions"><span class="ic">🧭</span>Missions &amp; Growth</a>
+      <h6>Recent runs</h6>
+      <div class="runs"><a><span class="ic">▸</span><b>run-0042</b> · Day-to-Day</a><a><span class="ic">▸</span><b>run-0041</b> · Scenario</a><a><span class="ic">▸</span><b>run-0040</b> · Quick</a></div>
+    </nav>
+    <div class="me"><div class="av">EN</div><div><b>Evo.Ninjas</b><div class="mut" style="font-size:12px">Owner · Sim tenant</div></div></div>
+  </aside>
+
+  <div class="main">
+    <header class="top">
+      <h2 id="ttl">Control Center</h2>
+      <span class="pill mock">Prototype · illustrative data</span>
+      <span class="sp"></span>
+      <span class="pill">seed 20271</span>
+      <span class="pill">Mon 14 Jun 2027 · <span class="clock" id="clk">08:00</span></span>
+      <button class="btn sm" id="theme">🌓 Theme</button>
+    </header>
+    <div class="content">
+
+      <!-- CONTROL -->
+      <section class="screen" id="control">
+        <div class="grid" style="grid-template-columns:2fr 1fr;height:100%">
+          <div style="display:flex;flex-direction:column;gap:16px;min-height:0">
+            <div class="grid" style="grid-template-columns:repeat(3,1fr)">
+              <div class="card mode" data-mode="quick"><div class="ico">⚡</div><h4>Quick Sim</h4><p>Fast-forward days, months, years on the GPU aggregated lane. Tests scale and throughput.</p></div>
+              <div class="card mode sel" data-mode="live"><div class="ico">🌍</div><h4>Day-to-Day</h4><p>Virtual owners, cashiers and customers use the <b>real PesoWeb</b>. Log in and watch it happen.</p></div>
+              <div class="card mode" data-mode="scenario"><div class="ico">🔥</div><h4>Scenario Sim</h4><p>Inject a demand spike, supplier delay, cash shortage or expiry batch. Replayable by seed.</p></div>
+            </div>
+            <div class="card" style="flex:1;min-height:0">
+              <h3>World setup <small>Same code, different numbers</small></h3>
+              <div class="grid" style="grid-template-columns:1fr 1fr 1fr">
+                <div class="field"><label>Population profile</label><div class="seg" id="prof"><button class="on">Starter</button><button>Full</button></div></div>
+                <div class="field"><label>Simulated date range</label><input type="text" value="14 Jun 2027 → 14 Jun 2027"></div>
+                <div class="field"><label>Seed</label><input type="text" value="20271"></div>
+              </div>
+              <div class="field"><label>Verticals</label><div class="chips"><span class="chip n">Convenience · A</span><span class="chip n">Grocery / Pharmacy · A</span><span class="chip n">Motorcycle parts · B</span><span class="chip warn">Mixed · C</span><span class="chip warn">Sports · C</span></div></div>
+              <div class="grid" style="grid-template-columns:repeat(4,1fr);margin-top:6px">
+                <div><div class="kpi"><div><div class="l">Owners / tenants</div><div class="v" id="wOwn">3</div></div></div></div>
+                <div><div class="kpi"><div><div class="l">Branches</div><div class="v" id="wBr">6</div></div></div></div>
+                <div><div class="kpi"><div><div class="l">Archetypes</div><div class="v" id="wAr">40</div></div></div></div>
+                <div><div class="kpi"><div><div class="l">Named customers</div><div class="v" id="wCu">3,000</div></div></div></div>
+              </div>
+              <div style="margin-top:18px;display:flex;gap:10px;align-items:center"><button class="btn pri" id="start">▶ Start Day-to-Day</button><span class="mut">Branch counts are bounded by each owner's plan tier.</span></div>
+              <div style="margin-top:22px;border-top:1px solid var(--line);padding-top:14px"><div class="mut" style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Persona library v3 · generated on AMD (vLLM)</div><div class="chips"><span class="chip ok">36 / 36 coverage cells</span><span class="chip ok">diversity check passed</span><span class="chip ok">plausibility validators passed</span><span class="chip n">cached · replayable by seed</span></div></div>
+            </div>
+          </div>
+          <div class="card" style="min-height:0;display:flex;flex-direction:column">
+            <h3>Simulated owner sign-ups <small>real Auth/Register</small></h3>
+            <div class="feed" id="signups" style="flex:1"></div>
+            <div class="chips" style="padding-top:10px;border-top:1px solid var(--line)"><span class="chip n">Trial 5</span><span class="chip ok">Paid 4</span><span class="chip warn">Upgraded 1</span><span class="chip bad">Churned 1</span></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- LIVE -->
+      <section class="screen" id="live">
+        <div class="grid" style="grid-template-columns:repeat(4,1fr)">
+          <div class="card kpi"><div><div class="l">Sales today</div><div class="v" id="kSales">₱0</div><div class="d mut">of ₱40,000 daily target</div></div><div id="dSales"></div></div>
+          <div class="card kpi"><div><div class="l">Transactions</div><div class="v" id="kTx">0</div><div class="d mut">avg basket <b id="kBk">₱0</b> · of 400 expected</div></div><div id="dTx"></div></div>
+          <div class="card kpi"><div><div class="l">Open shifts</div><div class="v">6 / 6</div><div class="d mut">expected cash <b id="kCash">₱0</b></div></div><div id="dShift"></div></div>
+          <div class="card kpi"><div><div class="l">Exceptions open</div><div class="v" id="kEx">1</div><div class="d dn">1 not yet caught</div></div><div id="dEx"></div></div>
+        </div>
+        <div class="grid" style="grid-template-columns:1.5fr 1fr;margin-top:16px;height:calc(100% - 120px)">
+          <div class="card" style="min-height:0;display:flex;flex-direction:column"><h3>Live transactions <small>Real PesoWeb · tagged X-Sim-Run run-0042</small></h3><div style="flex:1;min-height:0"><div class="feed" id="txfeed"></div></div></div>
+          <div style="display:flex;flex-direction:column;gap:16px;min-height:0">
+            <div class="card"><h3>Simulation clock</h3>
+              <div class="seg" id="spd"><button class="on">1×</button><button>100×</button><button>Fast-forward</button></div>
+              <div style="margin-top:12px"><div class="bar"><i id="dayBar" style="width:0"></i></div><div class="legend"><span>08:00</span><span>12:00</span><span>18:00</span><span>23:59</span></div></div>
+              <div class="mut" style="margin-top:8px">Actors online: <b id="act">0</b> customers · 6 cashiers · 3 managers</div></div>
+            <div class="card" style="flex:1;min-height:0"><h3>Branches <small>3 owners</small></h3>
+              <table><tr><th>Branch</th><th>Vertical</th><th>Sales</th><th></th></tr>
+              <tr><td><b>Manila 1</b></td><td>Convenience</td><td id="b1">₱0</td><td><span class="chip ok">POS online</span></td></tr>
+              <tr><td><b>Manila 2</b></td><td>Grocery</td><td id="b2">₱0</td><td><span class="chip ok">POS online</span></td></tr>
+              <tr><td><b>Cebu 1</b></td><td>Pharmacy</td><td id="b3">₱0</td><td><span class="chip ok">POS online</span></td></tr>
+              <tr><td><b>Davao 1</b></td><td>Motorcycle</td><td id="b4">₱0</td><td><span class="chip warn">POS offline 2m</span></td></tr></table></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- QUICK -->
+      <section class="screen" id="quick">
+        <div class="card">
+          <div class="kpi"><div><div class="l">Fast-forward · aggregated lane</div><div class="v" id="qDays" style="font-size:32px">Day 0 / 365</div></div><div style="text-align:right"><span class="pill ok" id="qState">running</span><div class="mut" style="margin-top:6px">Elapsed <b id="qEl">00:00</b></div></div></div>
+          <div class="bar" style="margin-top:12px;height:14px"><i id="qBar" style="width:0"></i></div>
+        </div>
+        <div class="grid" style="grid-template-columns:repeat(4,1fr);margin-top:16px">
+          <div class="card kpi"><div><div class="l">Transactions generated</div><div class="v" id="qT">0</div></div></div>
+          <div class="card kpi"><div><div class="l">Inventory events</div><div class="v" id="qI">0</div></div></div>
+          <div class="card kpi"><div><div class="l">Customer events</div><div class="v" id="qC">0</div></div></div>
+          <div class="card kpi"><div><div class="l">AI decisions</div><div class="v" id="qA">0</div></div></div>
+        </div>
+        <div class="grid" style="grid-template-columns:1.2fr 1fr;margin-top:16px;height:calc(100% - 235px)">
+          <div class="card"><h3>Throughput <small>events per second</small></h3><svg id="spark" viewBox="0 0 600 220" width="100%" height="85%" preserveAspectRatio="none"></svg></div>
+          <div class="card"><h3>🟧 AMD compute <small>live (rocm-smi style)</small></h3>
+            <div class="gauge"><span>GPU util</span><div class="bar o"><i id="gU"></i></div><b id="gUt">0%</b></div>
+            <div class="gauge"><span>VRAM</span><div class="bar o"><i id="gV"></i></div><b id="gVt">0%</b></div>
+            <div class="gauge"><span>Power</span><div class="bar o"><i id="gP"></i></div><b id="gPt">0%</b></div>
+            <table style="margin-top:10px"><tr><td class="mut">Generator</td><td><b id="gE">0</b> events/s</td></tr><tr><td class="mut">vLLM investigator</td><td><b id="gT">0</b> tok/s</td></tr><tr><td class="mut">Forecast model</td><td>PyTorch · ROCm</td></tr></table></div>
+        </div>
+      </section>
+
+      <!-- SCENARIO -->
+      <section class="screen" id="scenario">
+        <div class="grid" style="grid-template-columns:1fr 1fr;height:100%">
+          <div class="card" style="overflow:hidden">
+            <h3>Scenario builder</h3>
+            <div class="field"><label>Describe what to test (AI will draft the scenario)</label><textarea id="req" rows="2">Test what happens when a major supplier is delayed during a holiday demand spike.</textarea></div>
+            <button class="btn pri" id="gen">✨ Generate scenario</button>
+            <div class="grid" style="grid-template-columns:1fr 1fr;margin-top:16px">
+              <div class="field"><label>Duration</label><input type="text" value="14 days"></div>
+              <div class="field"><label>Supplier delay</label><input type="text" value="+72 hours · SUPPLIER-0042"></div>
+            </div>
+            <div class="field"><label>Branches</label><div class="chips"><span class="chip ok">Manila 1</span><span class="chip ok">Manila 2</span><span class="chip">Cebu 1</span><span class="chip">Davao 1</span></div></div>
+            <div class="field"><label>Demand uplift</label>
+              <div class="gauge"><span>Drinks</span><div class="bar"><i style="width:35%"></i></div><b>+35%</b></div>
+              <div class="gauge"><span>Gift items</span><div class="bar"><i style="width:70%"></i></div><b>+70%</b></div>
+              <div class="gauge"><span>Food</span><div class="bar"><i style="width:25%"></i></div><b>+25%</b></div></div>
+            <div class="mut">Mission detection <span class="chip ok">ON</span> · AI actions <span class="chip ok">ON</span> · Seed 20271</div>
+          </div>
+          <div class="card" style="display:flex;flex-direction:column">
+            <h3>Generated scenario <small id="vstat">validating…</small></h3>
+            <pre class="y" id="yaml" style="flex:1"></pre>
+            <div style="margin-top:12px" class="chips"><span class="chip n">stockout rate</span><span class="chip n">lost sales</span><span class="chip n">turnover</span><span class="chip n">margin impact</span><span class="chip n">AI response latency</span></div>
+            <div style="margin-top:12px"><button class="btn pri">▶ Run scenario</button> <button class="btn">Save to library</button></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CAUGHT -->
+      <section class="screen" id="caught">
+        <div class="grid" style="grid-template-columns:repeat(5,1fr)">
+          <div class="card kpi"><div><div class="l">Incidents injected</div><div class="v" id="cI">0</div></div></div>
+          <div class="card kpi"><div><div class="l">System caught</div><div class="v up" id="cS">0</div></div></div>
+          <div class="card kpi"><div><div class="l">Missed → AI found</div><div class="v" style="color:var(--pri)" id="cA">0</div></div></div>
+          <div class="card kpi"><div><div class="l">Undetected</div><div class="v dn" id="cU">0</div></div></div>
+          <div class="card kpi"><div><div class="l">Detection coverage</div><div class="v" id="cC">0%</div></div><div id="dCov"></div></div>
+        </div>
+        <div class="card" style="margin-top:16px;height:calc(100% - 118px);overflow:hidden">
+          <h3>Incident ledger <small>ground truth recorded at injection · click a row to investigate</small></h3>
+          <table id="inc"><tr><th>#</th><th>Incident</th><th>Branch</th><th>Injected</th><th>PesoWeb</th><th>AI</th><th>Evidence</th></tr></table>
+        </div>
+        <div class="drawer" id="drawer">
+          <div style="display:flex;align-items:center;margin-bottom:10px"><b style="font-size:16px">🕵️ Investigator</b><span class="sp"></span><button class="btn sm" id="dclose">Close</button></div>
+          <div style="text-align:right"><span class="bubble">Why is the Manila 1 cash drawer short?</span></div>
+          <div style="margin-top:14px"><b><span class="spin" id="dsp">◐</span> <span id="dttl">Working on it — reading the transaction trail…</span></b></div>
+          <div class="steps" id="steps"></div>
+          <div class="card" id="dres" style="margin-top:16px;display:none">
+            <h3>Unexplained cash variance <span class="chip bad">−₱1,500</span></h3>
+            <p>Three transactions contain unusual manual adjustments, and one cash-out has no supporting record. This needs review. It is <b>not</b> a conclusion about any person.</p>
+            <table style="margin-top:8px"><tr><td class="mut">Expected</td><td>₱43,000</td></tr><tr><td class="mut">Counted</td><td>₱41,500</td></tr><tr><td class="mut">Evidence</td><td>3 adjustments · 1 unsupported cash-out · 0 voids</td></tr></table>
+            <div style="margin-top:10px"><span class="chip n">Recommend: recount + review cash-out SR-118</span></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- MISSIONS -->
+      <section class="screen" id="missions">
+        <div class="grid" style="grid-template-columns:repeat(3,1fr)">
+          <div class="card"><h3>☕ Grab-and-Go Breakfast <span class="chip ok">detected</span></h3><div class="mut">Coffee + sandwich + drink</div><div class="heat" data-win="6-9"></div><div class="legend"><span>00</span><span>06</span><span>12</span><span>18</span><span>23</span></div></div>
+          <div class="card"><h3>🛍️ After-Work Top-Up <span class="chip ok">detected</span></h3><div class="mut">Drinks + ready meal + essentials</div><div class="heat" data-win="17-19"></div><div class="legend"><span>00</span><span>06</span><span>12</span><span>18</span><span>23</span></div></div>
+          <div class="card"><h3>🌙 Late-Night Emergency <span class="chip warn">weak signal</span></h3><div class="mut">Hot food + charger + essentials</div><div class="heat" data-win="22-24"></div><div class="legend"><span>00</span><span>06</span><span>12</span><span>18</span><span>23</span></div></div>
+        </div>
+        <div class="grid" style="grid-template-columns:1fr 1.1fr;margin-top:16px;height:calc(100% - 150px)">
+          <div class="card"><h3>Detector vs ground truth <small>scored on simulator missions</small></h3>
+            <table><tr><th>Mission</th><th>Precision</th><th>Recall</th></tr><tr><td>Grab-and-Go</td><td>0.91</td><td>0.88</td></tr><tr><td>After-Work Top-Up</td><td>0.86</td><td>0.90</td></tr><tr><td>Late-Night</td><td>0.72</td><td>0.61</td></tr></table>
+            <div class="card" style="margin-top:14px;background:var(--soft)"><h3>💡 Recommendation</h3><p>After-Work Top-Up at 17:30–19:00: raise ready-meal and drink stock +20%, bundle with milk, move 18 units from Manila 2.</p><div style="margin-top:8px"><span class="chip n">forecast model: LightGBM</span> <span class="chip n">explained by LLM</span></div></div></div>
+          <div class="card"><h3>Week 0 vs Week 3 <small>same seed · with vs without AI actions</small></h3>
+            <table id="wk"><tr><th>Metric</th><th>Week 0</th><th>Week 3</th><th>Change</th></tr></table>
+            <p class="mut" style="margin-top:10px">Illustrative figures for the design. The real screen shows measured values from two seeded runs.</p></div>
+        </div>
+      </section>
+
+      <div class="title-card" id="tc"><div><h1>Fast-forward a <em>retail world</em>.</h1><p>See how AI responds.</p></div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const q=(s,r=document)=>r.querySelector(s), qa=(s,r=document)=>[...r.querySelectorAll(s)];
+const P=new URLSearchParams(location.search), FREEZE=P.has('freeze');
+if(P.get('theme')) document.documentElement.dataset.theme=P.get('theme');
+const fmt=n=>Math.round(n).toLocaleString('en-US'), peso=n=>'₱'+fmt(n);
+function rng(s){return()=>{s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const R=rng(20271), pick=a=>a[Math.floor(R()*a.length)];
+function donut(p,col,s=62){const r=26,c=2*Math.PI*r;return `<svg viewBox="0 0 64 64" width="${s}" height="${s}"><circle cx="32" cy="32" r="${r}" fill="none" stroke="var(--line)" stroke-width="8"/><circle cx="32" cy="32" r="${r}" fill="none" stroke="${col}" stroke-width="8" stroke-linecap="round" stroke-dasharray="${c*p/100} ${c}" transform="rotate(-90 32 32)"/><text x="32" y="36" text-anchor="middle" font-size="13" font-weight="700" fill="var(--ink)">${p}%</text></svg>`}
+const TITLES={control:'Control Center',live:'Day-to-Day Live',quick:'Quick Sim',scenario:'Scenario Builder',caught:'Caught vs Missed',missions:'Missions & Growth'};
+let timers=[], cur=null, clockMin=480;
+const clr=()=>{timers.forEach(clearInterval);timers=[]};
+const every=(f,ms)=>timers.push(setInterval(f,ms));
+function show(id){clr();cur=id;qa('.screen').forEach(s=>s.classList.toggle('on',s.id===id));qa('.nav a[data-s]').forEach(a=>a.classList.toggle('on',a.dataset.s===id));q('#ttl').textContent=TITLES[id];q('#drawer').classList.remove('on');(INIT[id]||(()=>{}))()}
+qa('.nav a[data-s]').forEach(a=>a.onclick=()=>{location.hash=a.dataset.s});
+addEventListener('hashchange',()=>show(location.hash.slice(1)||'control'));
+q('#theme').onclick=()=>{const d=document.documentElement;d.dataset.theme=d.dataset.theme==='dark'?'light':'dark'};
+const hhmm=m=>String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');
+
+const INIT={
+control(){
+  const owners=[['Rico R.','Motorcycle parts','Business','3 branches · 10 staff','ok'],['Maria L.','Convenience','Pro','2 branches · 3 staff','ok'],['Ben T.','Grocery / Pharmacy','Lite','wanted 3 branches → downsized to 1','warn'],['Ana C.','Convenience','Pro','2 branches · 3 staff','ok'],['Jun D.','Sports','Lite','trial → churned day 9','bad']];
+  const f=q('#signups'); f.innerHTML='';
+  const add=o=>{const d=document.createElement('div');d.className='row';d.style.gridTemplateColumns='1fr auto';d.innerHTML=`<div><b>${o[0]}</b> · ${o[1]}<div class="mut" style="font-size:12px">${o[3]}</div></div><span class="chip ${o[4]==='ok'?'ok':o[4]==='warn'?'warn':'bad'}">${o[2]}</span>`;f.prepend(d)};
+  if(FREEZE) owners.forEach(add); else {let i=0;every(()=>{if(i<owners.length)add(owners[i++])},900)}
+  qa('.mode').forEach(m=>m.onclick=()=>{qa('.mode').forEach(x=>x.classList.remove('sel'));m.classList.add('sel');const k=m.dataset.mode;q('#start').textContent={quick:'▶ Start Quick Sim',live:'▶ Start Day-to-Day',scenario:'▶ Open Scenario Builder'}[k];q('#start').dataset.go=k});
+  q('#start').dataset.go='live'; q('#start').onclick=e=>{location.hash=e.target.dataset.go};
+  qa('#prof button').forEach((b,i)=>b.onclick=()=>{qa('#prof button').forEach(x=>x.classList.remove('on'));b.classList.add('on');const v=i?[5,12,150,10000]:[3,6,40,3000];['wOwn','wBr','wAr','wCu'].forEach((id,k)=>q('#'+id).textContent=fmt(v[k]))});
+},
+live(){
+  const brs=['Manila 1','Manila 2','Cebu 1','Davao 1'], VERT=['conv','groc','phar','moto'], pays=['Cash','GCash','Card'];
+  const BK={conv:{'Office worker':['Ready meal + Drink','Coffee + Sandwich'],'Student':['Noodles + Soda','Load + Snack'],'Night-shift nurse':['Hot food + Energy drink'],'Parent':['Milk + Bread + Eggs'],'Senior':['Bread + Tea'],'Commuter':['Coffee + Sandwich']},
+    groc:{'Parent':['Weekly basket (38 items)','Milk + Bread + Eggs'],'Office worker':['Ready meal + Drink'],'Senior':['Rice + Canned goods'],'Student':['Noodles + Soda'],'Night-shift nurse':['Ready meal'],'Commuter':['Water + Snack']},
+    phar:{'Senior':['Maintenance meds','Vitamins + Water'],'Parent':['Children vitamins','Cough syrup'],'Office worker':['Vitamins'],'Student':['Pain reliever'],'Night-shift nurse':['Energy tablets'],'Commuter':['Vitamins']},
+    moto:{'Commuter':['Engine oil','Brake pads','Chain lube']}};
+  // habit windows: who shops when (weights by hour)
+  const WT=h=>({'Commuter':(h>=6&&h<10)?3:(h>=16&&h<19)?2:0.3,'Office worker':(h>=7&&h<10)?2:(h>=12&&h<14)?3:(h>=17&&h<20)?4:0.3,'Student':(h>=11&&h<14)?3:(h>=15&&h<18)?3:0.2,'Parent':(h>=9&&h<12)?3:(h>=16&&h<19)?1.5:0.5,'Senior':(h>=7&&h<12)?3:0.3,'Night-shift nurse':(h>=21||h<6)?4:0});
+  const byTime=()=>{const w=WT(Math.floor(clockMin/60)),tot=Object.values(w).reduce((a,b)=>a+b,0);let r=R()*tot;for(const k in w){r-=w[k];if(r<=0)return k}return 'Parent'};
+  const pickBranch=()=>{const r=R();const hr=Math.floor(clockMin/60);if(r<.15&&hr>=8&&hr<18)return 3;return r<.5?0:r<.8?1:2};
+  const S={sales:0,tx:0,b:[0,0,0,0],cash:40000};
+  const feed=q('#txfeed'); feed.innerHTML='';
+  const render=()=>{q('#kSales').textContent=peso(S.sales);q('#kTx').textContent=fmt(S.tx);q('#kBk').textContent=peso(S.tx?S.sales/S.tx:0);q('#kCash').textContent=peso(S.cash+S.sales*.45);['b1','b2','b3','b4'].forEach((id,i)=>q('#'+id).textContent=peso(S.b[i]));q('#act').textContent=fmt(S.tx*3+120);q('#dSales').innerHTML=donut(Math.min(99,Math.round(S.sales/400)),'var(--pri)');q('#dTx').innerHTML=donut(Math.min(99,Math.round(S.tx/4)),'var(--pri2)');q('#dShift').innerHTML=donut(100,'var(--ok)');q('#dEx').innerHTML=donut(S.inj?50:0,'var(--warn)');q('#clk').textContent=hhmm(clockMin);q('#dayBar').style.width=Math.min(100,(clockMin-480)/(1439-480)*100)+'%'};
+  const addTx=()=>{const i=pickBranch(),b=brs[i],v=VERT[i],a=v==='moto'?'Commuter':byTime(),amt=v==='moto'?150+R()*750:40+R()*260,items=BK[v][a]||BK.conv.Commuter;S.sales+=amt;S.tx++;S.b[i]+=amt;const d=document.createElement('div');d.className='row';d.innerHTML=`<span class="t">${hhmm(clockMin)}</span><div><b>${a}</b> · ${pick(items)}<div class="mut" style="font-size:12px">${b} · POS-0${1+i%2} · ${pick(pays)}</div></div><b>${peso(amt)}</b>`;feed.prepend(d);while(feed.children.length>9)feed.lastChild.remove()};
+  const inject=()=>{S.inj=true;const d=document.createElement('div');d.className='row inj';d.innerHTML=`<span class="t">${hhmm(clockMin)}</span><div><b>⚠ Injected (ground truth logged)</b><div class="mut" style="font-size:12px">Fresh Milk · Manila 1 · system 50, physical 42</div></div><span class="chip warn">scenario</span>`;feed.prepend(d)};
+  q('#kEx').textContent='1';
+  if(FREEZE){clockMin=700;for(let i=0;i<46;i++){clockMin=480+Math.floor(i*4.5);addTx();if(i===40)inject()}clockMin=712;render();return}
+  clockMin=480;S.inj=false;render();
+  every(()=>{clockMin+=3;addTx();if(clockMin>=700&&!S.inj)inject();render()},700);
+},
+quick(){
+  const T=[2.84e9,1.17e9,8.42e8,4.2e6],ids=['qT','qI','qC','qA'];let day=0,tick=0;const pts=[];
+  const set=d=>{q('#qDays').textContent=`Day ${d} / 365`;q('#qBar').style.width=(d/365*100)+'%';ids.forEach((id,i)=>q('#'+id).textContent=fmt(T[i]*d/365));q('#qEl').textContent=hhmm(Math.floor(d/365*272)).replace(':',':');const u=88+Math.sin(tick/2)*6,v=64+d/365*14,p=72+Math.cos(tick/3)*8,e=(1.4e6+(R()-.5)*2.6e5);q('#gU').style.width=u+'%';q('#gUt').textContent=Math.round(u)+'%';q('#gV').style.width=v+'%';q('#gVt').textContent=Math.round(v)+'%';q('#gP').style.width=p+'%';q('#gPt').textContent=Math.round(p)+'%';q('#gE').textContent=fmt(e);q('#gT').textContent=fmt(64+Math.sin(tick)*6);pts.push(e);if(pts.length>40)pts.shift();const mx=1.8e6;const xy=pts.map((y,i)=>`${i*(600/39)},${215-(y/mx)*200}`).join(' ');q('#spark').innerHTML=`<polygon fill="var(--soft)" points="0,215 ${xy} ${(pts.length-1)*(600/39)},215"/><polyline fill="none" stroke="var(--pri)" stroke-width="2.5" stroke-linejoin="round" points="${xy}"/>`;tick++};
+  if(FREEZE){for(let i=0;i<40;i++)set(Math.round(i/39*365));set(365);q('#qState').textContent='complete';q('#qEl').textContent='04:32';return}
+  set(0);every(()=>{day=Math.min(365,day+9);set(day);if(day>=365){q('#qState').textContent='complete';clr()}},330);
+},
+scenario(){
+  const Y=`scenario: SUPPLIER_DELAY_HOLIDAY_SURGE
+seed: 20271
+precondition:
+  holiday: true
+  supplier: SUPPLIER-0042
+events:
+  - supplier_delay: 72h
+  - demand:
+      categories: [drinks, gift_items, food]
+      uplift: {drinks: 0.35, gift_items: 0.70, food: 0.25}
+expected_system_behavior:
+  - inventory_risk_detected
+  - alternative_supplier_considered
+  - replenishment_recommendation
+measure: [stockout_rate, lost_sales, turnover,
+          margin_impact, ai_response_latency]`;
+  const out=q('#yaml'),st=q('#vstat');out.textContent='';st.textContent='validating…';
+  const done=()=>{out.textContent=Y;st.innerHTML='<span class="chip ok">✓ valid · constraints passed</span>'};
+  q('#gen').onclick=()=>{out.textContent='';st.textContent='drafting with LLM…';let i=0;const t=setInterval(()=>{i+=14;out.textContent=Y.slice(0,i);if(i>=Y.length){clearInterval(t);done()}},40)};
+  if(FREEZE)done(); else q('#gen').click();
+},
+caught(){
+  const rows=[['Cash variance −₱1,500','Manila 1','14:05','missed','found','4 min · 3 adjustments, 1 cash-out'],['Fresh Milk 42 vs 50','Manila 1','11:40','missed','found','ledger drift −8'],['Yogurt 120 × ₱45 near expiry','Manila 2','09:00','caught','prioritized','₱5,400 at risk · FEFO'],['Bottled water low stock','Cebu 1','10:12','caught','—','reorder level hit'],['Abnormal refund pattern','Manila 2','15:30','missed','found','5 refunds in 20 min'],['Transfer difference −3','Davao 1','16:45','missed','undetected','no signal']];
+  const t=q('#inc');qa('tr:not(:first-child)',t).forEach(r=>r.remove());
+  rows.forEach((r,i)=>{const tr=document.createElement('tr');tr.style.cursor='pointer';tr.innerHTML=`<td>${i+1}</td><td><b>${r[0]}</b></td><td>${r[1]}</td><td>${r[2]}</td><td><span class="chip ${r[3]==='caught'?'ok':'bad'}">${r[3]==='caught'?'● caught':'● missed'}</span></td><td><span class="chip ${r[4]==='found'||r[4]==='prioritized'?'n':r[4]==='undetected'?'warn':'n'}">${r[4]==='found'?'AI found':r[4]==='prioritized'?'AI acted':r[4]==='undetected'?'undetected':'—'}</span></td><td class="mut">${r[5]}</td>`;tr.onclick=()=>invest();t.appendChild(tr)});
+  const I=rows.length,S=rows.filter(r=>r[3]==='caught').length,A=rows.filter(r=>r[3]==='missed'&&r[4]==='found').length,U=rows.filter(r=>r[4]==='undetected').length,C=Math.round((S+A)/I*100);
+  q('#cI').textContent=I;q('#cS').textContent=S;q('#cA').textContent=A;q('#cU').textContent=U;q('#cC').textContent=C+'%';q('#dCov').innerHTML=donut(C,'var(--ok)');
+  q('#dclose').onclick=()=>q('#drawer').classList.remove('on');
+  if(P.has('drawer'))invest();
+},
+missions(){
+  qa('.heat').forEach(h=>{const [a,b]=h.dataset.win.split('-').map(Number);h.innerHTML='';for(let i=0;i<24;i++){const on=i>=a&&i<b;const e=document.createElement('i');if(on)e.style.background='var(--pri)';else if(Math.abs(i-(a+b)/2)<4)e.style.opacity='.8';h.appendChild(e)}});
+  const W=[['Sales',100,114],['Waste',100,91],['Margin',100,107],['Stockouts',100,78]],t=q('#wk');qa('tr:not(:first-child)',t).forEach(r=>r.remove());
+  W.forEach(w=>{const d=w[2]-w[1],good=(w[0]==='Waste'||w[0]==='Stockouts')?d<0:d>0;const tr=document.createElement('tr');tr.innerHTML=`<td><b>${w[0]}</b></td><td>${w[1]}</td><td>${w[2]}</td><td><span class="chip ${good?'ok':'bad'}">${d>0?'+':''}${d}%</span></td>`;t.appendChild(tr)});
+}};
+
+function invest(){
+  const d=q('#drawer');d.classList.add('on');const steps=[['🔎','Pulling Manila 1 shift SH-0042','214 sales · opening ₱10,000'],['📒','Reading cash movements','cash-in, cash-out, refunds'],['🧮','Checking voids, refunds, discounts','0 voids · 3 manual adjustments'],['🔗','Correlating with the audit trail','1 cash-out without supporting record'],['📝','Writing explanation','evidence attached']];
+  const box=q('#steps');box.innerHTML=steps.map(s=>`<div class="step"><div class="ic">${s[0]}</div><div><b>${s[1]}</b><small>${s[2]}</small></div><div class="ck">✓</div></div>`).join('');
+  const els=qa('.step',box),res=q('#dres');res.style.display='none';q('#dsp').style.display='inline-block';q('#dttl').textContent='Working on it — reading the transaction trail…';
+  const finish=()=>{els.forEach(e=>e.classList.add('on','done'));res.style.display='block';q('#dsp').style.display='none';q('#dttl').textContent='Completed 5 steps · 4.1s'};
+  if(FREEZE){finish();return}
+  let i=0;const t=setInterval(()=>{if(i<els.length){els[i].classList.add('on');if(i>0)els[i-1].classList.add('done');i++}else{clearInterval(t);finish()}},900);
+}
+if(P.has('title'))q('#tc').classList.add('on');
+show(location.hash.slice(1)||'control');
+</script>
+</body>
+</html>
