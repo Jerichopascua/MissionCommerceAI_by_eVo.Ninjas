@@ -71,6 +71,39 @@ Detection coverage = (caught + AI-found) / injected. Every figure comes from a r
 | Scenario Sim | YAML scenario (hand-written or LLM-generated) on the Day-to-Day lane with injected events, plus KPIs | What-if and stress |
 | Quick Sim | Vectorised GPU generation, with forecast and anomaly models run over the result. Reports events/sec and virtual-days/sec. | Scale |
 
+### Actors: owners first, then staff and shoppers
+
+The world is **two-sided**. Owner agents are the SaaS customers: they sign up to PesoWeb, pick a plan, and create the tenants, branches, staff and catalogs that shopper agents then visit.
+
+| Layer | Method |
+|---|---|
+| Owner archetypes (~50-100) | LLM (vLLM, JSON schema) once, cached and versioned: intent, capital band, ambition, risk, vertical affinity |
+| Owner instances | Correlated-trait sampling (capital, ambition, vertical); named, located |
+| Business plan | LLM per owner (batched) then validated: vertical, concept, # branches, # staff per branch, catalog size, margin policy, hours |
+| Tier choice | Rule + traits, **constrained by `SubscriptionTierLimit`** (seed: Lite 1 branch/1 user/1,000 products; Pro 2/3/5,000; Business 5/10/50,000 - confirm in P0 that this is implemented). Plan exceeding tier means downsize or upgrade, recorded as a decision. |
+| Onboarding | `PesoWebDriver` via real APIs: `Auth/Register` -> `AddWarehouse` x N -> `AddUser` x staff -> categories/products (or CSV bulk import) -> opening stock via purchase receipt |
+| Lifecycle | Trial -> paid -> upgrade -> churn (SaaS funnel metric) |
+| Staff | Per-branch role mix with trait profile (speed, accuracy, reliability). Incidents are injected against staff as **ground truth only**; wording is always "unexplained variance", never an accusation. |
+| Shoppers | Persona archetype (LLM, cached) -> correlated instances -> weekly habit plan -> needs-based decision policy -> small bounded noise. Missions fit the branch's vertical. |
+
+**Principle:** the LLM writes who people are; models decide what they do; dice only add small noise; plausibility constraints keep it honest. The seed fixes the dice so reruns match; it does not make personas random. LLM cost is bounded because only archetypes, plans and "hero" actors (a few hundred, batch-generated) use the LLM; populations at scale are sampled from archetypes.
+
+**No real-data calibration is assumed.** Realism is enforced by constraints (margin bands per vertical, price/cost sanity, catalog size vs capital, staff vs branch size and ticket volume, traffic bands per vertical and location type, diversity across owners). Known limit, stated on stage: the population is plausible, not proven representative.
+
+### Verticals (templates are data, not code)
+
+A vertical template (LLM-generated once, validated) defines catalog size range, categories, price/cost margin band, ticket size, expiry on/off, shopper missions, traffic band and relevant incidents.
+
+| Vertical | Tier | Expiry/FEFO | Main missions |
+|---|---|---|---|
+| Convenience store | A (full depth) | Yes | Grab-and-go, after-work top-up, late-night |
+| Grocery / pharmacy | A (full depth) | Yes | Weekly restock, urgent medicine |
+| Motorcycle parts | B (end-to-end, template-driven) | No | Repair-urgent, scheduled maintenance, accessory browse |
+| Mixed store | C (blend of two templates) | Partial | Combination |
+| Sports | C (template only, seasonal) | No | Event-driven, hobby |
+
+Electronics is roadmap (serial/warranty logic is not in PesoWeb). High-ticket verticals show cash variance and shrinkage at a different scale (a missing high-value item rather than a low-value perishable), supporting the "works across business types" claim.
+
 ### Reproducibility
 
 Every run takes a seed. The same seed and scenario give an identical event log (hash-checked). The Week 0 vs Week 3 comparison runs the same seed with and without AI actions.
@@ -100,8 +133,10 @@ Order of work: 1, 8, 3+4, 5, 7, then 2 and 6.
 
 | Module | Responsibility |
 |---|---|
-| `world` | Seeded tenants, branches, products, suppliers, actors, customer missions |
-| `behavior` | Hourly demand curves per branch type, random events, trend signals (holidays, seasonality, weather), cashier throughput and queue model |
+| `world` | Owner agents and their business plans, tenants, branches, staff, catalogs, suppliers, shopper personas and customer missions (from archetypes and vertical templates) |
+| `owner` | Owner archetypes, business-plan generation, tier-constrained decisions, onboarding journey, SaaS lifecycle |
+| `verticals` | Vertical templates and catalog generation with validators |
+| `behavior` | Habit plans and needs-based decision policy, hourly demand curves per vertical and location type, random events, trend signals (holidays, seasonality, weather), cashier throughput and queue model |
 | `scenario` | YAML scenarios: demand spike, supplier delay, cash short, expiry batch, POS surge/offline |
 | `driver` | `PesoWebDriver`: virtual users calling real PesoWeb APIs |
 | `lane_scale` | Aggregated GPU generation to a columnar store, then the same models |
@@ -128,7 +163,7 @@ Order of work: 1, 8, 3+4, 5, 7, then 2 and 6.
 | P4 Scenario + Quick Sim | Oct 16 to 17 | YAML scenarios, GPU aggregate lane, Week 0 vs Week 3 | Scorecard and KPI delta from two real runs |
 | P5 Ship | Oct 17 to 18 (10 PM) | UI polish, hosted URL, Docker + README, demo video, deck with real numbers | Fresh-clone run works; submission checklist done |
 
-**Cut order if behind:** (1) Quick Sim at multi-thousand-tenant scale, so show a smaller scale with real throughput; (2) LLM-generated scenarios; (3) queue/waiting-time model; (4) stock count approval workflow, keeping variance recording.
+**Cut order if behind:** (1) Tier C verticals (sports, mixed); (2) Quick Sim at multi-thousand-tenant scale, so show a smaller scale with real throughput; (3) LLM-generated scenarios; (4) queue/waiting-time model; (5) Tier B vertical depth (motorcycle runs in Quick Sim only); (6) stock count approval workflow, keeping variance recording; (7) SaaS lifecycle (upgrade/churn).
 
 **Never cut:** cash shift, Exception Center, mission detection with Week 0 vs Week 3 KPI, visible AMD usage.
 
@@ -150,6 +185,8 @@ Order of work: 1, 8, 3+4, 5, 7, then 2 and 6.
 | Dev Cloud access or quota | P0 smoke test first; AI service uses an OpenAI-compatible vLLM endpoint so a local fallback works |
 | LLM slow or flaky live | Pre-compute and cache investigator output per run; live call is a bonus |
 | Sim traffic polluting real tenants | `X-Sim-Run` header, dedicated sim tenants, per-run purge script |
+| Onboarding chain (Register -> AddWarehouse -> AddUser -> AddProduct) fails through the API or is blocked by tier limits | Verify the chain end to end early in P1; the driver reports tier-limit refusals as events, not crashes |
+| LLM personas homogeneous or stereotyped | Diversity constraints, plausibility validators, hero actors only for a few hundred |
 | Time | Cut order above |
 
 ## 10. Repo layout (this repo is the public submission)
