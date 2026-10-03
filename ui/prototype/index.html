@@ -13,7 +13,8 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:"Segoe U
 .side{background:var(--side);border-right:1px solid var(--line);display:flex;flex-direction:column;padding:16px 12px}
 .brand{margin:0 4px 10px}
 .brand img{display:block;width:100%;height:auto;border-radius:12px}
-.brand img+img{margin-top:6px;border-radius:10px}
+.partner{margin:8px 4px 0}
+.partner img{display:block;width:100%;height:auto;border-radius:10px}
 .logo{display:flex;align-items:center;gap:10px;padding:4px 8px 14px}
 .logo i{width:32px;height:32px;border-radius:10px;background:conic-gradient(from 210deg,var(--pri2),var(--pri),#ff6a2b,var(--pri2));display:block;position:relative}
 .logo i:after{content:"";position:absolute;inset:8px;border-radius:50%;background:var(--side)}
@@ -110,7 +111,7 @@ pre.y{font:12.5px/1.5 Consolas,Menlo,monospace;background:var(--bg);border:1px s
 <body>
 <div class="app">
   <aside class="side">
-    <div class="brand"><img src="evoNinjas1.png" alt="Evo.Ninjas"><img src="amd_evos_logo.png" alt="AMD | Evolus"></div>
+    <div class="brand"><img src="evoNinjas1.png" alt="Evo.Ninjas"></div>
     <div class="logo"><i></i><div><b>Sim.PesoWeb</b><small>MissionCommerce AI</small></div></div>
     <div class="env"><label>Environment</label>
       <select id="envSel"><option>🧪 Sim · Starter</option><option>🧪 Sim · Full</option><option>🏪 Live · Sunrise</option></select></div>
@@ -127,6 +128,7 @@ pre.y{font:12.5px/1.5 Consolas,Menlo,monospace;background:var(--bg);border:1px s
       <div class="runs"><a><span class="ic">▸</span><b>run-0042</b> · Day-to-Day</a><a><span class="ic">▸</span><b>run-0041</b> · Scenario</a><a><span class="ic">▸</span><b>run-0040</b> · Quick</a></div>
     </nav>
     <div class="me"><div class="av">EN</div><div><b>Evo.Ninjas</b><div class="mut" style="font-size:12px">Owner · Sim tenant</div></div></div>
+    <div class="partner"><img src="amd_evos_logo.png" alt="AMD | Evolus"></div>
   </aside>
 
   <div class="main">
