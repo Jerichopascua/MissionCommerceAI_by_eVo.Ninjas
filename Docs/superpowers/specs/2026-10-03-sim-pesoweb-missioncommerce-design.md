@@ -145,6 +145,19 @@ A vertical template (LLM-generated once, validated) defines catalog size range, 
 
 Electronics is roadmap (serial/warranty logic is not in PesoWeb). High-ticket verticals show cash variance and shrinkage at a different scale (a missing high-value item rather than a low-value perishable), supporting the "works across business types" claim.
 
+### Expiry-tracked catalog and FEFO monitoring (added 2026-10-04)
+
+Markdown pricing only has something to act on if the catalog has real expiry data, so the world builder creates it and PesoWeb's existing FEFO runs unchanged.
+
+- **Product flags.** Perishable categories in convenience and grocery/pharmacy get `MonitorExpiry = 1`, `BatchTracking = 1` and an `ExpiryAlertDays` value. Motorcycle parts and sports products do not. With `BatchTracking = 1`, PesoWeb requires `batchNo` and `expiryDate` on every inbound line.
+- **Shelf-life profiles per category** (design parameters proposed by the LLM, validated against plausible ranges, tunable; not measured facts): ready meals 1 to 3 days, bakery 2 to 5, fresh dairy 7 to 21, fresh produce 3 to 7, chilled drinks 30 to 90, packaged drinks 90 to 365, canned and dry goods 365 to 720, medicines and personal care 365 to 1,095.
+- **Receiving.** Stock enters only through real purchase receipts (`POST /api/purchases/addpurchase`) with `batchNo`, `manufacturingDate` and `expiryDate`. Each SKU has several batches with staggered expiry so FEFO has real choices. Supplier lead time drives when batches arrive.
+- **Selling.** `AddSale` consumes batches in FEFO order and writes batch allocations. The simulator never bypasses this.
+- **Monitoring across tenants and branches.** The existing Near-Expiry Monitoring (`NearExpiryBatches`) and Recall Traceability are used as they are. A new read-only `/api/ai/expiry-risk` returns, per branch: batches inside the alert window, quantity, unit cost, **money at risk** (quantity x cost), already expired and written off (**waste in pesos**), and a FEFO compliance check. The Group Command Center rolls this up by company and branch. This is also the markdown engine's primary signal.
+- **Integrity.** A drift check compares `ProductWarehouses.Quantity` with the sum of batch quantities for expiry products, reusing the idea of PesoWeb's `fefo_integrity_checks.sql`.
+- **To confirm in the expiry money-at-risk work (item 5):** how PesoWeb writes off expired batches today. The intent is that expired quantity is written off through a stock adjustment and counted as waste in pesos; if that path does not exist, item 5 adds it.
+- **Extra scenarios for the Scenario Builder:** cold-chain failure (a batch loses shelf life), a supplier delivering short-dated stock, a demand drop on a perishable SKU.
+
 ### Customer population sizing
 
 Customers have two layers. **Archetypes** are LLM-written personality templates (office worker after work, student on a budget, night-shift nurse, parent doing a weekly shop, motorcycle commuter, and so on). **Individuals** are named customers instantiated from an archetype, each with their own wallet, habits, home area, favourite branch and history. Individuals must persist, because repeat visits, loyalty and churn are what Mission Detection looks for.
