@@ -3,3 +3,6 @@ __pycache__/
 
 # user prototype, kept out of the public repo
 ai/smoke/mainsample.py
+
+# sim run state (throwaway credentials, ledgers)
+sim/runs/
