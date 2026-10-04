@@ -35,10 +35,29 @@ Note: the migrations deliberately omit EF's scaffolded `UpdateData` statements f
 
 ## Smoke scripts (`smoke/`)
 
-Status: **written and syntax-checked, not yet run against a live app.** They need PesoWeb running on http://localhost:5061 with SQL Server up and the migrations applied.
+Status: **all pass against a live app on a restored dev-database copy (2026-10-05).** They need PesoWeb running with the migrations applied (default URL `http://localhost:5061`; pass `-BaseUrl` otherwise).
 
 | Script | What it proves |
 |---|---|
-| `onboarding-contract.ps1` | Register, branch creation, and lists the API routes the simulator driver needs |
-| `cash-shift-smoke.ps1` | Open shift, cash movement, close with variance, events and read APIs |
-| `pricing-smoke.ps1 -Yes` | Guardrails, a markdown applied to a real sale, events, ledger. DEV tenant only (creates two real sales). Credentials come from `PESOWEB_EMAIL` / `PESOWEB_PASSWORD`. |
+| `onboarding-contract.ps1` | Register, tier-limited branch creation, and lists the API routes the simulator driver needs |
+| `seed-expiry-tenant.ps1` | Dot-source for `New-ExpiryTenant`: the owner's setup chain (category, brand, unit, tax, supplier, expiry product, purchase with a batch). Documented in `Docs/onboarding-contract.md` |
+| `cash-shift-smoke.ps1` | Open shift, second shift refused, cash movement, close with variance, events and read APIs |
+| `pricing-smoke.ps1 -Email -Password -Yes` | Guardrails refuse an absurd markdown, a markdown prices a real sale (100 down to 80, back to 100 after it ends), events, ledger, expiry risk. DEV tenant only (creates two real sales). Credentials come from parameters or `PESOWEB_EMAIL` / `PESOWEB_PASSWORD`. |
+
+## Live verification environment (no admin rights needed)
+
+PesoWeb databases come from a backup plus SQL scripts, not from running every EF migration (an old migration has a foreign-key cycle, and the history is incomplete). To get a throwaway database on SQL Server LocalDB:
+
+    # 1. start LocalDB and restore the repo's backup as a new database
+    SqlLocalDB start MSSQLLocalDB
+    sqlcmd -S "(localdb)\MSSQLLocalDB" -E -C -Q "RESTORE DATABASE PesoWeb_MissionDev FROM DISK=N'<repo>\DATABASE\PesoWebFullbackup_JUNE302026_v1' WITH MOVE 'heavycoder-Retail2' TO N'<dir>\PesoWeb_MissionDev.mdf', MOVE 'heavycoder-Retail2_log' TO N'<dir>\PesoWeb_MissionDev_log.ldf', REPLACE"
+    # 2. record the two migrations whose objects the backup already has, then apply the pending ones (including ours)
+    sqlcmd -S "(localdb)\MSSQLLocalDB" -E -C -d PesoWeb_MissionDev -Q "INSERT INTO __EFMigrationsHistory VALUES (N'20260511235517_AddChatMessaging',N'7.0.13'),(N'20260514_AddOfflinePinToUsers',N'7.0.13')"
+    $env:ConnectionStrings__default = 'Server=(localdb)\MSSQLLocalDB;Database=PesoWeb_MissionDev;Trusted_Connection=True;TrustServerCertificate=True;MultipleActiveResultSets=true'
+    dotnet ef database update --project Retailo.csproj --no-build
+    # 3. widen the stale constraint so new tenants can register (see Docs/onboarding-contract.md, finding 2)
+    sqlcmd -S "(localdb)\MSSQLLocalDB" -E -C -d PesoWeb_MissionDev -Q "ALTER TABLE Users DROP CONSTRAINT CK_Users_Subscription_Valid; ALTER TABLE Users ADD CONSTRAINT CK_Users_Subscription_Valid CHECK (Subscription IN (1,2,3,4,5))"
+    # 4. run the app against it (same environment variable), then run the smoke scripts
+    dotnet run --project Retailo.csproj --no-build --no-launch-profile --urls http://localhost:5071
+
+Verified on that database: all six new tables and the new columns exist, all 9 owner roles received the 7 new permissions, the tier limits are 5 / 2 / 1 branches, and user 1's `LastLogin` was untouched.

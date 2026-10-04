@@ -25,13 +25,15 @@
 
 ## Execution log and corrections (2026-10-05)
 
-Executed inline in the worktree `D:\git\Retailo_v1_mission` (branch `Retail_MissionCommerceAI`), right after Plan 1. Tasks 1 to 7 are done with **69 tests passing** (Plan 1's 23 plus 46). Task 8 (`pricing-smoke.ps1`) is written and syntax-checked but **not run** because SQL Server was stopped; Task 9 shipped the SQL script (`scripts/20261004_sim_foundation_and_markdown_core.sql`, all six new tables, every migration guarded) and the patch series.
+Executed inline in the worktree `D:\git\Retailo_v1_mission` (branch `Retail_MissionCommerceAI`), right after Plan 1. Tasks 1 to 7 are done with **69 tests passing** (Plan 1's 23 plus 46). Task 8 (`pricing-smoke.ps1`) **passes against a live app** (guardrail refusal, a real sale priced 100 down to 80 and back to 100, events, ledger, expiry risk); Task 9 shipped the SQL script (`scripts/20261004_sim_foundation_and_markdown_core.sql`, all six new tables, every migration guarded) and the patch series.
 
 Corrections found while executing:
 1. `PricingFixtures.NewProduct` needs `BarcodeType` (the in-memory database enforces `[Required]`); the fixture code above is corrected in the source.
 2. Every migration needs its scaffolded `UpdateData` seed noise stripped (see Plan 1's log, correction 3).
 3. Task 6 Step 6: Plan 1 already grants `Cash.*` and `AI.Read` to all `SuperAdmin` roles, so `GrantPricingPermissionsToOwnerRoles` grants only the four `Pricing.*` permissions.
 4. Task 4: the `AddSale` anchor was unique (count 1) and the hook compiled cleanly.
+5. Task 8: `ProductDetail` takes the id in the path (`/api/Inventory/ProductDetail/{id}`). Run the smoke with a freshly seeded tenant: `. seed-expiry-tenant.ps1; $w = New-ExpiryTenant ...; pricing-smoke.ps1 -Email $w.Email -Password $w.Password -Yes`.
+6. Finding: PesoWeb purchase receiving stores `NULL` as the batch cost (and ledger unit cost), so margin floors and waste use the product cost. Fallback is built in; capturing the purchase cost is a recommended follow-up (Plan 3).
 
 ## Global Constraints
 

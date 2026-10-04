@@ -1,5 +1,5 @@
 # Verifies the signup-to-branch part of the onboarding chain and lists the routes the simulator driver needs.
-# NOT YET RUN against a live app (SQL Server was stopped when written). Run it, then finish docs/onboarding-contract.md.
+# Verified against a live app on 2026-10-05 (results in Docs/onboarding-contract.md).
 param([string] $BaseUrl = 'http://localhost:5061')
 . "$PSScriptRoot\common.ps1"
 

@@ -1,4 +1,4 @@
-# Shared helpers for the PesoWeb smoke scripts. NOT YET RUN against a live app (SQL Server was stopped when written).
+# Shared helpers for the PesoWeb smoke scripts. Verified against a live app on 2026-10-05.
 
 function Invoke-PesoApi {
     param(

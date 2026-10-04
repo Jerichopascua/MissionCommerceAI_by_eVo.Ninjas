@@ -1,5 +1,5 @@
 # End-to-end check of guardrails, a markdown applied at the POS, events and the read APIs, through the real API.
-# NOT YET RUN against a live app (SQL Server was stopped when written).
+# Verified against a live app on 2026-10-05: ALL CHECKS PASSED.
 # DEV tenant only: it sets a pricing policy, creates a markdown, ends it, and creates TWO REAL SALES of 1 unit each.
 param(
     [string] $BaseUrl = 'http://localhost:5061',
@@ -51,7 +51,7 @@ if (-not $batch) { throw 'No near-expiry batch with stock in this branch. Receiv
 Write-Host "Using batch $($batch.id) product $($batch.productId) qty $($batch.qtyOnHand) cost $($batch.cost) expires $($batch.expiryDate)"
 
 # 4. Product list price
-$pd = Invoke-PesoApi -BaseUrl $BaseUrl -Token $t -Method GET -Path "/api/Inventory/ProductDetail?id=$($batch.productId)&warehouse=$wh"
+$pd = Invoke-PesoApi -BaseUrl $BaseUrl -Token $t -Method GET -Path "/api/Inventory/ProductDetail/$($batch.productId)?warehouse=$wh"
 $price = if ($pd.price) { [decimal]$pd.price } elseif ($pd.product.price) { [decimal]$pd.product.price } else { 0 }
 if ($price -le 0) { $pd | ConvertTo-Json -Depth 3; throw 'Could not read the product price from ProductDetail; adjust the property name in this script.' }
 Write-Host "List price $price"

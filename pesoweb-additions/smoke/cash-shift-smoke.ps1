@@ -1,5 +1,5 @@
 # End-to-end check of the cash shift, event outbox and ledger endpoints through the real API.
-# NOT YET RUN against a live app (SQL Server was stopped when written).
+# Verified against a live app on 2026-10-05: ALL CHECKS PASSED.
 param([string] $BaseUrl = 'http://localhost:5061')
 . "$PSScriptRoot\common.ps1"
 

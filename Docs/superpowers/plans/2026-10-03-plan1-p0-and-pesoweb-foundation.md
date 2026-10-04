@@ -28,9 +28,9 @@ Executed inline in a **git worktree** `D:\git\Retailo_v1_mission` on branch `Ret
 |---|---|
 | 1 AMD smoke | Scripts and guide written and tested locally; **run by the user on the AMD server** |
 | 2 Harness | Done (commit `91a4331`) |
-| 3 Onboarding contract | **Blocked: SQL Server Express was stopped.** Script written (`onboarding-contract.ps1`), not run |
+| 3 Onboarding contract | **Done, verified live** (`Docs/onboarding-contract.md`; added `seed-expiry-tenant.ps1`) |
 | 4-9 Outbox, cash tables, cash service, cash API, ledger drift, AI API | Done, 23 tests passing |
-| 10 Smoke, SQL script, patches | SQL script and patches done; `cash-shift-smoke.ps1` written and syntax-checked, **not run** |
+| 10 Smoke, SQL script, patches | Done. `cash-shift-smoke.ps1` ALL CHECKS PASSED on a live app; SQL script and patches exported |
 
 Corrections found while executing (the steps below were wrong or incomplete as originally written):
 1. **Task 2:** the main `Retailo.csproj` must exclude the test folder from `Compile`, `None`, `Content` **and** `EmbeddedResource`. The `Compile Remove` line seen earlier was an *uncommitted* change in the user's folder, and without `Content Remove` the Web SDK's `**/*.json` glob copies `Retailo.Tests/bin` into itself recursively.
@@ -39,6 +39,8 @@ Corrections found while executing (the steps below were wrong or incomplete as o
 4. **Task 7:** `SalesController` has no `using GoPosify.Services;`; it must be added.
 5. **Task 7 migration:** `GrantCashAndAiPermissionsToOwnerRoles` grants `Cash.Shift`, `Cash.ShiftList` and `AI.Read` to **every tenant's `SuperAdmin` role** (not only role 1), per the owner's decision that the central company's subsidiaries use `SuperAdmin`.
 6. `dotnet ef migrations add ... --no-build` after a build is the fast path; `migrations add` does not need the database.
+7. **Live verification needs a restored database, not EF migrations.** The migration chain cannot build a database from scratch (foreign-key cycle in an old migration) and its history is incomplete. See "Live verification environment" in `pesoweb-additions/README.md` (restore the repo backup into LocalDB, record two migrations, `ef database update`, widen `CK_Users_Subscription_Valid`).
+8. The route `ProductDetail` takes the id in the path: `/api/Inventory/ProductDetail/{id}`.
 
 ## Global Constraints
 

@@ -218,7 +218,7 @@ Order of work: 1, 8, 3+4, 5, then 12, 10, 11, 13, 9, then 7, then 2 and 6.
 - The per-branch waste target is not stored or enforced in PesoWeb. It stays an objective input for the AI optimizer.
 - PesoWeb had no expired-stock write-off. It now logs `EXPIRED_WRITE_OFF` rows (quantity out at unit cost) to `InventoryTransactions`, so waste in pesos is measured from the ledger and the drift check stays consistent.
 - New permissions (`Cash.*`, `AI.Read`, `Pricing.*`) are granted to every tenant's `SuperAdmin` role by migration; new tenants receive them at registration.
-- Not yet verified against a live database: applying the migrations, the API routes, and the smoke scripts (SQL Server was stopped on the build machine).
+- **Verified live (2026-10-05)** on a restored dev-database copy in SQL Server LocalDB: migrations applied, all routes present, `cash-shift-smoke.ps1` and `pricing-smoke.ps1` pass (a real sale priced 100 down to 80 by a markdown and back to 100 after it ended). See `Docs/onboarding-contract.md` for the verified signup-to-sale chain and four PesoWeb findings (stale subscription check constraint breaks signup, batches carry no purchase cost, tier limits enforced, EF migrations cannot rebuild a database).
 
 **Deferred:** branch type/hours/timezone, auditor and purchasing roles, technical-incident taxonomy, AI assistant UI (Kuya Pedro gets wired to `/api/ai/*` in Phase 3).
 
