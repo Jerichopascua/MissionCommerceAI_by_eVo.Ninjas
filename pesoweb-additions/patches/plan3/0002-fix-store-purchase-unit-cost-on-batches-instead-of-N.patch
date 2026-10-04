@@ -1,0 +1,180 @@
+From 7586af7333c310905ecfc2ec65cb693bb0261100 Mon Sep 17 00:00:00 2001
+From: unknown <jericho.pascua@gmail.com>
+Date: Mon, 5 Oct 2026 03:49:42 +0800
+Subject: [PATCH 2/8] fix: store purchase unit cost on batches instead of NULL
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+---
+ Controllers/PurchasesController.cs       | 22 +++++--
+ Retailo.Tests/InventoryBatchCostTests.cs | 84 ++++++++++++++++++++++++
+ 2 files changed, 100 insertions(+), 6 deletions(-)
+ create mode 100644 Retailo.Tests/InventoryBatchCostTests.cs
+
+diff --git a/Controllers/PurchasesController.cs b/Controllers/PurchasesController.cs
+index b2013b4..9f5012c 100644
+--- a/Controllers/PurchasesController.cs
++++ b/Controllers/PurchasesController.cs
+@@ -36,6 +36,11 @@ namespace GoPosify.Controllers
+             return orderStatus == 1;
+         }
+ 
++        // Cost per BASE unit for a purchase line: total line cost divided by the base quantity received.
++        // Returns null when it cannot be computed, which keeps the old behavior (no batch cost).
++        private static decimal? BaseUnitCost(decimal unitCost, decimal purchaseQty, decimal baseQty)
++            => unitCost > 0m && purchaseQty > 0m && baseQty > 0m ? unitCost * purchaseQty / baseQty : null;
++
+         private async Task ApplyStockDeltaAsync(
+             int warehouseId,
+             int productId,
+@@ -47,7 +52,8 @@ namespace GoPosify.Controllers
+             DateTime? expiryDate = null,
+             DateTime? manufacturingDate = null,
+             string referenceNo = null,
+-            long? referenceId = null)
++            long? referenceId = null,
++            decimal? unitCost = null)
+         {
+             var tenantId = GetCurrentTenantID();
+             var product = await _dbContext.Products
+@@ -96,7 +102,7 @@ namespace GoPosify.Controllers
+                         ProductId = productId,
+                         VariantId = variantId,
+                         Quantity = quantity,
+-                        UnitCost = null,
++                        UnitCost = unitCost,
+                         SupplierId = supplierId,
+                         BatchNo = batchNo,
+                         ExpiryDate = expiryDate,
+@@ -653,7 +659,8 @@ namespace GoPosify.Controllers
+                                     meta?.ExpiryDate,
+                                     meta?.ManufacturingDate,
+                                     null,
+-                                    null);
++                                    null,
++                                    BaseUnitCost(detail.UnitCost, detail.Quantity, quantity));
+                             }
+                             else
+                             {
+@@ -680,7 +687,8 @@ namespace GoPosify.Controllers
+                                     meta?.ExpiryDate,
+                                     meta?.ManufacturingDate,
+                                     null,
+-                                    null);
++                                    null,
++                                    BaseUnitCost(detail.UnitCost, detail.Quantity, quantity));
+                             }
+                             else
+                             {
+@@ -838,7 +846,8 @@ namespace GoPosify.Controllers
+                             meta?.ExpiryDate,
+                             meta?.ManufacturingDate,
+                             $"p-{existingPurchase.Id}",
+-                            existingPurchase.Id);
++                            existingPurchase.Id,
++                            quantity > 0 ? BaseUnitCost(detail.UnitCost, quantityChange, quantity) : null);
+                     }
+ 
+                     // Update the detail with new data
+@@ -898,7 +907,8 @@ namespace GoPosify.Controllers
+                             meta?.ExpiryDate,
+                             meta?.ManufacturingDate,
+                             $"p-{existingPurchase.Id}",
+-                            existingPurchase.Id);
++                            existingPurchase.Id,
++                            BaseUnitCost(detail.UnitCost, detail.Quantity, quantity));
+                     }
+                 }
+ 
+diff --git a/Retailo.Tests/InventoryBatchCostTests.cs b/Retailo.Tests/InventoryBatchCostTests.cs
+new file mode 100644
+index 0000000..83efdee
+--- /dev/null
++++ b/Retailo.Tests/InventoryBatchCostTests.cs
+@@ -0,0 +1,84 @@
++using GoPosify.Services;
++using GoPosify.Services.Interfaces;
++using Retailo.Tests.Support;
++using Xunit;
++
++namespace Retailo.Tests;
++
++// Purchase receiving now passes the line's unit cost to the batch. These tests pin the service behavior it relies on.
++public class InventoryBatchCostTests
++{
++    private static readonly DateTime Expiry = new(2026, 11, 1);
++
++    private static BatchReceiveInput Input(int productId, decimal qty, decimal? cost, string batchNo = "B-1")
++        => new()
++        {
++            TenantId = 5, WarehouseId = 1, ProductId = productId, Quantity = qty, UnitCost = cost,
++            BatchNo = batchNo, ExpiryDate = Expiry, TransactionType = "PURCHASE_IN"
++        };
++
++    private static async Task<(TestAppDbContext db, InventoryBatchService svc, int productId)> CreateAsync()
++    {
++        var db = new TestAppDbContext(TestAppDbContext.NewDbName(), 5);
++        var product = PricingFixtures.NewProduct();
++        db.Products.Add(product);
++        await db.SaveChangesAsync();
++        return (db, new InventoryBatchService(db), product.Id);
++    }
++
++    [Fact]
++    public async Task Receiving_with_a_unit_cost_stores_it_on_the_batch_and_the_ledger()
++    {
++        var (db, svc, productId) = await CreateAsync();
++        await using var _ = db;
++
++        await svc.ReceiveAsync(Input(productId, 20, 42m));
++
++        var batch = Assert.Single(db.ProductBatches.ToList());
++        Assert.Equal(42m, batch.Cost);
++        var tx = Assert.Single(db.InventoryTransactions.ToList());
++        Assert.Equal(42m, tx.UnitCost);
++        Assert.Equal(20m, tx.QtyIn);
++    }
++
++    [Fact]
++    public async Task Receiving_into_an_existing_batch_without_a_cost_keeps_the_old_cost()
++    {
++        var (db, svc, productId) = await CreateAsync();
++        await using var _ = db;
++        await svc.ReceiveAsync(Input(productId, 20, 42m));
++
++        await svc.ReceiveAsync(Input(productId, 5, null));
++
++        var batch = Assert.Single(db.ProductBatches.ToList());
++        Assert.Equal(25m, batch.QtyOnHand);
++        Assert.Equal(42m, batch.Cost);
++    }
++
++    [Fact]
++    public async Task Receiving_into_an_existing_batch_with_a_new_cost_uses_the_latest_cost()
++    {
++        var (db, svc, productId) = await CreateAsync();
++        await using var _ = db;
++        await svc.ReceiveAsync(Input(productId, 20, 42m));
++
++        await svc.ReceiveAsync(Input(productId, 5, 50m));
++
++        var batch = Assert.Single(db.ProductBatches.ToList());
++        Assert.Equal(25m, batch.QtyOnHand);
++        Assert.Equal(50m, batch.Cost);      // latest cost wins; it is not a weighted average
++    }
++
++    [Fact]
++    public async Task A_different_batch_number_gets_its_own_cost()
++    {
++        var (db, svc, productId) = await CreateAsync();
++        await using var _ = db;
++
++        await svc.ReceiveAsync(Input(productId, 10, 40m, "B-1"));
++        await svc.ReceiveAsync(Input(productId, 10, 55m, "B-2"));
++
++        var costs = db.ProductBatches.OrderBy(b => b.BatchNo).Select(b => b.Cost).ToList();
++        Assert.Equal(new decimal?[] { 40m, 55m }, costs);
++    }
++}
+-- 
+2.46.0.windows.1
+

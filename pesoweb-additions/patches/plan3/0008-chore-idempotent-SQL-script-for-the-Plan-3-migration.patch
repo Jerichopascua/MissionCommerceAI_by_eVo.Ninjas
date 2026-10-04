@@ -1,0 +1,212 @@
+From da7b2f58db086d52e778cbd13f10deae69ea423b Mon Sep 17 00:00:00 2001
+From: unknown <jericho.pascua@gmail.com>
+Date: Mon, 5 Oct 2026 04:07:12 +0800
+Subject: [PATCH 8/8] chore: idempotent SQL script for the Plan 3 migrations
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+---
+ scripts/20261005_plan3_features.sql | 192 ++++++++++++++++++++++++++++
+ 1 file changed, 192 insertions(+)
+ create mode 100644 scripts/20261005_plan3_features.sql
+
+diff --git a/scripts/20261005_plan3_features.sql b/scripts/20261005_plan3_features.sql
+new file mode 100644
+index 0000000..5b66230
+--- /dev/null
++++ b/scripts/20261005_plan3_features.sql
+@@ -0,0 +1,192 @@
++﻿BEGIN TRANSACTION;
++GO
++
++IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20261004194644_WidenUsersSubscriptionCheck')
++BEGIN
++
++    IF EXISTS (
++        SELECT 1 FROM sys.check_constraints
++        WHERE name = N'CK_Users_Subscription_Valid'
++          AND parent_object_id = OBJECT_ID(N'dbo.Users')
++          AND definition NOT LIKE N'%(5)%')
++    BEGIN
++        ALTER TABLE dbo.Users DROP CONSTRAINT CK_Users_Subscription_Valid;
++        ALTER TABLE dbo.Users WITH CHECK ADD CONSTRAINT CK_Users_Subscription_Valid CHECK (Subscription IN (1, 2, 3, 4, 5));
++    END
++END;
++GO
++
++IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20261004194644_WidenUsersSubscriptionCheck')
++BEGIN
++    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
++    VALUES (N'20261004194644_WidenUsersSubscriptionCheck', N'7.0.13');
++END;
++GO
++
++COMMIT;
++GO
++
++BEGIN TRANSACTION;
++GO
++
++IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20261004195323_AddExceptionRecords')
++BEGIN
++    CREATE TABLE [ExceptionRecords] (
++        [Id] bigint NOT NULL IDENTITY,
++        [TenantID] int NOT NULL,
++        [WarehouseId] int NULL,
++        [Type] nvarchar(40) NOT NULL,
++        [Severity] nvarchar(10) NOT NULL,
++        [Status] nvarchar(10) NOT NULL,
++        [Source] nvarchar(20) NOT NULL,
++        [DetectedAt] datetime NOT NULL,
++        [ReferenceNo] nvarchar(100) NULL,
++        [Description] nvarchar(500) NULL,
++        [EvidenceJson] nvarchar(max) NULL,
++        [ResolvedAt] datetime NULL,
++        [ResolvedBy] int NULL,
++        [ResolutionNote] nvarchar(300) NULL,
++        CONSTRAINT [PK_ExceptionRecords] PRIMARY KEY ([Id])
++    );
++END;
++GO
++
++IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20261004195323_AddExceptionRecords')
++BEGIN
++    CREATE INDEX [IX_ExceptionRecords_Tenant_Status_Detected] ON [ExceptionRecords] ([TenantID], [Status], [DetectedAt]);
++END;
++GO
++
++IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20261004195323_AddExceptionRecords')
++BEGIN
++    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
++    VALUES (N'20261004195323_AddExceptionRecords', N'7.0.13');
++END;
++GO
++
++COMMIT;
++GO
++
++BEGIN TRANSACTION;
++GO
++
++IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20261004195328_GrantExceptionPermissionsToOwnerRoles')
++BEGIN
++    UPDATE Roles SET Permissions = Permissions + ',Exceptions.View' WHERE Title = 'SuperAdmin' AND (',' + Permissions + ',') NOT LIKE '%,Exceptions.View,%';
++END;
++GO
++
++IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20261004195328_GrantExceptionPermissionsToOwnerRoles')
++BEGIN
++    UPDATE Roles SET Permissions = Permissions + ',Exceptions.Manage' WHERE Title = 'SuperAdmin' AND (',' + Permissions + ',') NOT LIKE '%,Exceptions.Manage,%';
++END;
++GO
++
++IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20261004195328_GrantExceptionPermissionsToOwnerRoles')
++BEGIN
++    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
++    VALUES (N'20261004195328_GrantExceptionPermissionsToOwnerRoles', N'7.0.13');
++END;
++GO
++
++COMMIT;
++GO
++
++BEGIN TRANSACTION;
++GO
++
++IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20261004195623_AddStockCounts')
++BEGIN
++    CREATE TABLE [StockCountLines] (
++        [Id] bigint NOT NULL IDENTITY,
++        [TenantID] int NOT NULL,
++        [StockCountId] int NOT NULL,
++        [ProductId] int NOT NULL,
++        [SystemQty] decimal(18,2) NOT NULL,
++        [CountedQty] decimal(18,2) NULL,
++        [Variance] decimal(18,2) NULL,
++        [Reason] nvarchar(300) NULL,
++        CONSTRAINT [PK_StockCountLines] PRIMARY KEY ([Id])
++    );
++END;
++GO
++
++IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20261004195623_AddStockCounts')
++BEGIN
++    CREATE TABLE [StockCounts] (
++        [Id] int NOT NULL IDENTITY,
++        [TenantID] int NOT NULL,
++        [WarehouseId] int NOT NULL,
++        [Status] nvarchar(20) NOT NULL,
++        [Note] nvarchar(300) NULL,
++        [CreatedBy] int NOT NULL,
++        [CreatedAt] datetime NOT NULL,
++        [ApprovedBy] int NULL,
++        [ApprovedAt] datetime NULL,
++        CONSTRAINT [PK_StockCounts] PRIMARY KEY ([Id])
++    );
++END;
++GO
++
++IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20261004195623_AddStockCounts')
++BEGIN
++    CREATE INDEX [IX_StockCountLines_Tenant_Count] ON [StockCountLines] ([TenantID], [StockCountId]);
++END;
++GO
++
++IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20261004195623_AddStockCounts')
++BEGIN
++    CREATE INDEX [IX_StockCounts_Tenant_Branch_Status] ON [StockCounts] ([TenantID], [WarehouseId], [Status]);
++END;
++GO
++
++IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20261004195623_AddStockCounts')
++BEGIN
++    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
++    VALUES (N'20261004195623_AddStockCounts', N'7.0.13');
++END;
++GO
++
++COMMIT;
++GO
++
++BEGIN TRANSACTION;
++GO
++
++IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20261004195749_AddReceivingReports')
++BEGIN
++    CREATE TABLE [ReceivingReports] (
++        [Id] bigint NOT NULL IDENTITY,
++        [TenantID] int NOT NULL,
++        [WarehouseId] int NOT NULL,
++        [SourceType] nvarchar(20) NOT NULL,
++        [SourceId] int NOT NULL,
++        [ProductId] int NOT NULL,
++        [ExpectedQty] decimal(18,2) NOT NULL,
++        [ReceivedQty] decimal(18,2) NOT NULL,
++        [Difference] decimal(18,2) NOT NULL,
++        [Status] nvarchar(20) NOT NULL,
++        [Note] nvarchar(300) NULL,
++        [ReportedBy] int NOT NULL,
++        [ReportedAt] datetime NOT NULL,
++        CONSTRAINT [PK_ReceivingReports] PRIMARY KEY ([Id])
++    );
++END;
++GO
++
++IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20261004195749_AddReceivingReports')
++BEGIN
++    CREATE INDEX [IX_ReceivingReports_Tenant_Branch_Status] ON [ReceivingReports] ([TenantID], [WarehouseId], [Status]);
++END;
++GO
++
++IF NOT EXISTS(SELECT * FROM [__EFMigrationsHistory] WHERE [MigrationId] = N'20261004195749_AddReceivingReports')
++BEGIN
++    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
++    VALUES (N'20261004195749_AddReceivingReports', N'7.0.13');
++END;
++GO
++
++COMMIT;
++GO
++
+-- 
+2.46.0.windows.1
+

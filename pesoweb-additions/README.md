@@ -44,6 +44,17 @@ Status: **all pass against a live app on a restored dev-database copy (2026-10-0
 | `cash-shift-smoke.ps1` | Open shift, second shift refused, cash movement, close with variance, events and read APIs |
 | `pricing-smoke.ps1 -Email -Password -Yes` | Guardrails refuse an absurd markdown, a markdown prices a real sale (100 down to 80, back to 100 after it ends), events, ledger, expiry risk. DEV tenant only (creates two real sales). Credentials come from parameters or `PESOWEB_EMAIL` / `PESOWEB_PASSWORD`. |
 
+| `plan3-smoke.ps1` | Batch cost stored, cash refund on a sale return, cash-variance and expiry exceptions (idempotent), stock count approval through FEFO with zero ledger drift, short-delivery receiving report, all events, and `Group/Overview` returning 403 to a tenant owner |
+
+Also verified live as the root `SuperAdmin` (user 1) on the restored database: `GET /api/Group/Overview` returned 22 companies and 24 branches with roll-up totals. To repeat it, set user 1's password in the throwaway database only (password hash = lowercase hex MD5 of the UTF-8 password), log in at `/api/Auth/Login`, and call the endpoint.
+
+## Plan 3 additions
+
+- `scripts/20261005_widen_users_subscription_check.sql`: widens the stale signup constraint (idempotent).
+- `scripts/20261005_plan3_features.sql`: idempotent SQL for the five Plan 3 migrations (constraint, exception records, stock counts, receiving reports, exception permission grants) for databases that do not run `dotnet ef database update`.
+- Patches: `patches/plan3` (8 patches, tag `plan3-complete`).
+- New APIs: `Exceptions/*`, `StockCounts/*`, `Receiving/*`, `Group/Overview` (root `SuperAdmin` only), `/api/ai/exceptions`, `/api/ai/receiving-reports`.
+
 ## Live verification environment (no admin rights needed)
 
 PesoWeb databases come from a backup plus SQL scripts, not from running every EF migration (an old migration has a foreign-key cycle, and the history is incomplete). To get a throwaway database on SQL Server LocalDB:
@@ -55,7 +66,7 @@ PesoWeb databases come from a backup plus SQL scripts, not from running every EF
     sqlcmd -S "(localdb)\MSSQLLocalDB" -E -C -d PesoWeb_MissionDev -Q "INSERT INTO __EFMigrationsHistory VALUES (N'20260511235517_AddChatMessaging',N'7.0.13'),(N'20260514_AddOfflinePinToUsers',N'7.0.13')"
     $env:ConnectionStrings__default = 'Server=(localdb)\MSSQLLocalDB;Database=PesoWeb_MissionDev;Trusted_Connection=True;TrustServerCertificate=True;MultipleActiveResultSets=true'
     dotnet ef database update --project Retailo.csproj --no-build
-    # 3. widen the stale constraint so new tenants can register (see Docs/onboarding-contract.md, finding 2)
+    # 3. not needed any more: the WidenUsersSubscriptionCheck migration (applied in step 2) does this. Only for a database that skipped it (see Docs/onboarding-contract.md, finding 2):
     sqlcmd -S "(localdb)\MSSQLLocalDB" -E -C -d PesoWeb_MissionDev -Q "ALTER TABLE Users DROP CONSTRAINT CK_Users_Subscription_Valid; ALTER TABLE Users ADD CONSTRAINT CK_Users_Subscription_Valid CHECK (Subscription IN (1,2,3,4,5))"
     # 4. run the app against it (same environment variable), then run the smoke scripts
     dotnet run --project Retailo.csproj --no-build --no-launch-profile --urls http://localhost:5071

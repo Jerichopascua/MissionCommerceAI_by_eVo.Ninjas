@@ -19,10 +19,10 @@ function Invoke-PesoStatus {
     try {
         $json = if ($null -ne $Body) { $Body | ConvertTo-Json -Depth 6 -Compress } else { '' }
         [System.IO.File]::WriteAllText($tmp, $json, (New-Object System.Text.UTF8Encoding $false))
-        $args = @('-s', '-X', $Method, "$BaseUrl$Path", '-H', "Authorization: Bearer $Token", '-H', 'Content-Type: application/json', '-w', "`n%{http_code}")
-        if ($SimRun) { $args += @('-H', "X-Sim-Run: $SimRun") }
-        if ($null -ne $Body) { $args += @('--data-binary', "@$tmp") }
-        $raw = & curl.exe @args
+        $curlArgs = @('-s', '-X', $Method, "$BaseUrl$Path", '-H', "Authorization: Bearer $Token", '-H', 'Content-Type: application/json', '-w', "`n%{http_code}")
+        if ($SimRun) { $curlArgs += @('-H', "X-Sim-Run: $SimRun") }
+        if ($null -ne $Body) { $curlArgs += @('--data-binary', "@$tmp") }
+        $raw = & curl.exe @curlArgs
         $lines = @($raw)
         $status = [int]$lines[-1]
         $text = if ($lines.Count -gt 1) { ($lines[0..($lines.Count - 2)] -join "`n") } else { '' }

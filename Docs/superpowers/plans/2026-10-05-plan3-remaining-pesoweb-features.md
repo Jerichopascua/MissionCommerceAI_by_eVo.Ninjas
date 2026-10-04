@@ -163,10 +163,10 @@
 
 ## Task 8: Ship Plan 3
 
-- [ ] Smoke: extend `pesoweb-additions/smoke` with `plan3-smoke.ps1` covering tasks 3 to 6 through the real API (refund recorded, exception on cash close, expiry detect, stock count approve, receiving report). Run it and keep it passing.
-- [ ] `dotnet ef migrations script --idempotent` to `scripts/20261005_plan3_features.sql`; confirm the new migrations are guarded.
-- [ ] Export patches since the last export tag (`git tag plan2-complete` before starting, then `git format-patch plan2-complete..HEAD` into `pesoweb-additions/patches/plan3`); scan for secrets.
-- [ ] Update `Docs/onboarding-contract.md` findings (fixed items), `pesoweb-additions/README.md`, the spec implementation notes, and this plan's execution log. Commit in the hackathon repo.
+- [x] Smoke: extend `pesoweb-additions/smoke` with `plan3-smoke.ps1` covering tasks 3 to 6 through the real API (refund recorded, exception on cash close, expiry detect, stock count approve, receiving report). Run it and keep it passing.
+- [x] `dotnet ef migrations script --idempotent` to `scripts/20261005_plan3_features.sql`; confirm the new migrations are guarded.
+- [x] Export patches since the last export tag (`git tag plan2-complete` before starting, then `git format-patch plan2-complete..HEAD` into `pesoweb-additions/patches/plan3`); scan for secrets.
+- [x] Update `Docs/onboarding-contract.md` findings (fixed items), `pesoweb-additions/README.md`, the spec implementation notes, and this plan's execution log. Commit in the hackathon repo.
 
 ## Exit criteria
 
@@ -177,3 +177,11 @@
 - A receiving report records expected versus received.
 - The root `SuperAdmin` gets a read-only company-to-branch overview; tenant owners get 403.
 - All unit tests and `plan3-smoke.ps1` pass.
+
+## Execution log and corrections
+
+- Built 2026-10-05 in `D:\git\Retailo_v1_mission`, tags `plan3-complete`; 119 unit tests pass.
+- `plan3-smoke.ps1` and the earlier smokes pass against a live app on a restored LocalDB copy. `Group/Overview` verified as root `SuperAdmin`: 22 companies, 24 branches, tenant owner gets 403.
+- Windows PowerShell 5.1 returns an empty JSON array as a wrapper object; `ConvertTo-List` in `common.ps1` handles it (the first run showed drift rows = 1 for an empty list).
+- The idempotent script covers only the Plan 3 migrations (generated from the last Plan 2 migration), not the whole chain.
+- Patch secret scan: only the existing seed values inside EF model snapshot diffs matched; nothing new.

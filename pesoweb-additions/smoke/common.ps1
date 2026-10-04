@@ -12,10 +12,10 @@ function Invoke-PesoApi {
     $headers = @{}
     if ($Token)  { $headers['Authorization'] = "Bearer $Token" }
     if ($SimRun) { $headers['X-Sim-Run'] = $SimRun }
-    $args = @{ Uri = "$BaseUrl$Path"; Method = $Method; Headers = $headers; ContentType = 'application/json' }
-    if ($null -ne $Body) { $args['Body'] = ($Body | ConvertTo-Json -Depth 8) }
+    $req = @{ Uri = "$BaseUrl$Path"; Method = $Method; Headers = $headers; ContentType = 'application/json' }
+    if ($null -ne $Body) { $req['Body'] = ($Body | ConvertTo-Json -Depth 8) }
     try {
-        return Invoke-RestMethod @args
+        return Invoke-RestMethod @req
     } catch {
         $detail = ''
         if ($_.Exception.Response) {
@@ -24,6 +24,18 @@ function Invoke-PesoApi {
         }
         throw "API $Method $Path failed: $($_.Exception.Message) $detail"
     }
+}
+
+# Windows PowerShell 5.1 hands back an empty JSON array [] as one wrapper object ({ value = @(); Count = 0 }),
+# so @(...).Count would be 1. Use this to count list results reliably.
+function ConvertTo-List {
+    param($Value)
+    $items = @($Value)
+    if ($items.Count -eq 1) {
+        if ($null -eq $items[0]) { return @() }
+        if ($items[0].PSObject.Properties['value'] -and $items[0].PSObject.Properties['Count'] -and @($items[0].value).Count -eq 0) { return @() }
+    }
+    return $items
 }
 
 function New-SimTenant {

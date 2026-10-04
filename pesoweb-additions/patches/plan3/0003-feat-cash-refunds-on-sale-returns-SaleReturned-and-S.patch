@@ -1,0 +1,219 @@
+From bc14d9aa2cd1f3d8bd53e76743f87febdac4d547 Mon Sep 17 00:00:00 2001
+From: unknown <jericho.pascua@gmail.com>
+Date: Mon, 5 Oct 2026 03:51:35 +0800
+Subject: [PATCH 3/8] feat: cash refunds on sale returns, SaleReturned and
+ SaleDeleted events
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+---
+ Controllers/SalesController.cs     | 15 ++++-
+ Retailo.Tests/CashRefundTests.cs   | 96 ++++++++++++++++++++++++++++++
+ Services/BusinessEventPublisher.cs |  2 +
+ Services/CashShiftService.cs       | 21 +++++++
+ 4 files changed, 133 insertions(+), 1 deletion(-)
+ create mode 100644 Retailo.Tests/CashRefundTests.cs
+
+diff --git a/Controllers/SalesController.cs b/Controllers/SalesController.cs
+index 358f1d0..957c882 100644
+--- a/Controllers/SalesController.cs
++++ b/Controllers/SalesController.cs
+@@ -36,7 +36,8 @@ namespace GoPosify.Controllers
+         private readonly IDocService _docService;
+         private readonly IBusinessEventPublisher _events;
+         private readonly IMarkdownPricingService _markdownPricing;
+-        public SalesController(AppDBContext dbContext, IStockService stockService, IInventoryBatchService inventoryBatchService, ITransactionService transactionService, IDocService docService, IBusinessEventPublisher events, IMarkdownPricingService markdownPricing) : base(dbContext)
++        private readonly ICashShiftService _cashShifts;
++        public SalesController(AppDBContext dbContext, IStockService stockService, IInventoryBatchService inventoryBatchService, ITransactionService transactionService, IDocService docService, IBusinessEventPublisher events, IMarkdownPricingService markdownPricing, ICashShiftService cashShifts) : base(dbContext)
+         {
+             _stockService = stockService;
+             _inventoryBatchService = inventoryBatchService;
+@@ -44,6 +45,7 @@ namespace GoPosify.Controllers
+             _docService = docService;
+             _events = events;
+             _markdownPricing = markdownPricing;
++            _cashShifts = cashShifts;
+         }
+ 
+         private async Task ApplyNonBatchStockDeltaAsync(
+@@ -1318,6 +1320,9 @@ namespace GoPosify.Controllers
+                     }
+                 }
+ 
++                _events.Publish(BusinessEventTypes.SaleDeleted, existing.WarehouseId, $"s-{existing.Id}",
++                    new { saleId = existing.Id, existing.TotalAmount, existing.PaymentMethod, existing.ShiftId }, CurrentDateTime());
++
+                 // Remove the sale and save changes
+                 _dbContext.Sales.Remove(existing);
+                 await _transactionService.DeleteTransaction($"s-{id}");
+@@ -2094,6 +2099,14 @@ namespace GoPosify.Controllers
+ 
+                 await _transactionService.AddTransaction(trans);
+ 
++                // Cash refund from the cashier's open shift (when the original sale was paid in cash) and an event for the AI
++                var originalPayment = await _dbContext.Sales.Where(s => s.Id == newSaleReturn.SaleId).Select(s => s.PaymentMethod).FirstOrDefaultAsync();
++                var refund = await _cashShifts.RecordCashRefundAsync(newSaleReturn.WarehouseId, userId, originalPayment, newSaleReturn.TotalAmount, $"sr-{newSaleReturn.Id}", CurrentDateTime());
++                _events.Publish(BusinessEventTypes.SaleReturned, newSaleReturn.WarehouseId, $"sr-{newSaleReturn.Id}",
++                    new { saleReturnId = newSaleReturn.Id, saleId = newSaleReturn.SaleId, totalAmount = newSaleReturn.TotalAmount, paymentMethod = originalPayment, shiftId = refund?.ShiftId, refundRecorded = refund != null },
++                    CurrentDateTime());
++                await _dbContext.SaveChangesAsync();
++
+                 scope.Complete();
+ 
+                 // Return success response with location header
+diff --git a/Retailo.Tests/CashRefundTests.cs b/Retailo.Tests/CashRefundTests.cs
+new file mode 100644
+index 0000000..914ffba
+--- /dev/null
++++ b/Retailo.Tests/CashRefundTests.cs
+@@ -0,0 +1,96 @@
++using GoPosify.Models;
++using GoPosify.Services;
++using Microsoft.AspNetCore.Http;
++using Retailo.Tests.Support;
++using Xunit;
++
++namespace Retailo.Tests;
++
++public class CashRefundTests
++{
++    private static readonly DateTime T0 = new(2026, 10, 20, 8, 0, 0);
++
++    private static (TestAppDbContext db, CashShiftService svc) Create()
++    {
++        var db = new TestAppDbContext(TestAppDbContext.NewDbName(), 5);
++        var publisher = new BusinessEventPublisher(db, new HttpContextAccessor { HttpContext = new DefaultHttpContext() });
++        return (db, new CashShiftService(db, publisher));
++    }
++
++    [Fact]
++    public async Task Cash_return_on_an_open_shift_records_a_refund_and_lowers_expected_cash()
++    {
++        var (db, svc) = Create();
++        await using var _ = db;
++        var shift = await svc.OpenAsync(1, 77, "POS-01", 1000m, T0);
++
++        var movement = await svc.RecordCashRefundAsync(1, 77, "Cash", 250m, "sr-9", T0.AddHours(1));
++
++        Assert.NotNull(movement);
++        Assert.Equal(CashMovementType.Refund, movement.MovementType);
++        Assert.Equal(250m, movement.Amount);
++        Assert.Equal("sr-9", movement.ReferenceNo);
++        Assert.Equal(shift.Id, movement.ShiftId);
++        Assert.Equal(750m, (await svc.SummarizeAsync(shift.Id)).ExpectedCash);
++    }
++
++    [Fact]
++    public async Task Payment_method_match_is_case_insensitive()
++    {
++        var (db, svc) = Create();
++        await using var _ = db;
++        await svc.OpenAsync(1, 77, "POS-01", 0m, T0);
++
++        Assert.NotNull(await svc.RecordCashRefundAsync(1, 77, "cash", 10m, "sr-1", T0));
++    }
++
++    [Theory]
++    [InlineData("GCash")]
++    [InlineData("Card")]
++    [InlineData(null)]
++    public async Task A_non_cash_original_payment_records_nothing(string method)
++    {
++        var (db, svc) = Create();
++        await using var _ = db;
++        await svc.OpenAsync(1, 77, "POS-01", 0m, T0);
++
++        Assert.Null(await svc.RecordCashRefundAsync(1, 77, method, 100m, "sr-2", T0));
++        Assert.Empty(db.CashMovements.ToList());
++    }
++
++    [Fact]
++    public async Task No_open_shift_for_that_cashier_and_branch_records_nothing()
++    {
++        var (db, svc) = Create();
++        await using var _ = db;
++        var other = await svc.OpenAsync(1, 99, "POS-02", 0m, T0);          // a different cashier is open
++        await svc.OpenAsync(2, 77, "POS-03", 0m, T0);                      // same cashier, other branch
++
++        Assert.Null(await svc.RecordCashRefundAsync(1, 77, "Cash", 100m, "sr-3", T0));
++        Assert.Empty(db.CashMovements.ToList());
++        Assert.Equal(0m, (await svc.SummarizeAsync(other.Id)).CashRefunds);
++    }
++
++    [Theory]
++    [InlineData(0)]
++    [InlineData(-5)]
++    public async Task A_zero_or_negative_amount_records_nothing(int amount)
++    {
++        var (db, svc) = Create();
++        await using var _ = db;
++        await svc.OpenAsync(1, 77, "POS-01", 0m, T0);
++
++        Assert.Null(await svc.RecordCashRefundAsync(1, 77, "Cash", amount, "sr-4", T0));
++    }
++
++    [Fact]
++    public async Task A_closed_shift_is_not_used()
++    {
++        var (db, svc) = Create();
++        await using var _ = db;
++        var shift = await svc.OpenAsync(1, 77, "POS-01", 100m, T0);
++        await svc.CloseAsync(shift.Id, 100m, null, T0.AddHours(8));
++
++        Assert.Null(await svc.RecordCashRefundAsync(1, 77, "Cash", 50m, "sr-5", T0.AddHours(9)));
++    }
++}
+diff --git a/Services/BusinessEventPublisher.cs b/Services/BusinessEventPublisher.cs
+index d64112c..1c3a437 100644
+--- a/Services/BusinessEventPublisher.cs
++++ b/Services/BusinessEventPublisher.cs
+@@ -12,6 +12,8 @@ public static class BusinessEventTypes
+     public const string CashClosed = "CashClosed";
+     public const string PriceChanged = "PriceChanged";
+     public const string InventoryExpired = "InventoryExpired";
++    public const string SaleReturned = "SaleReturned";
++    public const string SaleDeleted = "SaleDeleted";
+ }
+ 
+ public interface IBusinessEventPublisher
+diff --git a/Services/CashShiftService.cs b/Services/CashShiftService.cs
+index 36667b2..23e39c4 100644
+--- a/Services/CashShiftService.cs
++++ b/Services/CashShiftService.cs
+@@ -45,6 +45,10 @@ public interface ICashShiftService
+     Task<CashMovement> AddMovementAsync(int shiftId, string movementType, decimal amount, string reason, string referenceNo, int userId, DateTime now);
+     Task<CashShiftSummary> SummarizeAsync(int shiftId);
+     Task<CashShift> CloseAsync(int shiftId, decimal actualCash, string note, DateTime now);
++
++    // Records a Refund movement on the cashier's OPEN shift in that branch when the original sale was paid in cash.
++    // Returns null (and records nothing) for non-cash sales, zero amounts, or when no open shift exists.
++    Task<CashMovement> RecordCashRefundAsync(int warehouseId, int cashierId, string originalPaymentMethod, decimal amount, string referenceNo, DateTime now);
+ }
+ 
+ public sealed class CashShiftService : ICashShiftService
+@@ -171,6 +175,23 @@ public sealed class CashShiftService : ICashShiftService
+         return shift;
+     }
+ 
++    public async Task<CashMovement> RecordCashRefundAsync(int warehouseId, int cashierId, string originalPaymentMethod, decimal amount, string referenceNo, DateTime now)
++    {
++        if (amount <= 0m || !string.Equals(originalPaymentMethod, "Cash", StringComparison.OrdinalIgnoreCase))
++        {
++            return null;
++        }
++
++        var shift = await _db.CashShifts.FirstOrDefaultAsync(s =>
++            s.CashierId == cashierId && s.WarehouseId == warehouseId && s.Status == CashShiftStatus.Open);
++        if (shift == null)
++        {
++            return null;
++        }
++
++        return await AddMovementAsync(shift.Id, CashMovementType.Refund, amount, "Sale return refunded in cash", referenceNo, cashierId, now);
++    }
++
+     private async Task<CashShift> GetOpenShiftAsync(int shiftId)
+     {
+         var shift = await _db.CashShifts.FirstOrDefaultAsync(s => s.Id == shiftId)
+-- 
+2.46.0.windows.1
+

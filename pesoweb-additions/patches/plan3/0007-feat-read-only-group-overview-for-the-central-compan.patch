@@ -1,0 +1,480 @@
+From 04c7637e8fa4b3f29df098634f6e9903fd8269ad Mon Sep 17 00:00:00 2001
+From: unknown <jericho.pascua@gmail.com>
+Date: Mon, 5 Oct 2026 04:01:10 +0800
+Subject: [PATCH 7/8] feat: read-only group overview for the central company
+ (root SuperAdmin)
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+---
+ Controllers/GroupController.cs             |  43 +++++
+ Program.cs                                 |   1 +
+ Retailo.Tests/GroupOverviewServiceTests.cs | 208 +++++++++++++++++++++
+ Services/GroupOverviewService.cs           | 179 ++++++++++++++++++
+ 4 files changed, 431 insertions(+)
+ create mode 100644 Controllers/GroupController.cs
+ create mode 100644 Retailo.Tests/GroupOverviewServiceTests.cs
+ create mode 100644 Services/GroupOverviewService.cs
+
+diff --git a/Controllers/GroupController.cs b/Controllers/GroupController.cs
+new file mode 100644
+index 0000000..76a8f2b
+--- /dev/null
++++ b/Controllers/GroupController.cs
+@@ -0,0 +1,43 @@
++using GoPosify.Data;
++using GoPosify.Services;
++using Microsoft.AspNetCore.Authorization;
++using Microsoft.AspNetCore.Mvc;
++
++namespace GoPosify.Controllers
++{
++    // Central-company monitoring: every company (tenant) and branch in one read-only view.
++    // Root SuperAdmin only. Never writes.
++    [Route("api/[controller]/[action]")]
++    [ApiController]
++    [Authorize]
++    public class GroupController : BaseController
++    {
++        private readonly IGroupOverviewService _group;
++
++        public GroupController(AppDBContext dbContext, IGroupOverviewService group) : base(dbContext)
++        {
++            _group = group;
++        }
++
++        // GET: api/group/overview
++        [HttpGet]
++        [Authorize(Policy = "Subscription.Tenants")]
++        public async Task<IActionResult> Overview()
++        {
++            try
++            {
++                var current = await GetCurrentUserRecordAsync();
++                if (!IsRootSuperAdmin(current))
++                {
++                    return Forbid();
++                }
++
++                return Ok(await _group.GetAsync(CurrentDateTime()));
++            }
++            catch (Exception ex)
++            {
++                return HandleServerError(ex, "An error occurred while building the group overview.", "Group", "Overview");
++            }
++        }
++    }
++}
+diff --git a/Program.cs b/Program.cs
+index 2e9d712..d4a4606 100644
+--- a/Program.cs
++++ b/Program.cs
+@@ -326,6 +326,7 @@ builder.Services.AddScoped<IExpiryService, ExpiryService>();
+ builder.Services.AddScoped<IExceptionService, ExceptionService>();
+ builder.Services.AddScoped<IStockCountService, StockCountService>();
+ builder.Services.AddScoped<IReceivingService, ReceivingService>();
++builder.Services.AddScoped<IGroupOverviewService, GroupOverviewService>();
+ builder.Services.AddScoped<IDocService, DocService>();
+ builder.Services.AddScoped<ISyncService, SyncService>();
+ 
+diff --git a/Retailo.Tests/GroupOverviewServiceTests.cs b/Retailo.Tests/GroupOverviewServiceTests.cs
+new file mode 100644
+index 0000000..97b611f
+--- /dev/null
++++ b/Retailo.Tests/GroupOverviewServiceTests.cs
+@@ -0,0 +1,208 @@
++using GoPosify.Models;
++using GoPosify.Services;
++using Microsoft.EntityFrameworkCore;
++using Retailo.Tests.Support;
++using Xunit;
++
++namespace Retailo.Tests;
++
++public class GroupOverviewServiceTests
++{
++    private static readonly DateTime Now = new(2026, 10, 20, 15, 0, 0);
++
++    // InMemory enforces [Required]: AppSetting has many required strings.
++    // AppSetting.Id is ValueGeneratedNever, so every company needs its own explicit id.
++    private static AppSetting Setting(int id, string company) => new()
++    {
++        Id = id, CompanyName = company, AppName = "PesoWeb", Logo = "-", AppIcon = "-", Copyright = "-", CompanyEmail = "c@example.test",
++        CompanyPhone = "-", CompanyAddress = "-", CompanyTaxNumber = "-", DefaultTimezone = "Asia/Manila", DefaultLanguage = "en",
++        DefaultCurrency = "PHP", MailProtocol = "-", MailEncryption = "-", MailHost = "-", MailUserName = "-", MailPassword = "-",
++        InvoiceTemplate = "-", ThemeLayout = "-", ThemeColor = "-", ThemeAppBar = "-", ThemeSideBar = "-"
++    };
++
++    private static Warehouse Branch(string name) => new() { WarehouseName = name, Address = "-", Email = "b@example.test", Phone = "-" };
++
++    private static User Owner(string name, int subscription) => new()
++    {
++        FullName = name, UserName = name, Email = name + "@example.test", Password = "x", Subscription = subscription
++    };
++
++    private sealed class World
++    {
++        public string Name;
++        public int A1, A2, B1, B2, C1;       // warehouse ids: company 5 (A1, A2), company 6 (B1, B2), company 7 (C1, idle)
++    }
++
++    private static async Task<World> SeedAsync()
++    {
++        var name = TestAppDbContext.NewDbName();
++        var w = new World { Name = name };
++
++        // company 5 "Alpha"
++        await using (var a = new TestAppDbContext(name, 5))
++        {
++            a.AppSettings.Add(Setting(5, "Alpha"));
++            a.Users.Add(Owner("alpha", 4));
++            var wa1 = Branch("A1"); var wa2 = Branch("A2");
++            a.Warehouses.AddRange(wa1, wa2);
++            var milk = PricingFixtures.NewProduct(price: 10m, cost: 5m);
++            a.Products.Add(milk);
++            await a.SaveChangesAsync();
++            w.A1 = wa1.Id; w.A2 = wa2.Id;
++
++            a.Sales.AddRange(
++                new Sale { WarehouseId = w.A1, CustomerId = 1, PaymentMethod = "Cash", SaleDate = Now.AddHours(-3), TotalAmount = 100m },
++                new Sale { WarehouseId = w.A1, CustomerId = 1, PaymentMethod = "Cash", SaleDate = Now.AddHours(-1), TotalAmount = 50m },
++                new Sale { WarehouseId = w.A1, CustomerId = 1, PaymentMethod = "Cash", SaleDate = Now.AddDays(-1), TotalAmount = 999m });   // yesterday, ignored
++            a.CashShifts.Add(new CashShift { WarehouseId = w.A1, CashierId = 1, Status = CashShiftStatus.Open, OpenedAt = Now.AddHours(-5) });
++            a.ProductBatches.AddRange(
++                PricingFixtures.NewBatch(milk.Id, Now.Date.AddDays(-1), qty: 10, cost: 5, warehouseId: w.A1),   // expired: 50 unwritten
++                PricingFixtures.NewBatch(milk.Id, Now.Date.AddDays(1), qty: 20, cost: 5, warehouseId: w.A1));   // at risk: 100
++            a.InventoryTransactions.Add(new InventoryTransaction { WarehouseId = w.A1, ProductId = milk.Id, TransactionType = ExpiryTransactionTypes.WriteOff, QtyOut = 3m, UnitCost = 5m });   // 15 written off
++            a.ActiveMarkdowns.AddRange(
++                new ActiveMarkdown { WarehouseId = w.A1, ProductId = milk.Id, BatchId = 1, Price = 8m, IsActive = true, StartsAt = Now },
++                new ActiveMarkdown { WarehouseId = w.A1, ProductId = milk.Id, BatchId = 2, Price = 8m, IsActive = false, StartsAt = Now });
++            a.ExceptionRecords.AddRange(
++                new ExceptionRecord { WarehouseId = w.A1, Type = ExceptionTypes.LowStock, Severity = "Low", Status = ExceptionStatus.Open, Source = "System", DetectedAt = Now },
++                new ExceptionRecord { WarehouseId = w.A1, Type = ExceptionTypes.NegativeStock, Severity = "High", Status = ExceptionStatus.Open, Source = "System", DetectedAt = Now },
++                new ExceptionRecord { WarehouseId = w.A1, Type = ExceptionTypes.ExpiredStock, Severity = "High", Status = ExceptionStatus.Resolved, Source = "System", DetectedAt = Now },   // resolved: not counted
++                new ExceptionRecord { WarehouseId = null, Type = ExceptionTypes.CashVariance, Severity = "High", Status = ExceptionStatus.Open, Source = "System", DetectedAt = Now });      // company-level
++            await a.SaveChangesAsync();
++        }
++
++        // company 6 "Beta"
++        await using (var b = new TestAppDbContext(name, 6))
++        {
++            b.AppSettings.Add(Setting(6, "Beta"));
++            b.Users.Add(Owner("beta", 3));
++            var wb1 = Branch("B1"); var wb2 = Branch("B2");
++            b.Warehouses.AddRange(wb1, wb2);
++            var oil = PricingFixtures.NewProduct(price: 100m, cost: 10m);
++            b.Products.Add(oil);
++            await b.SaveChangesAsync();
++            w.B1 = wb1.Id; w.B2 = wb2.Id;
++
++            b.Sales.Add(new Sale { WarehouseId = w.B1, CustomerId = 1, PaymentMethod = "Cash", SaleDate = Now.AddHours(-2), TotalAmount = 70m });
++            b.CashShifts.AddRange(
++                new CashShift { WarehouseId = w.B1, CashierId = 2, Status = CashShiftStatus.Closed, OpenedAt = Now.AddHours(-9), ClosedAt = Now.AddHours(-1), Variance = -30m },
++                new CashShift { WarehouseId = w.B1, CashierId = 3, Status = CashShiftStatus.Closed, OpenedAt = Now.AddDays(-2), ClosedAt = Now.AddDays(-1), Variance = -999m });   // yesterday, ignored
++            b.ProductBatches.Add(PricingFixtures.NewBatch(oil.Id, Now.Date.AddDays(5), qty: 4, cost: 10, warehouseId: w.B1));   // at risk: 40
++            b.ActiveMarkdowns.Add(new ActiveMarkdown { WarehouseId = w.B1, ProductId = oil.Id, BatchId = 3, Price = 80m, IsActive = true, StartsAt = Now });
++            b.ExceptionRecords.Add(new ExceptionRecord { WarehouseId = w.B1, Type = ExceptionTypes.LowStock, Severity = "Low", Status = ExceptionStatus.Open, Source = "System", DetectedAt = Now });
++            await b.SaveChangesAsync();
++        }
++
++        // company 7 "Gamma": one idle branch, no activity
++        await using (var c = new TestAppDbContext(name, 7))
++        {
++            c.AppSettings.Add(Setting(7, "Gamma"));
++            var wc1 = Branch("C1");
++            c.Warehouses.Add(wc1);
++            await c.SaveChangesAsync();
++            w.C1 = wc1.Id;
++        }
++
++        return w;
++    }
++
++    [Fact]
++    public async Task Each_branch_reports_its_own_numbers()
++    {
++        var w = await SeedAsync();
++        await using var db = new TestAppDbContext(w.Name, 1);
++
++        var o = await new GroupOverviewService(db).GetAsync(Now);
++
++        var alpha = o.Tenants.Single(t => t.TenantId == 5);
++        var a1 = alpha.Branches.Single(b => b.WarehouseId == w.A1);
++        Assert.Equal("A1", a1.Name);
++        Assert.Equal(150m, a1.SalesToday);
++        Assert.Equal(2, a1.TransactionsToday);
++        Assert.Equal(1, a1.OpenShifts);
++        Assert.Equal(100m, a1.ExpiryAtRiskPesos);
++        Assert.Equal(50m, a1.ExpiredUnwrittenPesos);
++        Assert.Equal(15m, a1.WrittenOffPesos);
++        Assert.Equal(1, a1.ActiveMarkdowns);
++        Assert.Equal(2, a1.OpenExceptions);
++
++        var b1 = o.Tenants.Single(t => t.TenantId == 6).Branches.Single(b => b.WarehouseId == w.B1);
++        Assert.Equal(70m, b1.SalesToday);
++        Assert.Equal(-30m, b1.CashVarianceToday);          // only the shift closed today
++        Assert.Equal(40m, b1.ExpiryAtRiskPesos);
++        Assert.Equal(1, b1.ActiveMarkdowns);
++        Assert.Equal(1, b1.OpenExceptions);
++    }
++
++    [Fact]
++    public async Task Companies_and_branches_with_no_activity_still_appear_with_zeros()
++    {
++        var w = await SeedAsync();
++        await using var db = new TestAppDbContext(w.Name, 1);
++
++        var o = await new GroupOverviewService(db).GetAsync(Now);
++
++        var gamma = o.Tenants.Single(t => t.TenantId == 7);
++        Assert.Equal("Gamma", gamma.CompanyName);
++        Assert.Equal(1, gamma.BranchCount);
++        var c1 = Assert.Single(gamma.Branches);
++        Assert.Equal(0m, c1.SalesToday);
++        Assert.Equal(0, c1.OpenExceptions);
++        Assert.Equal(0m, gamma.Totals.ExpiryAtRiskPesos);
++        var a2 = o.Tenants.Single(t => t.TenantId == 5).Branches.Single(b => b.WarehouseId == w.A2);
++        Assert.Equal(0m, a2.SalesToday);
++    }
++
++    [Fact]
++    public async Task Company_totals_sum_the_branches_and_include_company_level_exceptions()
++    {
++        var w = await SeedAsync();
++        await using var db = new TestAppDbContext(w.Name, 1);
++
++        var o = await new GroupOverviewService(db).GetAsync(Now);
++
++        var alpha = o.Tenants.Single(t => t.TenantId == 5);
++        Assert.Equal(2, alpha.BranchCount);
++        Assert.Equal(150m, alpha.Totals.SalesToday);
++        Assert.Equal(3, alpha.Totals.OpenExceptions);        // 2 on A1 + 1 not tied to a branch
++        Assert.Equal(4, alpha.Subscription);                 // owner's tier
++        Assert.Equal(3, o.Tenants.Single(t => t.TenantId == 6).Subscription);
++    }
++
++    [Fact]
++    public async Task Group_totals_equal_the_sum_of_the_companies_and_nothing_leaks_across()
++    {
++        var w = await SeedAsync();
++        await using var db = new TestAppDbContext(w.Name, 1);
++
++        var o = await new GroupOverviewService(db).GetAsync(Now);
++
++        Assert.Equal(3, o.Tenants.Count);
++        Assert.Equal(o.Tenants.Sum(t => t.Totals.SalesToday), o.Totals.SalesToday);
++        Assert.Equal(220m, o.Totals.SalesToday);
++        Assert.Equal(3, o.Totals.TransactionsToday);
++        Assert.Equal(140m, o.Totals.ExpiryAtRiskPesos);       // 100 + 40
++        Assert.Equal(2, o.Totals.ActiveMarkdowns);
++        Assert.Equal(4, o.Totals.OpenExceptions);             // 3 (Alpha) + 1 (Beta)
++        Assert.Equal(5, o.Totals.Branches);
++        Assert.Equal(1, o.Totals.OpenShifts);
++        Assert.Equal(-30m, o.Totals.CashVarianceToday);
++        // Alpha's branches never contain Beta's sales
++        Assert.DoesNotContain(o.Tenants.Single(t => t.TenantId == 5).Branches, b => b.WarehouseId == w.B1);
++    }
++
++    [Fact]
++    public async Task The_overview_does_not_modify_any_data()
++    {
++        var w = await SeedAsync();
++        await using var db = new TestAppDbContext(w.Name, 1);
++        int Rows() => db.Sales.IgnoreQueryFilters().Count() + db.CashShifts.IgnoreQueryFilters().Count()
++                      + db.ProductBatches.IgnoreQueryFilters().Count() + db.ExceptionRecords.IgnoreQueryFilters().Count()
++                      + db.InventoryTransactions.IgnoreQueryFilters().Count() + db.ActiveMarkdowns.IgnoreQueryFilters().Count();
++        var before = Rows();
++
++        await new GroupOverviewService(db).GetAsync(Now);
++
++        Assert.Equal(before, Rows());
++        Assert.False(db.ChangeTracker.HasChanges());
++    }
++}
+diff --git a/Services/GroupOverviewService.cs b/Services/GroupOverviewService.cs
+new file mode 100644
+index 0000000..cf45919
+--- /dev/null
++++ b/Services/GroupOverviewService.cs
+@@ -0,0 +1,179 @@
++using GoPosify.Data;
++using GoPosify.Models;
++using Microsoft.EntityFrameworkCore;
++
++namespace GoPosify.Services;
++
++public class OverviewMetrics
++{
++    public decimal SalesToday { get; set; }
++    public int TransactionsToday { get; set; }
++    public int OpenShifts { get; set; }
++    public decimal CashVarianceToday { get; set; }
++    public decimal ExpiryAtRiskPesos { get; set; }
++    public decimal ExpiredUnwrittenPesos { get; set; }
++    public decimal WrittenOffPesos { get; set; }
++    public int ActiveMarkdowns { get; set; }
++    public int OpenExceptions { get; set; }
++
++    public void Add(OverviewMetrics o)
++    {
++        SalesToday += o.SalesToday;
++        TransactionsToday += o.TransactionsToday;
++        OpenShifts += o.OpenShifts;
++        CashVarianceToday += o.CashVarianceToday;
++        ExpiryAtRiskPesos += o.ExpiryAtRiskPesos;
++        ExpiredUnwrittenPesos += o.ExpiredUnwrittenPesos;
++        WrittenOffPesos += o.WrittenOffPesos;
++        ActiveMarkdowns += o.ActiveMarkdowns;
++        OpenExceptions += o.OpenExceptions;
++    }
++}
++
++public sealed class BranchOverview : OverviewMetrics
++{
++    public int WarehouseId { get; set; }
++    public string Name { get; set; }
++}
++
++public sealed class GroupTotals : OverviewMetrics
++{
++    public int Branches { get; set; }
++}
++
++public sealed class TenantOverview
++{
++    public int TenantId { get; set; }
++    public string CompanyName { get; set; }
++    public int Subscription { get; set; }
++    public int BranchCount { get; set; }
++    public GroupTotals Totals { get; set; } = new();
++    public List<BranchOverview> Branches { get; set; } = new();
++}
++
++public sealed class GroupOverview
++{
++    public DateTime GeneratedAt { get; set; }
++    public GroupTotals Totals { get; set; } = new();
++    public List<TenantOverview> Tenants { get; set; } = new();
++}
++
++public interface IGroupOverviewService
++{
++    Task<GroupOverview> GetAsync(DateTime now);
++}
++
++// Read-only roll-up across every tenant (company) and branch for the central company. It bypasses the tenant
++// query filter on purpose, so it must only ever be exposed to the root SuperAdmin. It never writes.
++public sealed class GroupOverviewService : IGroupOverviewService
++{
++    private const int CriticalDays = 2;
++
++    private readonly AppDBContext _db;
++
++    public GroupOverviewService(AppDBContext db)
++    {
++        _db = db;
++    }
++
++    public async Task<GroupOverview> GetAsync(DateTime now)
++    {
++        var today = now.Date;
++        var tomorrow = today.AddDays(1);
++
++        var settings = await _db.AppSettings.IgnoreQueryFilters().AsNoTracking()
++            .Select(s => new { s.TenantID, s.CompanyName }).ToListAsync();
++        var warehouses = await _db.Warehouses.IgnoreQueryFilters().AsNoTracking()
++            .Select(w => new { w.TenantID, w.Id, w.WarehouseName }).ToListAsync();
++        var users = await _db.Users.IgnoreQueryFilters().AsNoTracking()
++            .Select(u => new { u.TenantID, u.Id, u.Subscription }).ToListAsync();
++
++        var sales = await _db.Sales.IgnoreQueryFilters().AsNoTracking()
++            .Where(s => s.SaleDate >= today && s.SaleDate < tomorrow)
++            .GroupBy(s => new { s.TenantID, s.WarehouseId })
++            .Select(g => new { g.Key.TenantID, g.Key.WarehouseId, Total = g.Sum(s => s.TotalAmount), Count = g.Count() })
++            .ToListAsync();
++        var openShifts = await _db.CashShifts.IgnoreQueryFilters().AsNoTracking()
++            .Where(s => s.Status == CashShiftStatus.Open)
++            .GroupBy(s => new { s.TenantID, s.WarehouseId })
++            .Select(g => new { g.Key.TenantID, g.Key.WarehouseId, Count = g.Count() })
++            .ToListAsync();
++        var variances = await _db.CashShifts.IgnoreQueryFilters().AsNoTracking()
++            .Where(s => s.Status == CashShiftStatus.Closed && s.ClosedAt >= today && s.ClosedAt < tomorrow)
++            .GroupBy(s => new { s.TenantID, s.WarehouseId })
++            .Select(g => new { g.Key.TenantID, g.Key.WarehouseId, Total = g.Sum(s => s.Variance ?? 0m) })
++            .ToListAsync();
++        var markdowns = await _db.ActiveMarkdowns.IgnoreQueryFilters().AsNoTracking()
++            .Where(m => m.IsActive)
++            .GroupBy(m => new { m.TenantID, m.WarehouseId })
++            .Select(g => new { g.Key.TenantID, g.Key.WarehouseId, Count = g.Count() })
++            .ToListAsync();
++        var exceptions = await _db.ExceptionRecords.IgnoreQueryFilters().AsNoTracking()
++            .Where(e => e.Status == ExceptionStatus.Open)
++            .GroupBy(e => new { e.TenantID, e.WarehouseId })
++            .Select(g => new { g.Key.TenantID, g.Key.WarehouseId, Count = g.Count() })
++            .ToListAsync();
++        var writeOffs = (await _db.InventoryTransactions.IgnoreQueryFilters().AsNoTracking()
++                .Where(t => t.TransactionType == ExpiryTransactionTypes.WriteOff)
++                .Select(t => new { t.TenantID, t.WarehouseId, t.QtyOut, t.UnitCost }).ToListAsync())
++            .GroupBy(t => new { t.TenantID, t.WarehouseId })
++            .ToDictionary(g => (g.Key.TenantID, g.Key.WarehouseId), g => g.Sum(t => t.QtyOut * (t.UnitCost ?? 0m)));
++
++        var batches = await _db.ProductBatches.IgnoreQueryFilters().AsNoTracking().Include(b => b.Product)
++            .Where(b => b.QtyOnHand > 0 && b.ExpiryDate.HasValue && b.Product.MonitorExpiry).ToListAsync();
++        var atRisk = new Dictionary<(int, int), decimal>();
++        var expiredUnwritten = new Dictionary<(int, int), decimal>();
++        foreach (var b in batches)
++        {
++            var days = (b.ExpiryDate.Value.Date - today).Days;
++            var alert = b.Product.ExpiryAlertDays > 0 ? b.Product.ExpiryAlertDays : 30;
++            var pesos = b.QtyOnHand * (b.Cost ?? b.Product.Cost);
++            var key = (b.TenantID, b.WarehouseId);
++            if (days < 0) expiredUnwritten[key] = expiredUnwritten.GetValueOrDefault(key) + pesos;
++            else if (days <= alert) atRisk[key] = atRisk.GetValueOrDefault(key) + pesos;
++        }
++
++        var names = settings.GroupBy(s => s.TenantID).ToDictionary(g => g.Key, g => g.First().CompanyName);
++        var subscriptions = users.GroupBy(u => u.TenantID).ToDictionary(g => g.Key, g => g.OrderBy(u => u.Id).First().Subscription);
++        var tenantIds = names.Keys.Union(warehouses.Select(w => w.TenantID)).Distinct().OrderBy(x => x).ToList();
++
++        var overview = new GroupOverview { GeneratedAt = now };
++        foreach (var tenantId in tenantIds)
++        {
++            var tenant = new TenantOverview
++            {
++                TenantId = tenantId,
++                CompanyName = names.TryGetValue(tenantId, out var n) ? n : $"Tenant {tenantId}",
++                Subscription = subscriptions.TryGetValue(tenantId, out var sub) ? sub : 5
++            };
++
++            foreach (var w in warehouses.Where(w => w.TenantID == tenantId).OrderBy(w => w.Id))
++            {
++                var key = (tenantId, w.Id);
++                var branch = new BranchOverview { WarehouseId = w.Id, Name = w.WarehouseName };
++                var s = sales.FirstOrDefault(x => x.TenantID == tenantId && x.WarehouseId == w.Id);
++                if (s != null) { branch.SalesToday = s.Total; branch.TransactionsToday = s.Count; }
++                branch.OpenShifts = openShifts.FirstOrDefault(x => x.TenantID == tenantId && x.WarehouseId == w.Id)?.Count ?? 0;
++                branch.CashVarianceToday = variances.FirstOrDefault(x => x.TenantID == tenantId && x.WarehouseId == w.Id)?.Total ?? 0m;
++                branch.ActiveMarkdowns = markdowns.FirstOrDefault(x => x.TenantID == tenantId && x.WarehouseId == w.Id)?.Count ?? 0;
++                branch.OpenExceptions = exceptions.FirstOrDefault(x => x.TenantID == tenantId && x.WarehouseId == w.Id)?.Count ?? 0;
++                branch.ExpiryAtRiskPesos = atRisk.GetValueOrDefault(key);
++                branch.ExpiredUnwrittenPesos = expiredUnwritten.GetValueOrDefault(key);
++                branch.WrittenOffPesos = writeOffs.GetValueOrDefault(key);
++                tenant.Branches.Add(branch);
++                tenant.Totals.Add(branch);
++            }
++
++            // Exceptions that are not tied to a branch still count for the company.
++            tenant.Totals.OpenExceptions += exceptions.Where(x => x.TenantID == tenantId && x.WarehouseId == null).Sum(x => x.Count);
++
++            tenant.BranchCount = tenant.Branches.Count;
++            tenant.Totals.Branches = tenant.BranchCount;
++            overview.Tenants.Add(tenant);
++            overview.Totals.Add(tenant.Totals);
++            overview.Totals.Branches += tenant.BranchCount;
++        }
++
++        return overview;
++    }
++}
+-- 
+2.46.0.windows.1
+
