@@ -1,0 +1,391 @@
+From 40a16b910f150212db8f02c308612d70f7c29a12 Mon Sep 17 00:00:00 2001
+From: unknown <jericho.pascua@gmail.com>
+Date: Mon, 5 Oct 2026 02:21:52 +0800
+Subject: [PATCH 5/7] feat: expiry risk report and expired-stock write-off
+ through the ledger
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+---
+ Program.cs                          |   1 +
+ Retailo.Tests/ExpiryServiceTests.cs | 149 +++++++++++++++++++++
+ Services/ExpiryService.cs           | 200 ++++++++++++++++++++++++++++
+ 3 files changed, 350 insertions(+)
+ create mode 100644 Retailo.Tests/ExpiryServiceTests.cs
+ create mode 100644 Services/ExpiryService.cs
+
+diff --git a/Program.cs b/Program.cs
+index f4b8268..818c3a5 100644
+--- a/Program.cs
++++ b/Program.cs
+@@ -322,6 +322,7 @@ builder.Services.AddScoped<ICashShiftService, CashShiftService>();
+ builder.Services.AddScoped<ILedgerService, LedgerService>();
+ builder.Services.AddScoped<IMarkdownService, MarkdownService>();
+ builder.Services.AddScoped<IMarkdownPricingService, MarkdownPricingService>();
++builder.Services.AddScoped<IExpiryService, ExpiryService>();
+ builder.Services.AddScoped<IDocService, DocService>();
+ builder.Services.AddScoped<ISyncService, SyncService>();
+ 
+diff --git a/Retailo.Tests/ExpiryServiceTests.cs b/Retailo.Tests/ExpiryServiceTests.cs
+new file mode 100644
+index 0000000..c91fe16
+--- /dev/null
++++ b/Retailo.Tests/ExpiryServiceTests.cs
+@@ -0,0 +1,149 @@
++using GoPosify.Models;
++using GoPosify.Services;
++using Retailo.Tests.Support;
++using Xunit;
++
++namespace Retailo.Tests;
++
++public class ExpiryServiceTests
++{
++    private static readonly DateTime Today = new(2026, 10, 20);
++
++    private static ExpiryService Svc(TestAppDbContext db)
++        => new(db, PricingFixtures.Publisher(db), new InventoryBatchService(db));
++
++    private static async Task<(TestAppDbContext db, Product monitored, Product plain)> SeedAsync()
++    {
++        var db = new TestAppDbContext(TestAppDbContext.NewDbName(), 5);
++        var monitored = PricingFixtures.NewProduct(price: 10m, cost: 5m);
++        var plain = PricingFixtures.NewProduct(price: 10m, cost: 5m, monitorExpiry: false);
++        db.Products.AddRange(monitored, plain);
++        await db.SaveChangesAsync();
++        return (db, monitored, plain);
++    }
++
++    [Fact]
++    public async Task Risk_report_classifies_batches_and_sums_money_at_risk()
++    {
++        var (db, p, q) = await SeedAsync();
++        await using var _ = db;
++        db.ProductBatches.AddRange(
++            PricingFixtures.NewBatch(p.Id, Today.AddDays(-1), qty: 10, cost: 5),    // expired
++            PricingFixtures.NewBatch(p.Id, Today.AddDays(1), qty: 20, cost: 5),     // critical
++            PricingFixtures.NewBatch(p.Id, Today.AddDays(10), qty: 30, cost: 5),    // expiring soon
++            PricingFixtures.NewBatch(p.Id, Today.AddDays(60), qty: 40, cost: 5),    // normal, excluded
++            PricingFixtures.NewBatch(p.Id, Today.AddDays(1), qty: 0, cost: 5),      // empty, excluded
++            PricingFixtures.NewBatch(q.Id, Today.AddDays(1), qty: 50, cost: 5));    // not expiry-tracked, excluded
++        await db.SaveChangesAsync();
++
++        var report = await Svc(db).GetRiskAsync(null, Today);
++
++        Assert.Equal(new[] { ExpiryStatus.Expired, ExpiryStatus.Critical, ExpiryStatus.ExpiringSoon }, report.Batches.Select(b => b.Status).ToArray());
++        Assert.Equal(new[] { -1, 1, 10 }, report.Batches.Select(b => b.DaysLeft).ToArray());
++        Assert.Equal(new[] { 50m, 100m, 150m }, report.Batches.Select(b => b.MoneyAtRisk).ToArray());
++        var s = Assert.Single(report.Summaries);
++        Assert.Equal(250m, s.AtRiskPesos);
++        Assert.Equal(50m, s.ExpiredUnwrittenPesos);
++        Assert.Equal(0m, s.WrittenOffPesos);
++        Assert.Equal(2, s.BatchesAtRisk);
++    }
++
++    [Fact]
++    public async Task Cost_falls_back_to_the_product_cost_when_the_batch_has_none()
++    {
++        var (db, p, _) = await SeedAsync();
++        await using var __ = db;
++        var b = PricingFixtures.NewBatch(p.Id, Today.AddDays(5), qty: 10);
++        b.Cost = null;
++        db.ProductBatches.Add(b);
++        await db.SaveChangesAsync();
++
++        var row = Assert.Single((await Svc(db).GetRiskAsync(null, Today)).Batches);
++
++        Assert.Equal(50m, row.MoneyAtRisk);     // 10 x product cost 5
++    }
++
++    [Fact]
++    public async Task Branch_filter_limits_the_report()
++    {
++        var (db, p, _) = await SeedAsync();
++        await using var _ = db;
++        db.ProductBatches.AddRange(
++            PricingFixtures.NewBatch(p.Id, Today.AddDays(1), qty: 10, cost: 5, warehouseId: 1),
++            PricingFixtures.NewBatch(p.Id, Today.AddDays(1), qty: 7, cost: 5, warehouseId: 2));
++        await db.SaveChangesAsync();
++
++        var report = await Svc(db).GetRiskAsync(new[] { 2 }, Today);
++
++        var row = Assert.Single(report.Batches);
++        Assert.Equal(2, row.WarehouseId);
++        Assert.Equal(35m, Assert.Single(report.Summaries).AtRiskPesos);
++    }
++
++    [Fact]
++    public async Task Write_off_zeroes_expired_batches_logs_the_loss_and_fixes_the_cache()
++    {
++        var (db, p, _) = await SeedAsync();
++        await using var _ = db;
++        var expired = PricingFixtures.NewBatch(p.Id, Today.AddDays(-1), qty: 10, cost: 5);
++        var live = PricingFixtures.NewBatch(p.Id, Today.AddDays(1), qty: 20, cost: 5);
++        db.ProductBatches.AddRange(expired, live);
++        db.ProductWarehouses.Add(new ProductWarehouse { WarehouseId = 1, ProductId = p.Id, Quantity = 30 });
++        await db.SaveChangesAsync();
++        db.ActiveMarkdowns.Add(new ActiveMarkdown { WarehouseId = 1, ProductId = p.Id, BatchId = expired.Id, Price = 8m, IsActive = true, StartsAt = Today.AddDays(-3) });
++        await db.SaveChangesAsync();
++
++        var result = await Svc(db).WriteOffExpiredAsync(null, Today.AddHours(6), 9);
++
++        Assert.Equal(1, result.Batches);
++        Assert.Equal(10m, result.Units);
++        Assert.Equal(50m, result.Pesos);
++        Assert.Equal(0m, db.ProductBatches.Single(b => b.Id == expired.Id).QtyOnHand);
++        Assert.Equal(20m, db.ProductBatches.Single(b => b.Id == live.Id).QtyOnHand);
++        var tx = Assert.Single(db.InventoryTransactions.ToList());
++        Assert.Equal(ExpiryTransactionTypes.WriteOff, tx.TransactionType);
++        Assert.Equal(10m, tx.QtyOut);
++        Assert.Equal(5m, tx.UnitCost);
++        Assert.Equal(expired.Id, tx.BatchId);
++        Assert.Equal(20m, db.ProductWarehouses.Single().Quantity);     // cache = sum of batches
++        Assert.False(db.ActiveMarkdowns.Single().IsActive);
++        Assert.Contains(db.BusinessEvents.ToList(), e => e.EventType == BusinessEventTypes.InventoryExpired);
++    }
++
++    [Fact]
++    public async Task Write_off_is_idempotent_and_waste_shows_in_the_risk_summary()
++    {
++        var (db, p, _) = await SeedAsync();
++        await using var _ = db;
++        db.ProductBatches.Add(PricingFixtures.NewBatch(p.Id, Today.AddDays(-2), qty: 10, cost: 5));
++        await db.SaveChangesAsync();
++        var svc = Svc(db);
++
++        var first = await svc.WriteOffExpiredAsync(null, Today, 9);
++        var second = await svc.WriteOffExpiredAsync(null, Today, 9);
++
++        Assert.Equal(50m, first.Pesos);
++        Assert.Equal(0, second.Batches);
++        Assert.Single(db.InventoryTransactions.ToList());
++        var summary = Assert.Single((await svc.GetRiskAsync(null, Today)).Summaries);
++        Assert.Equal(50m, summary.WrittenOffPesos);
++        Assert.Equal(0m, summary.ExpiredUnwrittenPesos);
++    }
++
++    [Fact]
++    public async Task Write_off_respects_the_branch_filter()
++    {
++        var (db, p, _) = await SeedAsync();
++        await using var _ = db;
++        db.ProductBatches.AddRange(
++            PricingFixtures.NewBatch(p.Id, Today.AddDays(-1), qty: 10, cost: 5, warehouseId: 1),
++            PricingFixtures.NewBatch(p.Id, Today.AddDays(-1), qty: 4, cost: 5, warehouseId: 2));
++        await db.SaveChangesAsync();
++
++        var result = await Svc(db).WriteOffExpiredAsync(new[] { 2 }, Today, 9);
++
++        Assert.Equal(1, result.Batches);
++        Assert.Equal(20m, result.Pesos);
++        Assert.Equal(10m, db.ProductBatches.Single(b => b.WarehouseId == 1).QtyOnHand);
++    }
++}
+diff --git a/Services/ExpiryService.cs b/Services/ExpiryService.cs
+new file mode 100644
+index 0000000..f8fad00
+--- /dev/null
++++ b/Services/ExpiryService.cs
+@@ -0,0 +1,200 @@
++using GoPosify.Data;
++using GoPosify.Models;
++using GoPosify.Services.Interfaces;
++using Microsoft.EntityFrameworkCore;
++
++namespace GoPosify.Services;
++
++public static class ExpiryStatus
++{
++    public const string Normal = "Normal";
++    public const string ExpiringSoon = "ExpiringSoon";
++    public const string Critical = "Critical";
++    public const string Expired = "Expired";
++}
++
++public static class ExpiryTransactionTypes
++{
++    public const string WriteOff = "EXPIRED_WRITE_OFF";
++}
++
++public sealed class ExpiryBatchRow
++{
++    public int WarehouseId { get; set; }
++    public int ProductId { get; set; }
++    public string ProductName { get; set; }
++    public long BatchId { get; set; }
++    public string BatchNo { get; set; }
++    public DateTime ExpiryDate { get; set; }
++    public int DaysLeft { get; set; }
++    public decimal QtyOnHand { get; set; }
++    public decimal UnitCost { get; set; }
++    public decimal MoneyAtRisk { get; set; }
++    public string Status { get; set; }
++}
++
++public sealed class ExpiryRiskSummary
++{
++    public int WarehouseId { get; set; }
++    public decimal AtRiskPesos { get; set; }            // ExpiringSoon + Critical, still sellable
++    public decimal ExpiredUnwrittenPesos { get; set; }  // expired but still sitting in stock
++    public decimal WrittenOffPesos { get; set; }        // already written off (waste)
++    public int BatchesAtRisk { get; set; }
++}
++
++public sealed class ExpiryRiskReport
++{
++    public List<ExpiryBatchRow> Batches { get; set; } = new();
++    public List<ExpiryRiskSummary> Summaries { get; set; } = new();
++}
++
++public sealed class WriteOffResult
++{
++    public int Batches { get; set; }
++    public decimal Units { get; set; }
++    public decimal Pesos { get; set; }
++}
++
++public interface IExpiryService
++{
++    Task<ExpiryRiskReport> GetRiskAsync(IReadOnlyCollection<int> warehouseIds, DateTime today, int criticalDays = 2);
++    Task<WriteOffResult> WriteOffExpiredAsync(IReadOnlyCollection<int> warehouseIds, DateTime now, int? updatedBy);
++}
++
++public sealed class ExpiryService : IExpiryService
++{
++    private readonly AppDBContext _db;
++    private readonly IBusinessEventPublisher _events;
++    private readonly IInventoryBatchService _batches;
++
++    public ExpiryService(AppDBContext db, IBusinessEventPublisher events, IInventoryBatchService batches)
++    {
++        _db = db;
++        _events = events;
++        _batches = batches;
++    }
++
++    public async Task<ExpiryRiskReport> GetRiskAsync(IReadOnlyCollection<int> warehouseIds, DateTime today, int criticalDays = 2)
++    {
++        var ids = warehouseIds?.ToArray();
++
++        var q = _db.ProductBatches.AsNoTracking().Include(b => b.Product)
++            .Where(b => b.QtyOnHand > 0 && b.ExpiryDate.HasValue && b.Product.MonitorExpiry);
++        if (ids != null) q = q.Where(b => ids.Contains(b.WarehouseId));
++        var batches = await q.ToListAsync();
++
++        var rows = new List<ExpiryBatchRow>();
++        foreach (var b in batches)
++        {
++            var days = (b.ExpiryDate.Value.Date - today.Date).Days;
++            var alert = b.Product.ExpiryAlertDays > 0 ? b.Product.ExpiryAlertDays : 30;
++            var status = days < 0 ? ExpiryStatus.Expired
++                : days <= criticalDays ? ExpiryStatus.Critical
++                : days <= alert ? ExpiryStatus.ExpiringSoon
++                : ExpiryStatus.Normal;
++            if (status == ExpiryStatus.Normal)
++            {
++                continue;
++            }
++
++            var cost = b.Cost ?? b.Product.Cost;
++            rows.Add(new ExpiryBatchRow
++            {
++                WarehouseId = b.WarehouseId, ProductId = b.ProductId, ProductName = b.Product.ProductName,
++                BatchId = b.Id, BatchNo = b.BatchNo, ExpiryDate = b.ExpiryDate.Value, DaysLeft = days,
++                QtyOnHand = b.QtyOnHand, UnitCost = cost, MoneyAtRisk = b.QtyOnHand * cost, Status = status
++            });
++        }
++
++        rows = rows.OrderBy(r => r.DaysLeft).ThenBy(r => r.BatchId).ToList();
++
++        var wq = _db.InventoryTransactions.AsNoTracking().Where(t => t.TransactionType == ExpiryTransactionTypes.WriteOff);
++        if (ids != null) wq = wq.Where(t => ids.Contains(t.WarehouseId));
++        var writeOffs = (await wq.Select(t => new { t.WarehouseId, t.QtyOut, t.UnitCost }).ToListAsync())
++            .GroupBy(t => t.WarehouseId)
++            .ToDictionary(g => g.Key, g => g.Sum(t => t.QtyOut * (t.UnitCost ?? 0m)));
++
++        var warehouseKeys = rows.Select(r => r.WarehouseId).Union(writeOffs.Keys).Distinct().OrderBy(x => x);
++        var report = new ExpiryRiskReport { Batches = rows };
++        foreach (var wh in warehouseKeys)
++        {
++            var mine = rows.Where(r => r.WarehouseId == wh).ToList();
++            report.Summaries.Add(new ExpiryRiskSummary
++            {
++                WarehouseId = wh,
++                AtRiskPesos = mine.Where(r => r.Status != ExpiryStatus.Expired).Sum(r => r.MoneyAtRisk),
++                ExpiredUnwrittenPesos = mine.Where(r => r.Status == ExpiryStatus.Expired).Sum(r => r.MoneyAtRisk),
++                WrittenOffPesos = writeOffs.TryGetValue(wh, out var w) ? w : 0m,
++                BatchesAtRisk = mine.Count(r => r.Status != ExpiryStatus.Expired)
++            });
++        }
++
++        return report;
++    }
++
++    public async Task<WriteOffResult> WriteOffExpiredAsync(IReadOnlyCollection<int> warehouseIds, DateTime now, int? updatedBy)
++    {
++        var ids = warehouseIds?.ToArray();
++        var today = now.Date;
++        var tenantId = _db.CurrentTenantId > 0 ? _db.CurrentTenantId : 1;
++
++        var q = _db.ProductBatches.Include(b => b.Product)
++            .Where(b => b.QtyOnHand > 0 && b.ExpiryDate.HasValue && b.ExpiryDate.Value < today && b.Product.MonitorExpiry);
++        if (ids != null) q = q.Where(b => ids.Contains(b.WarehouseId));
++        var expired = await q.ToListAsync();
++
++        var result = new WriteOffResult();
++        if (expired.Count == 0)
++        {
++            return result;
++        }
++
++        var cacheKeys = new HashSet<(int Warehouse, int Product, int? Variant)>();
++        foreach (var b in expired)
++        {
++            var qty = b.QtyOnHand;
++            var cost = b.Cost ?? b.Product.Cost;
++            b.QtyOnHand = 0m;
++
++            _db.InventoryTransactions.Add(new InventoryTransaction
++            {
++                TransactionType = ExpiryTransactionTypes.WriteOff,
++                ReferenceNo = $"expiry-{today:yyyyMMdd}",
++                WarehouseId = b.WarehouseId,
++                ProductId = b.ProductId,
++                VariantId = b.VariantId,
++                BatchId = b.Id,
++                QtyIn = 0m,
++                QtyOut = qty,
++                UnitCost = cost,
++                TransactionDate = now,
++                UpdatedBy = updatedBy
++            });
++
++            _events.Publish(BusinessEventTypes.InventoryExpired, b.WarehouseId, $"expiry-{b.Id}",
++                new { batchId = b.Id, productId = b.ProductId, quantity = qty, unitCost = cost, pesos = qty * cost }, now);
++
++            cacheKeys.Add((b.WarehouseId, b.ProductId, b.VariantId));
++            result.Batches++;
++            result.Units += qty;
++            result.Pesos += qty * cost;
++        }
++
++        var expiredBatchIds = expired.Select(b => b.Id).ToList();
++        var markdowns = await _db.ActiveMarkdowns.Where(m => m.IsActive && expiredBatchIds.Contains(m.BatchId)).ToListAsync();
++        foreach (var m in markdowns)
++        {
++            m.IsActive = false;
++            m.EndsAt = now;
++        }
++
++        await _db.SaveChangesAsync();
++
++        foreach (var k in cacheKeys)
++        {
++            await _batches.SyncWarehouseCacheAsync(tenantId, k.Warehouse, k.Product, k.Variant);
++        }
++
++        return result;
++    }
++}
+-- 
+2.46.0.windows.1
+

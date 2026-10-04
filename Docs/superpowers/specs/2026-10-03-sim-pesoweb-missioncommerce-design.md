@@ -79,6 +79,7 @@ CORPORATE GROUP
 - Companies have **many branches**. The Business tier caps at 5 branches, so group companies use an **Enterprise** tier row in the editable `SubscriptionTierLimits` table (a data change, not code).
 - **Expansion is simulated:** a company adds branches mid-run (`AddWarehouse`, assortment copy, staff, opening stock through a purchase receipt). Scenario example: "Company C opens 3 branches in week 2." The markdown engine and monitoring must pick up new branches without restart.
 - **Group Command Center:** a read-only roll-up from group to company to branch (sales, margin, waste in pesos, near-expiry money at risk, markdowns executed, guardrail blocks, exceptions). Cross-tenant reads require explicit group membership, are read-only, are filtered to the group's tenant list, and are audited. They never write.
+- **Central company (confirmed 2026-10-05):** the platform is owned by one central company; its subsidiaries are the tenants. The central company is the root `SuperAdmin` tenant (TenantID 1), which already supports cross-tenant operation (Act-As-Tenant, Subscription.Tenants). Plan 3 decides whether the group roll-up reuses that root access (no new tables) or adds a thin `CorporateGroup` link; both are read-only.
 - The simulated group owner is a "conglomerate" owner archetype that plans several companies at once, each with its own vertical mix and branch count.
 
 ### Agentic markdown pricing (PesoProfit)
@@ -207,6 +208,17 @@ Existing: `TenantID` everywhere, `Warehouse` (branch), `Role`, `AuditLog`, `Inve
 **Important:** the markdown API never trusts the caller: a price below the hard margin floor is rejected even when the AI proposes it. Exception Center rules are intentionally basic (low stock, expiry alert, negative stock, cash variance on close). Pattern-level cash anomalies, shrinkage and abnormal refunds are **not** detected by PesoWeb. The AI layer finds them. The "missed" column is therefore real output, not slide content.
 
 Order of work: 1, 8, 3+4, 5, then 12, 10, 11, 13, 9, then 7, then 2 and 6.
+
+**Implementation notes (built 2026-10-05 on branch `Retail_MissionCommerceAI`; items 1, 3 (derived), 5, 8, 10, 11, 12, 13 are code-complete with 69 unit tests):**
+- Item 3 is a derived ledger-vs-on-hand drift check (`/api/ai/ledger-drift`) instead of storing `QtyBefore/QtyAfter` on each ledger row. The ledger is append-only, so the running balance is derivable without touching the four existing write paths. Valid for tenants stocked through purchases (all simulator tenants).
+- Item 8's read API uses the normal JWT and a new `AI.Read` permission, not a separate API key.
+- Cash refunds in the expected-cash formula come from `CashMovement` rows of type `Refund`; sale returns create them automatically once item 2 is built.
+- Markdowns are per batch and applied inside `AddSale` after FEFO consumption, so a line spanning a marked-down batch and a fresh batch gets the quantity-weighted price. Non-variant products only.
+- All guardrail checks use the net price (list price after the product's own discount percent, before tax). The hard margin floor, maximum discount and change-rate limit can never be waived; only the soft floor and approval mode can be approved by a person. Hard limits are re-checked at sale time, and autonomy `Off` is a kill switch for existing markdowns. The default is `Off`.
+- The per-branch waste target is not stored or enforced in PesoWeb. It stays an objective input for the AI optimizer.
+- PesoWeb had no expired-stock write-off. It now logs `EXPIRED_WRITE_OFF` rows (quantity out at unit cost) to `InventoryTransactions`, so waste in pesos is measured from the ledger and the drift check stays consistent.
+- New permissions (`Cash.*`, `AI.Read`, `Pricing.*`) are granted to every tenant's `SuperAdmin` role by migration; new tenants receive them at registration.
+- Not yet verified against a live database: applying the migrations, the API routes, and the smoke scripts (SQL Server was stopped on the build machine).
 
 **Deferred:** branch type/hours/timezone, auditor and purchasing roles, technical-incident taxonomy, AI assistant UI (Kuya Pedro gets wired to `/api/ai/*` in Phase 3).
 

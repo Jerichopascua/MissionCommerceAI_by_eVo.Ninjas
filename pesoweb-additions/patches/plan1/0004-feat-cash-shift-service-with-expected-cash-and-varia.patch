@@ -1,0 +1,396 @@
+From df5146a32a0b79fe5d81a7fc1101066854a524e7 Mon Sep 17 00:00:00 2001
+From: unknown <jericho.pascua@gmail.com>
+Date: Mon, 5 Oct 2026 02:12:50 +0800
+Subject: [PATCH 4/7] feat: cash shift service with expected cash and variance
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+---
+ Program.cs                             |   1 +
+ Retailo.Tests/CashShiftServiceTests.cs | 170 +++++++++++++++++++++++
+ Services/CashShiftService.cs           | 185 +++++++++++++++++++++++++
+ 3 files changed, 356 insertions(+)
+ create mode 100644 Retailo.Tests/CashShiftServiceTests.cs
+ create mode 100644 Services/CashShiftService.cs
+
+diff --git a/Program.cs b/Program.cs
+index 5771f89..6848441 100644
+--- a/Program.cs
++++ b/Program.cs
+@@ -318,6 +318,7 @@ builder.Services.AddScoped<ITransactionService, TransactionService>();
+ builder.Services.AddScoped<IStockService, StockService>();
+ builder.Services.AddScoped<IInventoryBatchService, InventoryBatchService>();
+ builder.Services.AddScoped<IBusinessEventPublisher, BusinessEventPublisher>();
++builder.Services.AddScoped<ICashShiftService, CashShiftService>();
+ builder.Services.AddScoped<IDocService, DocService>();
+ builder.Services.AddScoped<ISyncService, SyncService>();
+ 
+diff --git a/Retailo.Tests/CashShiftServiceTests.cs b/Retailo.Tests/CashShiftServiceTests.cs
+new file mode 100644
+index 0000000..172d1e5
+--- /dev/null
++++ b/Retailo.Tests/CashShiftServiceTests.cs
+@@ -0,0 +1,170 @@
++using GoPosify.Models;
++using GoPosify.Services;
++using Microsoft.AspNetCore.Http;
++using Retailo.Tests.Support;
++using Xunit;
++
++namespace Retailo.Tests;
++
++public class CashShiftServiceTests
++{
++    private static readonly DateTime T0 = new(2026, 10, 20, 8, 0, 0);
++
++    private static (TestAppDbContext db, CashShiftService svc) Create(int tenantId = 5)
++    {
++        var db = new TestAppDbContext(TestAppDbContext.NewDbName(), tenantId);
++        var publisher = new BusinessEventPublisher(db, new HttpContextAccessor { HttpContext = new DefaultHttpContext() });
++        return (db, new CashShiftService(db, publisher));
++    }
++
++    private static Sale CashSale(int shiftId, decimal total, decimal paid, string method = "Cash")
++        => new()
++        {
++            WarehouseId = 1, CustomerId = 1, SaleDate = T0, PaymentMethod = method, ShiftId = shiftId,
++            TotalAmount = total, PaidAmount = paid, ChangeDue = paid > total ? paid - total : 0
++        };
++
++    [Fact]
++    public void Calculator_matches_the_deck_example()
++    {
++        var expected = CashShiftCalculator.ExpectedCash(10000m, 35000m, 0m, 2000m, 0m);
++        Assert.Equal(43000m, expected);
++        Assert.Equal(-1500m, CashShiftCalculator.Variance(41500m, expected));
++    }
++
++    [Fact]
++    public async Task Open_creates_open_shift_and_publishes_CashOpened()
++    {
++        var (db, svc) = Create();
++        await using var _ = db;
++
++        var shift = await svc.OpenAsync(1, 77, "POS-01", 10000m, T0);
++
++        Assert.Equal(CashShiftStatus.Open, shift.Status);
++        Assert.Equal(10000m, shift.OpeningCash);
++        Assert.Equal(5, shift.TenantID);
++        var ev = Assert.Single(db.BusinessEvents.ToList());
++        Assert.Equal(BusinessEventTypes.CashOpened, ev.EventType);
++        Assert.Equal($"shift-{shift.Id}", ev.ReferenceNo);
++    }
++
++    [Fact]
++    public async Task Open_rejects_second_open_shift_for_the_same_cashier()
++    {
++        var (db, svc) = Create();
++        await using var _ = db;
++        await svc.OpenAsync(1, 77, "POS-01", 100m, T0);
++
++        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => svc.OpenAsync(2, 77, "POS-02", 100m, T0));
++        Assert.Contains("already has an open shift", ex.Message);
++    }
++
++    [Fact]
++    public async Task Open_rejects_negative_opening_cash()
++    {
++        var (db, svc) = Create();
++        await using var _ = db;
++        await Assert.ThrowsAsync<InvalidOperationException>(() => svc.OpenAsync(1, 77, "POS-01", -1m, T0));
++    }
++
++    [Fact]
++    public async Task Close_computes_expected_cash_and_variance_from_sales_and_movements()
++    {
++        var (db, svc) = Create();
++        await using var _ = db;
++        var shift = await svc.OpenAsync(1, 77, "POS-01", 10000m, T0);
++        db.Sales.Add(CashSale(shift.Id, 35000m, 35000m));
++        await db.SaveChangesAsync();
++        await svc.AddMovementAsync(shift.Id, CashMovementType.Refund, 2000m, "customer return", "sr-1", 77, T0);
++
++        var closed = await svc.CloseAsync(shift.Id, 41500m, null, T0.AddHours(9));
++
++        Assert.Equal(CashShiftStatus.Closed, closed.Status);
++        Assert.Equal(43000m, closed.ExpectedCash);
++        Assert.Equal(41500m, closed.ActualCash);
++        Assert.Equal(-1500m, closed.Variance);
++        Assert.Contains(db.BusinessEvents.ToList(), e => e.EventType == BusinessEventTypes.CashClosed);
++    }
++
++    [Fact]
++    public async Task Cash_sale_counts_net_of_change_given()
++    {
++        var (db, svc) = Create();
++        await using var _ = db;
++        var shift = await svc.OpenAsync(1, 77, "POS-01", 0m, T0);
++        db.Sales.Add(CashSale(shift.Id, total: 450m, paid: 500m));   // 50 given back as change
++        await db.SaveChangesAsync();
++
++        var summary = await svc.SummarizeAsync(shift.Id);
++
++        Assert.Equal(450m, summary.CashSales);
++    }
++
++    [Fact]
++    public async Task Non_cash_sales_are_excluded_from_cash_sales()
++    {
++        var (db, svc) = Create();
++        await using var _ = db;
++        var shift = await svc.OpenAsync(1, 77, "POS-01", 0m, T0);
++        db.Sales.Add(CashSale(shift.Id, 300m, 300m, method: "GCash"));
++        db.Sales.Add(CashSale(shift.Id, 100m, 100m, method: "cash"));
++        await db.SaveChangesAsync();
++
++        var summary = await svc.SummarizeAsync(shift.Id);
++
++        Assert.Equal(100m, summary.CashSales);
++    }
++
++    [Fact]
++    public async Task Cash_in_and_cash_out_move_expected_cash()
++    {
++        var (db, svc) = Create();
++        await using var _ = db;
++        var shift = await svc.OpenAsync(1, 77, "POS-01", 1000m, T0);
++        await svc.AddMovementAsync(shift.Id, CashMovementType.CashIn, 200m, "float top-up", null, 77, T0);
++        await svc.AddMovementAsync(shift.Id, CashMovementType.CashOut, 500m, "supplier cash", null, 77, T0);
++
++        var summary = await svc.SummarizeAsync(shift.Id);
++
++        Assert.Equal(700m, summary.ExpectedCash);
++    }
++
++    [Theory]
++    [InlineData("Bogus", 10)]
++    [InlineData(CashMovementType.CashIn, 0)]
++    [InlineData(CashMovementType.CashOut, -5)]
++    public async Task Movement_rejects_unknown_type_and_non_positive_amount(string type, int amount)
++    {
++        var (db, svc) = Create();
++        await using var _ = db;
++        var shift = await svc.OpenAsync(1, 77, "POS-01", 100m, T0);
++
++        await Assert.ThrowsAsync<InvalidOperationException>(
++            () => svc.AddMovementAsync(shift.Id, type, amount, "x", null, 77, T0));
++    }
++
++    [Fact]
++    public async Task Movement_and_close_are_rejected_on_a_closed_shift()
++    {
++        var (db, svc) = Create();
++        await using var _ = db;
++        var shift = await svc.OpenAsync(1, 77, "POS-01", 100m, T0);
++        await svc.CloseAsync(shift.Id, 100m, null, T0.AddHours(8));
++
++        await Assert.ThrowsAsync<InvalidOperationException>(
++            () => svc.AddMovementAsync(shift.Id, CashMovementType.CashIn, 10m, "late", null, 77, T0));
++        await Assert.ThrowsAsync<InvalidOperationException>(
++            () => svc.CloseAsync(shift.Id, 100m, null, T0.AddHours(9)));
++    }
++
++    [Fact]
++    public async Task Close_rejects_negative_actual_cash_and_unknown_shift()
++    {
++        var (db, svc) = Create();
++        await using var _ = db;
++        var shift = await svc.OpenAsync(1, 77, "POS-01", 100m, T0);
++
++        await Assert.ThrowsAsync<InvalidOperationException>(() => svc.CloseAsync(shift.Id, -1m, null, T0));
++        await Assert.ThrowsAsync<InvalidOperationException>(() => svc.CloseAsync(99999, 0m, null, T0));
++    }
++}
+diff --git a/Services/CashShiftService.cs b/Services/CashShiftService.cs
+new file mode 100644
+index 0000000..36667b2
+--- /dev/null
++++ b/Services/CashShiftService.cs
+@@ -0,0 +1,185 @@
++using GoPosify.Data;
++using GoPosify.Models;
++using Microsoft.EntityFrameworkCore;
++
++namespace GoPosify.Services;
++
++public static class CashShiftStatus
++{
++    public const string Open = "Open";
++    public const string Closed = "Closed";
++}
++
++public static class CashMovementType
++{
++    public const string CashIn = "CashIn";
++    public const string CashOut = "CashOut";
++    public const string Refund = "Refund";
++
++    public static readonly string[] All = { CashIn, CashOut, Refund };
++}
++
++public static class CashShiftCalculator
++{
++    // Expected = Opening + CashSales + CashIn - CashRefunds - CashOut
++    public static decimal ExpectedCash(decimal openingCash, decimal cashSales, decimal cashIn, decimal cashRefunds, decimal cashOut)
++        => openingCash + cashSales + cashIn - cashRefunds - cashOut;
++
++    // Variance = Actual - Expected (negative means the drawer is short)
++    public static decimal Variance(decimal actualCash, decimal expectedCash) => actualCash - expectedCash;
++}
++
++public sealed class CashShiftSummary
++{
++    public decimal OpeningCash { get; set; }
++    public decimal CashSales { get; set; }
++    public decimal CashIn { get; set; }
++    public decimal CashRefunds { get; set; }
++    public decimal CashOut { get; set; }
++    public decimal ExpectedCash { get; set; }
++}
++
++public interface ICashShiftService
++{
++    Task<CashShift> OpenAsync(int warehouseId, int cashierId, string posTerminal, decimal openingCash, DateTime now);
++    Task<CashMovement> AddMovementAsync(int shiftId, string movementType, decimal amount, string reason, string referenceNo, int userId, DateTime now);
++    Task<CashShiftSummary> SummarizeAsync(int shiftId);
++    Task<CashShift> CloseAsync(int shiftId, decimal actualCash, string note, DateTime now);
++}
++
++public sealed class CashShiftService : ICashShiftService
++{
++    private readonly AppDBContext _db;
++    private readonly IBusinessEventPublisher _events;
++
++    public CashShiftService(AppDBContext db, IBusinessEventPublisher events)
++    {
++        _db = db;
++        _events = events;
++    }
++
++    public async Task<CashShift> OpenAsync(int warehouseId, int cashierId, string posTerminal, decimal openingCash, DateTime now)
++    {
++        if (openingCash < 0)
++        {
++            throw new InvalidOperationException("Opening cash cannot be negative.");
++        }
++
++        var alreadyOpen = await _db.CashShifts.AnyAsync(s => s.CashierId == cashierId && s.Status == CashShiftStatus.Open);
++        if (alreadyOpen)
++        {
++            throw new InvalidOperationException("This cashier already has an open shift. Close it first.");
++        }
++
++        var shift = new CashShift
++        {
++            WarehouseId = warehouseId,
++            CashierId = cashierId,
++            PosTerminal = posTerminal,
++            OpenedAt = now,
++            OpeningCash = openingCash,
++            Status = CashShiftStatus.Open
++        };
++        _db.CashShifts.Add(shift);
++        await _db.SaveChangesAsync();   // assigns Id for the event reference
++
++        _events.Publish(BusinessEventTypes.CashOpened, warehouseId, $"shift-{shift.Id}",
++            new { shiftId = shift.Id, cashierId, posTerminal, openingCash }, now);
++        await _db.SaveChangesAsync();
++        return shift;
++    }
++
++    public async Task<CashMovement> AddMovementAsync(int shiftId, string movementType, decimal amount, string reason, string referenceNo, int userId, DateTime now)
++    {
++        if (!CashMovementType.All.Contains(movementType))
++        {
++            throw new InvalidOperationException($"Unknown cash movement type '{movementType}'.");
++        }
++
++        if (amount <= 0)
++        {
++            throw new InvalidOperationException("Amount must be greater than zero.");
++        }
++
++        var shift = await GetOpenShiftAsync(shiftId);
++        var movement = new CashMovement
++        {
++            ShiftId = shift.Id,
++            MovementType = movementType,
++            Amount = amount,
++            Reason = reason,
++            ReferenceNo = referenceNo,
++            CreatedBy = userId,
++            CreatedAt = now
++        };
++        _db.CashMovements.Add(movement);
++        await _db.SaveChangesAsync();
++        return movement;
++    }
++
++    public async Task<CashShiftSummary> SummarizeAsync(int shiftId)
++    {
++        var shift = await _db.CashShifts.AsNoTracking().FirstOrDefaultAsync(s => s.Id == shiftId)
++            ?? throw new InvalidOperationException("Shift not found.");
++
++        var sales = await _db.Sales.AsNoTracking()
++            .Where(s => s.ShiftId == shiftId)
++            .Select(s => new { s.PaymentMethod, s.PaidAmount, s.ChangeDue })
++            .ToListAsync();
++        var cashSales = sales
++            .Where(s => string.Equals(s.PaymentMethod, "Cash", StringComparison.OrdinalIgnoreCase))
++            .Sum(s => s.PaidAmount - s.ChangeDue);
++
++        var movements = await _db.CashMovements.AsNoTracking().Where(m => m.ShiftId == shiftId).ToListAsync();
++        decimal Sum(string type) => movements.Where(m => m.MovementType == type).Sum(m => m.Amount);
++
++        var cashIn = Sum(CashMovementType.CashIn);
++        var cashOut = Sum(CashMovementType.CashOut);
++        var refunds = Sum(CashMovementType.Refund);
++
++        return new CashShiftSummary
++        {
++            OpeningCash = shift.OpeningCash,
++            CashSales = cashSales,
++            CashIn = cashIn,
++            CashOut = cashOut,
++            CashRefunds = refunds,
++            ExpectedCash = CashShiftCalculator.ExpectedCash(shift.OpeningCash, cashSales, cashIn, refunds, cashOut)
++        };
++    }
++
++    public async Task<CashShift> CloseAsync(int shiftId, decimal actualCash, string note, DateTime now)
++    {
++        if (actualCash < 0)
++        {
++            throw new InvalidOperationException("Counted cash cannot be negative.");
++        }
++
++        var shift = await GetOpenShiftAsync(shiftId);
++        var summary = await SummarizeAsync(shiftId);
++
++        shift.ExpectedCash = summary.ExpectedCash;
++        shift.ActualCash = actualCash;
++        shift.Variance = CashShiftCalculator.Variance(actualCash, summary.ExpectedCash);
++        shift.ClosedAt = now;
++        shift.Note = note;
++        shift.Status = CashShiftStatus.Closed;
++
++        _events.Publish(BusinessEventTypes.CashClosed, shift.WarehouseId, $"shift-{shift.Id}",
++            new { shiftId = shift.Id, shift.CashierId, shift.OpeningCash, expectedCash = shift.ExpectedCash, actualCash, variance = shift.Variance }, now);
++        await _db.SaveChangesAsync();
++        return shift;
++    }
++
++    private async Task<CashShift> GetOpenShiftAsync(int shiftId)
++    {
++        var shift = await _db.CashShifts.FirstOrDefaultAsync(s => s.Id == shiftId)
++            ?? throw new InvalidOperationException("Shift not found.");
++        if (shift.Status != CashShiftStatus.Open)
++        {
++            throw new InvalidOperationException("This shift is already closed.");
++        }
++
++        return shift;
++    }
++}
+-- 
+2.46.0.windows.1
+

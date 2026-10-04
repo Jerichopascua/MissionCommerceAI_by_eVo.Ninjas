@@ -20,6 +20,26 @@
 | 4 | AI on AMD: forecast, mission detection, anomaly detectors, vLLM investigator, Kuya Pedro wiring | after plan 3 |
 | 5 | Scenario Sim, Quick Sim lane, UI, Week 0 vs Week 3, packaging, demo | after plan 4 |
 
+## Execution log and corrections (2026-10-05)
+
+Executed inline in a **git worktree** `D:\git\Retailo_v1_mission` on branch `Retail_MissionCommerceAI` (the user's folder `D:\git\Retailo_v1` stays on `main` with its own uncommitted work). Paths in this plan that say `D:\git\Retailo_v1` mean the worktree.
+
+| Task | Status |
+|---|---|
+| 1 AMD smoke | Scripts and guide written and tested locally; **run by the user on the AMD server** |
+| 2 Harness | Done (commit `91a4331`) |
+| 3 Onboarding contract | **Blocked: SQL Server Express was stopped.** Script written (`onboarding-contract.ps1`), not run |
+| 4-9 Outbox, cash tables, cash service, cash API, ledger drift, AI API | Done, 23 tests passing |
+| 10 Smoke, SQL script, patches | SQL script and patches done; `cash-shift-smoke.ps1` written and syntax-checked, **not run** |
+
+Corrections found while executing (the steps below were wrong or incomplete as originally written):
+1. **Task 2:** the main `Retailo.csproj` must exclude the test folder from `Compile`, `None`, `Content` **and** `EmbeddedResource`. The `Compile Remove` line seen earlier was an *uncommitted* change in the user's folder, and without `Content Remove` the Web SDK's `**/*.json` glob copies `Retailo.Tests/bin` into itself recursively.
+2. **Task 2:** the in-memory database enforces `[Required]`, so test entities need their required strings (`Warehouse`: Address, Email, Phone; `Product`: ProductCode, BarcodeType, ProductName).
+3. **All migrations:** `dotnet ef migrations add` always emits ~44 `UpdateData` statements that rewrite seed rows (the model's seed data uses `DateTime.UtcNow`; one of them touches user 1's `LastLogin`). Strip them with `pesoweb-additions/tools/strip_seed_noise.py <migration.cs>` and confirm only the intended tables/columns remain. The plan's "stop and report" guard is replaced by "strip, then verify".
+4. **Task 7:** `SalesController` has no `using GoPosify.Services;`; it must be added.
+5. **Task 7 migration:** `GrantCashAndAiPermissionsToOwnerRoles` grants `Cash.Shift`, `Cash.ShiftList` and `AI.Read` to **every tenant's `SuperAdmin` role** (not only role 1), per the owner's decision that the central company's subsidiaries use `SuperAdmin`.
+6. `dotnet ef migrations add ... --no-build` after a build is the fast path; `migrations add` does not need the database.
+
 ## Global Constraints
 
 - PesoWeb changes are **additive only**: new tables, services, controllers, nullable columns. No behaviour change to existing endpoints except the two marked hooks in `SalesController.AddSale` (Task 7).

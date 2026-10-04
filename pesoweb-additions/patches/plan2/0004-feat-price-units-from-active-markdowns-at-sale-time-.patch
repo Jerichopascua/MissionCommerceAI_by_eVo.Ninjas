@@ -1,0 +1,303 @@
+From 678fd0adf7d0470991531e80b2dc8e1cfbd4a38b Mon Sep 17 00:00:00 2001
+From: unknown <jericho.pascua@gmail.com>
+Date: Mon, 5 Oct 2026 02:21:07 +0800
+Subject: [PATCH 4/7] feat: price units from active markdowns at sale time,
+ guardrails re-checked
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+---
+ Controllers/SalesController.cs               |  20 ++-
+ Program.cs                                   |   1 +
+ Retailo.Tests/MarkdownPricingServiceTests.cs | 146 +++++++++++++++++++
+ Services/MarkdownPricingService.cs           |  69 +++++++++
+ 4 files changed, 231 insertions(+), 5 deletions(-)
+ create mode 100644 Retailo.Tests/MarkdownPricingServiceTests.cs
+ create mode 100644 Services/MarkdownPricingService.cs
+
+diff --git a/Controllers/SalesController.cs b/Controllers/SalesController.cs
+index 037f351..358f1d0 100644
+--- a/Controllers/SalesController.cs
++++ b/Controllers/SalesController.cs
+@@ -35,13 +35,15 @@ namespace GoPosify.Controllers
+         private readonly ITransactionService _transactionService;
+         private readonly IDocService _docService;
+         private readonly IBusinessEventPublisher _events;
+-        public SalesController(AppDBContext dbContext, IStockService stockService, IInventoryBatchService inventoryBatchService, ITransactionService transactionService, IDocService docService, IBusinessEventPublisher events) : base(dbContext)
++        private readonly IMarkdownPricingService _markdownPricing;
++        public SalesController(AppDBContext dbContext, IStockService stockService, IInventoryBatchService inventoryBatchService, ITransactionService transactionService, IDocService docService, IBusinessEventPublisher events, IMarkdownPricingService markdownPricing) : base(dbContext)
+         {
+             _stockService = stockService;
+             _inventoryBatchService = inventoryBatchService;
+             _transactionService = transactionService;
+             _docService = docService;
+             _events = events;
++            _markdownPricing = markdownPricing;
+         }
+ 
+         private async Task ApplyNonBatchStockDeltaAsync(
+@@ -836,11 +838,19 @@ namespace GoPosify.Controllers
+                             await ApplyNonBatchStockDeltaAsync(newSale.WarehouseId, newSaleDetail.ProductId, null, baseQuantity * (-1), "SALE_OUT", null, null, userId);
+                         }
+ 
+-                        salePrice = General.CalculateSalePrice(product.Price, product.Discount, product.TaxMethod, product.Tax);
+-                        newSaleDetail.TaxTotal = General.CalculateTax(product.Price, product.Discount, product.TaxMethod, product.Tax);
+-                        newSaleDetail.DiscountTotal = General.CalculateDiscount(product.Price, product.Discount);
++                        // Agentic markdowns: FEFO has already chosen the batches; price the units from each batch,
++                        // honoring an active markdown only while the guardrails still hold.
++                        var basePrice = product.Price;
++                        if (pendingBatchAllocations.TryGetValue(newSaleDetail, out var consumedForPrice))
++                        {
++                            basePrice = await _markdownPricing.EffectiveBasePriceAsync(newSale.WarehouseId, product, consumedForPrice, CurrentDateTime());
++                        }
++
++                        salePrice = General.CalculateSalePrice(basePrice, product.Discount, product.TaxMethod, product.Tax);
++                        newSaleDetail.TaxTotal = General.CalculateTax(basePrice, product.Discount, product.TaxMethod, product.Tax);
++                        newSaleDetail.DiscountTotal = General.CalculateDiscount(basePrice, product.Discount);
+                         newSaleDetail.SalePrice = salePrice;
+-                        newSaleDetail.Price = product.Price;
++                        newSaleDetail.Price = basePrice;
+                     }
+ 
+                     newSaleDetail.Amount = salePrice * newSaleDetail.Quantity;
+diff --git a/Program.cs b/Program.cs
+index 6ce2ddd..f4b8268 100644
+--- a/Program.cs
++++ b/Program.cs
+@@ -321,6 +321,7 @@ builder.Services.AddScoped<IBusinessEventPublisher, BusinessEventPublisher>();
+ builder.Services.AddScoped<ICashShiftService, CashShiftService>();
+ builder.Services.AddScoped<ILedgerService, LedgerService>();
+ builder.Services.AddScoped<IMarkdownService, MarkdownService>();
++builder.Services.AddScoped<IMarkdownPricingService, MarkdownPricingService>();
+ builder.Services.AddScoped<IDocService, DocService>();
+ builder.Services.AddScoped<ISyncService, SyncService>();
+ 
+diff --git a/Retailo.Tests/MarkdownPricingServiceTests.cs b/Retailo.Tests/MarkdownPricingServiceTests.cs
+new file mode 100644
+index 0000000..f2f7d45
+--- /dev/null
++++ b/Retailo.Tests/MarkdownPricingServiceTests.cs
+@@ -0,0 +1,146 @@
++using GoPosify.Models;
++using GoPosify.Services;
++using GoPosify.Services.Interfaces;
++using Retailo.Tests.Support;
++using Xunit;
++
++namespace Retailo.Tests;
++
++public class MarkdownPricingServiceTests
++{
++    private static readonly DateTime Now = new(2026, 10, 20, 10, 0, 0);
++
++    private static async Task<(TestAppDbContext db, MarkdownPricingService svc, Product product)> CreateAsync(PricingPolicy policy)
++    {
++        var db = new TestAppDbContext(TestAppDbContext.NewDbName(), 5);
++        if (policy != null) db.PricingPolicies.Add(policy);
++        var product = PricingFixtures.NewProduct(price: 100m, cost: 60m);
++        db.Products.Add(product);
++        await db.SaveChangesAsync();
++        return (db, new MarkdownPricingService(db), product);
++    }
++
++    private static ActiveMarkdown Md(int productId, long batchId, decimal price, bool active = true,
++        DateTime? starts = null, DateTime? ends = null, int warehouseId = 1) => new()
++    {
++        WarehouseId = warehouseId, ProductId = productId, BatchId = batchId, Price = price, IsActive = active,
++        StartsAt = starts ?? Now.AddHours(-1), EndsAt = ends, Source = PriceChangeSource.Ai
++    };
++
++    private static BatchConsumptionItem Used(long batchId, decimal qty, decimal cost = 60m)
++        => new() { BatchId = batchId, Quantity = qty, UnitCost = cost };
++
++    [Fact]
++    public async Task No_markdown_means_the_normal_price()
++    {
++        var (db, svc, p) = await CreateAsync(PricingFixtures.Policy());
++        await using var _ = db;
++
++        Assert.Equal(100m, await svc.EffectiveBasePriceAsync(1, p, new[] { Used(11, 2) }, Now));
++        Assert.Equal(100m, await svc.EffectiveBasePriceAsync(1, p, Array.Empty<BatchConsumptionItem>(), Now));
++    }
++
++    [Fact]
++    public async Task Markdown_prices_the_units_taken_from_its_batch()
++    {
++        var (db, svc, p) = await CreateAsync(PricingFixtures.Policy());
++        await using var _ = db;
++        db.ActiveMarkdowns.Add(Md(p.Id, 11, 80m));
++        await db.SaveChangesAsync();
++
++        Assert.Equal(80m, await svc.EffectiveBasePriceAsync(1, p, new[] { Used(11, 2) }, Now));
++    }
++
++    [Fact]
++    public async Task A_line_spanning_two_batches_gets_the_weighted_price()
++    {
++        var (db, svc, p) = await CreateAsync(PricingFixtures.Policy());
++        await using var _ = db;
++        db.ActiveMarkdowns.Add(Md(p.Id, 11, 80m));      // marked batch
++        await db.SaveChangesAsync();
++
++        // 1 unit from the marked batch (80) + 3 units from a fresh batch (100) = 380 / 4
++        var price = await svc.EffectiveBasePriceAsync(1, p, new[] { Used(11, 1), Used(12, 3) }, Now);
++
++        Assert.Equal(95m, price);
++    }
++
++    [Fact]
++    public async Task Autonomy_off_is_a_kill_switch_for_existing_markdowns()
++    {
++        var (db, svc, p) = await CreateAsync(PricingFixtures.Policy(AutonomyModes.Off));
++        await using var _ = db;
++        db.ActiveMarkdowns.Add(Md(p.Id, 11, 80m));
++        await db.SaveChangesAsync();
++
++        Assert.Equal(100m, await svc.EffectiveBasePriceAsync(1, p, new[] { Used(11, 2) }, Now));
++    }
++
++    [Fact]
++    public async Task Missing_policy_means_no_markdown_is_honored()
++    {
++        var (db, svc, p) = await CreateAsync(null);
++        await using var _ = db;
++        db.ActiveMarkdowns.Add(Md(p.Id, 11, 80m));
++        await db.SaveChangesAsync();
++
++        Assert.Equal(100m, await svc.EffectiveBasePriceAsync(1, p, new[] { Used(11, 2) }, Now));
++    }
++
++    [Theory]
++    [InlineData(false, -60, null)]   // inactive
++    [InlineData(true, 60, null)]     // starts in the future
++    [InlineData(true, -60, -1)]      // already ended (EndsAt one minute ago)
++    public async Task Inactive_future_or_ended_markdowns_are_ignored(bool active, int startsMinutesFromNow, int? endsMinutesFromNow)
++    {
++        var (db, svc, p) = await CreateAsync(PricingFixtures.Policy());
++        await using var _ = db;
++        db.ActiveMarkdowns.Add(Md(p.Id, 11, 80m, active,
++            starts: Now.AddMinutes(startsMinutesFromNow),
++            ends: endsMinutesFromNow.HasValue ? Now.AddMinutes(endsMinutesFromNow.Value) : null));
++        await db.SaveChangesAsync();
++
++        Assert.Equal(100m, await svc.EffectiveBasePriceAsync(1, p, new[] { Used(11, 2) }, Now));
++    }
++
++    [Fact]
++    public async Task A_markdown_that_no_longer_clears_the_hard_floor_is_ignored_per_batch()
++    {
++        var (db, svc, p) = await CreateAsync(PricingFixtures.Policy());
++        await using var _ = db;
++        db.ActiveMarkdowns.Add(Md(p.Id, 11, 80m));      // fine at cost 60 (floor 63)
++        db.ActiveMarkdowns.Add(Md(p.Id, 12, 80m));      // batch 12 cost is 78 -> floor 81.9 -> unsafe
++        await db.SaveChangesAsync();
++
++        var price = await svc.EffectiveBasePriceAsync(1, p, new[] { Used(11, 1, cost: 60m), Used(12, 1, cost: 78m) }, Now);
++
++        Assert.Equal(90m, price);    // (80 + 100) / 2
++    }
++
++    [Fact]
++    public async Task Markdowns_from_another_branch_do_not_apply()
++    {
++        var (db, svc, p) = await CreateAsync(PricingFixtures.Policy());
++        await using var _ = db;
++        db.ActiveMarkdowns.Add(Md(p.Id, 11, 80m, warehouseId: 2));
++        await db.SaveChangesAsync();
++
++        Assert.Equal(100m, await svc.EffectiveBasePriceAsync(1, p, new[] { Used(11, 2) }, Now));
++    }
++
++    [Fact]
++    public async Task Product_discount_is_respected_when_rechecking_the_floor()
++    {
++        var db = new TestAppDbContext(TestAppDbContext.NewDbName(), 5);
++        await using var _ = db;
++        db.PricingPolicies.Add(PricingFixtures.Policy());
++        var p = PricingFixtures.NewProduct(price: 100m, cost: 80m, discount: 10m);   // list net 90, floor net 84
++        db.Products.Add(p);
++        await db.SaveChangesAsync();
++        db.ActiveMarkdowns.Add(Md(p.Id, 11, 90m));      // net 81 < 84 -> unsafe even though 90 > 84 as a base
++        await db.SaveChangesAsync();
++        var svc = new MarkdownPricingService(db);
++
++        Assert.Equal(100m, await svc.EffectiveBasePriceAsync(1, p, new[] { Used(11, 1, cost: 80m) }, Now));
++    }
++}
+diff --git a/Services/MarkdownPricingService.cs b/Services/MarkdownPricingService.cs
+new file mode 100644
+index 0000000..fab7ebc
+--- /dev/null
++++ b/Services/MarkdownPricingService.cs
+@@ -0,0 +1,69 @@
++using GoPosify.Data;
++using GoPosify.Models;
++using GoPosify.Services.Interfaces;
++using Microsoft.EntityFrameworkCore;
++
++namespace GoPosify.Services;
++
++public interface IMarkdownPricingService
++{
++    // Quantity-weighted BASE price (the unit of Product.Price) for the units FEFO consumed from these batches.
++    Task<decimal> EffectiveBasePriceAsync(int warehouseId, Product product, IReadOnlyList<BatchConsumptionItem> consumed, DateTime now);
++}
++
++public sealed class MarkdownPricingService : IMarkdownPricingService
++{
++    private readonly AppDBContext _db;
++
++    public MarkdownPricingService(AppDBContext db)
++    {
++        _db = db;
++    }
++
++    public async Task<decimal> EffectiveBasePriceAsync(int warehouseId, Product product, IReadOnlyList<BatchConsumptionItem> consumed, DateTime now)
++    {
++        if (consumed == null || consumed.Count == 0)
++        {
++            return product.Price;
++        }
++
++        var batchIds = consumed.Select(c => c.BatchId).ToList();
++        var markdowns = await _db.ActiveMarkdowns.AsNoTracking()
++            .Where(m => m.IsActive && m.WarehouseId == warehouseId && m.ProductId == product.Id
++                        && batchIds.Contains(m.BatchId) && m.StartsAt <= now && (m.EndsAt == null || m.EndsAt > now))
++            .ToListAsync();
++        if (markdowns.Count == 0)
++        {
++            return product.Price;
++        }
++
++        var policy = await _db.PricingPolicies.AsNoTracking().FirstOrDefaultAsync();
++        if (policy == null || policy.AutonomyMode == AutonomyModes.Off)
++        {
++            return product.Price;   // the policy is the kill switch
++        }
++
++        var listNet = MarkdownGuardrails.NetPrice(product.Price, product.Discount);
++        decimal totalQty = 0m, totalValue = 0m;
++
++        foreach (var c in consumed)
++        {
++            var price = product.Price;
++            var md = markdowns.FirstOrDefault(m => m.BatchId == c.BatchId);
++            if (md != null)
++            {
++                var cost = c.UnitCost > 0m ? c.UnitCost : (product.Cost > 0m ? product.Cost : (decimal?)null);
++                var newNet = MarkdownGuardrails.NetPrice(md.Price, product.Discount);
++                if (MarkdownGuardrails.HardLimitsHold(policy, listNet, newNet, cost))
++                {
++                    price = md.Price;
++                }
++            }
++
++            totalQty += c.Quantity;
++            totalValue += price * c.Quantity;
++        }
++
++        return totalQty <= 0m ? product.Price : totalValue / totalQty;
++    }
++}
+-- 
+2.46.0.windows.1
+

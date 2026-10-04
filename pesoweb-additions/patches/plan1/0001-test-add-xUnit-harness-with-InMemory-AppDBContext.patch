@@ -1,0 +1,175 @@
+From 91a43313162cc989fcb6f629f104a062e6a7e20a Mon Sep 17 00:00:00 2001
+From: unknown <jericho.pascua@gmail.com>
+Date: Mon, 5 Oct 2026 02:08:00 +0800
+Subject: [PATCH 1/7] test: add xUnit harness with InMemory AppDBContext
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+---
+ Retailo.Tests/HarnessTests.cs             | 27 ++++++++++++++++++++++
+ Retailo.Tests/Retailo.Tests.csproj        | 21 +++++++++++++++++
+ Retailo.Tests/Support/TestAppDbContext.cs | 21 +++++++++++++++++
+ Retailo.csproj                            |  5 ++++
+ Retailo.sln                               | 28 ++++++++++++++++++++++-
+ 5 files changed, 101 insertions(+), 1 deletion(-)
+ create mode 100644 Retailo.Tests/HarnessTests.cs
+ create mode 100644 Retailo.Tests/Retailo.Tests.csproj
+ create mode 100644 Retailo.Tests/Support/TestAppDbContext.cs
+
+diff --git a/Retailo.Tests/HarnessTests.cs b/Retailo.Tests/HarnessTests.cs
+new file mode 100644
+index 0000000..9203341
+--- /dev/null
++++ b/Retailo.Tests/HarnessTests.cs
+@@ -0,0 +1,27 @@
++using GoPosify.Models;
++using Retailo.Tests.Support;
++using Xunit;
++
++namespace Retailo.Tests;
++
++public class HarnessTests
++{
++    [Fact]
++    public async Task Tenant_filter_isolates_rows_between_contexts_sharing_one_database()
++    {
++        var name = TestAppDbContext.NewDbName();
++
++        await using (var tenant7 = new TestAppDbContext(name, 7))
++        {
++            // InMemory enforces [Required]: Warehouse needs Address, Email and Phone.
++            tenant7.Warehouses.Add(new Warehouse { WarehouseName = "Branch A", Address = "1 Test St", Email = "a@example.test", Phone = "+639000000000" });
++            await tenant7.SaveChangesAsync();
++        }
++
++        await using var seen7 = new TestAppDbContext(name, 7);
++        await using var seen8 = new TestAppDbContext(name, 8);
++
++        Assert.Equal(1, seen7.Warehouses.Count(w => w.WarehouseName == "Branch A"));
++        Assert.Equal(0, seen8.Warehouses.Count(w => w.WarehouseName == "Branch A"));
++    }
++}
+diff --git a/Retailo.Tests/Retailo.Tests.csproj b/Retailo.Tests/Retailo.Tests.csproj
+new file mode 100644
+index 0000000..cdc1fa3
+--- /dev/null
++++ b/Retailo.Tests/Retailo.Tests.csproj
+@@ -0,0 +1,21 @@
++<Project Sdk="Microsoft.NET.Sdk">
++
++  <PropertyGroup>
++    <TargetFramework>net9.0</TargetFramework>
++    <Nullable>disable</Nullable>
++    <ImplicitUsings>enable</ImplicitUsings>
++    <IsPackable>false</IsPackable>
++  </PropertyGroup>
++
++  <ItemGroup>
++    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
++    <PackageReference Include="xunit" Version="2.9.2" />
++    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
++    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="7.0.13" />
++  </ItemGroup>
++
++  <ItemGroup>
++    <ProjectReference Include="..\Retailo.csproj" />
++  </ItemGroup>
++
++</Project>
+diff --git a/Retailo.Tests/Support/TestAppDbContext.cs b/Retailo.Tests/Support/TestAppDbContext.cs
+new file mode 100644
+index 0000000..d0a5993
+--- /dev/null
++++ b/Retailo.Tests/Support/TestAppDbContext.cs
+@@ -0,0 +1,21 @@
++using GoPosify.Data;
++using Microsoft.EntityFrameworkCore;
++
++namespace Retailo.Tests.Support;
++
++// AppDBContext.OnConfiguring hard-wires SQL Server, so tests subclass it and swap in InMemory.
++public sealed class TestAppDbContext : AppDBContext
++{
++    private readonly string _dbName;
++
++    public TestAppDbContext(string dbName, int tenantId)
++    {
++        _dbName = dbName;
++        CurrentTenantId = tenantId;
++    }
++
++    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
++        => optionsBuilder.UseInMemoryDatabase(_dbName);
++
++    public static string NewDbName() => Guid.NewGuid().ToString("N");
++}
+diff --git a/Retailo.csproj b/Retailo.csproj
+index 77ec752..8872340 100644
+--- a/Retailo.csproj
++++ b/Retailo.csproj
+@@ -42,6 +42,11 @@
+     <Content Remove="AppFiles\Templates\en-US.json" />
+   </ItemGroup>
+ 
++  <ItemGroup>
++    <Compile Remove="Retailo.Tests\**\*.cs" />
++    <None Remove="Retailo.Tests\**\*" />
++  </ItemGroup>
++
+   <ItemGroup>
+     <None Include="AppFiles\Templates\en-US.json" />
+   </ItemGroup>
+diff --git a/Retailo.sln b/Retailo.sln
+index 137f0b4..116b1f6 100644
+--- a/Retailo.sln
++++ b/Retailo.sln
+@@ -1,20 +1,46 @@
+ ﻿
+ Microsoft Visual Studio Solution File, Format Version 12.00
+ # Visual Studio Version 17
+-VisualStudioVersion = 17.14.37328.6 d17.14
++VisualStudioVersion = 17.14.37328.6
+ MinimumVisualStudioVersion = 10.0.40219.1
+ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Retailo", "Retailo.csproj", "{878C7765-D349-352C-6A3B-6E1F1A2316CD}"
+ EndProject
++Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Retailo.Tests", "Retailo.Tests\Retailo.Tests.csproj", "{3073BA8D-6DF7-4649-AE45-D873A6E1D1F0}"
++EndProject
+ Global
+ 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+ 		Debug|Any CPU = Debug|Any CPU
++		Debug|x64 = Debug|x64
++		Debug|x86 = Debug|x86
+ 		Release|Any CPU = Release|Any CPU
++		Release|x64 = Release|x64
++		Release|x86 = Release|x86
+ 	EndGlobalSection
+ 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+ 		{878C7765-D349-352C-6A3B-6E1F1A2316CD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+ 		{878C7765-D349-352C-6A3B-6E1F1A2316CD}.Debug|Any CPU.Build.0 = Debug|Any CPU
++		{878C7765-D349-352C-6A3B-6E1F1A2316CD}.Debug|x64.ActiveCfg = Debug|Any CPU
++		{878C7765-D349-352C-6A3B-6E1F1A2316CD}.Debug|x64.Build.0 = Debug|Any CPU
++		{878C7765-D349-352C-6A3B-6E1F1A2316CD}.Debug|x86.ActiveCfg = Debug|Any CPU
++		{878C7765-D349-352C-6A3B-6E1F1A2316CD}.Debug|x86.Build.0 = Debug|Any CPU
+ 		{878C7765-D349-352C-6A3B-6E1F1A2316CD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+ 		{878C7765-D349-352C-6A3B-6E1F1A2316CD}.Release|Any CPU.Build.0 = Release|Any CPU
++		{878C7765-D349-352C-6A3B-6E1F1A2316CD}.Release|x64.ActiveCfg = Release|Any CPU
++		{878C7765-D349-352C-6A3B-6E1F1A2316CD}.Release|x64.Build.0 = Release|Any CPU
++		{878C7765-D349-352C-6A3B-6E1F1A2316CD}.Release|x86.ActiveCfg = Release|Any CPU
++		{878C7765-D349-352C-6A3B-6E1F1A2316CD}.Release|x86.Build.0 = Release|Any CPU
++		{3073BA8D-6DF7-4649-AE45-D873A6E1D1F0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
++		{3073BA8D-6DF7-4649-AE45-D873A6E1D1F0}.Debug|Any CPU.Build.0 = Debug|Any CPU
++		{3073BA8D-6DF7-4649-AE45-D873A6E1D1F0}.Debug|x64.ActiveCfg = Debug|Any CPU
++		{3073BA8D-6DF7-4649-AE45-D873A6E1D1F0}.Debug|x64.Build.0 = Debug|Any CPU
++		{3073BA8D-6DF7-4649-AE45-D873A6E1D1F0}.Debug|x86.ActiveCfg = Debug|Any CPU
++		{3073BA8D-6DF7-4649-AE45-D873A6E1D1F0}.Debug|x86.Build.0 = Debug|Any CPU
++		{3073BA8D-6DF7-4649-AE45-D873A6E1D1F0}.Release|Any CPU.ActiveCfg = Release|Any CPU
++		{3073BA8D-6DF7-4649-AE45-D873A6E1D1F0}.Release|Any CPU.Build.0 = Release|Any CPU
++		{3073BA8D-6DF7-4649-AE45-D873A6E1D1F0}.Release|x64.ActiveCfg = Release|Any CPU
++		{3073BA8D-6DF7-4649-AE45-D873A6E1D1F0}.Release|x64.Build.0 = Release|Any CPU
++		{3073BA8D-6DF7-4649-AE45-D873A6E1D1F0}.Release|x86.ActiveCfg = Release|Any CPU
++		{3073BA8D-6DF7-4649-AE45-D873A6E1D1F0}.Release|x86.Build.0 = Release|Any CPU
+ 	EndGlobalSection
+ 	GlobalSection(SolutionProperties) = preSolution
+ 		HideSolutionNode = FALSE
+-- 
+2.46.0.windows.1
+

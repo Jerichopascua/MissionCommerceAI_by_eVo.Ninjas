@@ -1,0 +1,646 @@
+From 1a2181454e497e524400223a3c6748ea56d074b7 Mon Sep 17 00:00:00 2001
+From: unknown <jericho.pascua@gmail.com>
+Date: Mon, 5 Oct 2026 02:19:49 +0800
+Subject: [PATCH 3/7] feat: markdown service with guardrails, approval, and
+ price ledger
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+---
+ Program.cs                               |   1 +
+ Retailo.Tests/MarkdownServiceTests.cs    | 270 +++++++++++++++++++++
+ Retailo.Tests/Support/PricingFixtures.cs |  34 +++
+ Services/MarkdownService.cs              | 292 +++++++++++++++++++++++
+ 4 files changed, 597 insertions(+)
+ create mode 100644 Retailo.Tests/MarkdownServiceTests.cs
+ create mode 100644 Retailo.Tests/Support/PricingFixtures.cs
+ create mode 100644 Services/MarkdownService.cs
+
+diff --git a/Program.cs b/Program.cs
+index de54ba3..6ce2ddd 100644
+--- a/Program.cs
++++ b/Program.cs
+@@ -320,6 +320,7 @@ builder.Services.AddScoped<IInventoryBatchService, InventoryBatchService>();
+ builder.Services.AddScoped<IBusinessEventPublisher, BusinessEventPublisher>();
+ builder.Services.AddScoped<ICashShiftService, CashShiftService>();
+ builder.Services.AddScoped<ILedgerService, LedgerService>();
++builder.Services.AddScoped<IMarkdownService, MarkdownService>();
+ builder.Services.AddScoped<IDocService, DocService>();
+ builder.Services.AddScoped<ISyncService, SyncService>();
+ 
+diff --git a/Retailo.Tests/MarkdownServiceTests.cs b/Retailo.Tests/MarkdownServiceTests.cs
+new file mode 100644
+index 0000000..e9f9ee8
+--- /dev/null
++++ b/Retailo.Tests/MarkdownServiceTests.cs
+@@ -0,0 +1,270 @@
++using GoPosify.Models;
++using GoPosify.Services;
++using Retailo.Tests.Support;
++using Xunit;
++
++namespace Retailo.Tests;
++
++public class MarkdownServiceTests
++{
++    private static readonly DateTime Now = new(2026, 10, 20, 10, 0, 0);
++
++    private sealed class World
++    {
++        public string DbName;
++        public TestAppDbContext Db;
++        public MarkdownService Svc;
++        public Product Product;
++        public ProductBatch Batch;
++    }
++
++    private static async Task<World> CreateAsync(PricingPolicy policy = null, decimal productDiscount = 0m,
++        int expiryInDays = 3, decimal batchCost = 60m, bool monitorExpiry = true)
++    {
++        var name = TestAppDbContext.NewDbName();
++        var db = new TestAppDbContext(name, 5);
++        if (policy != null) db.PricingPolicies.Add(policy);
++        var product = PricingFixtures.NewProduct(discount: productDiscount, monitorExpiry: monitorExpiry);
++        db.Products.Add(product);
++        await db.SaveChangesAsync();
++        var batch = PricingFixtures.NewBatch(product.Id, Now.Date.AddDays(expiryInDays), cost: batchCost);
++        db.ProductBatches.Add(batch);
++        await db.SaveChangesAsync();
++        return new World { DbName = name, Db = db, Svc = new MarkdownService(db, PricingFixtures.Publisher(db)), Product = product, Batch = batch };
++    }
++
++    private static MarkdownProposal Propose(World w, decimal newPrice, DateTime? endsAt = null) => new()
++    {
++        WarehouseId = 1, ProductId = w.Product.Id, BatchId = w.Batch.Id, NewPrice = newPrice,
++        Reason = "near expiry", PredictionRef = "pred-1", EndsAt = endsAt
++    };
++
++    [Fact]
++    public async Task Allowed_markdown_creates_active_markdown_ledger_row_and_event()
++    {
++        var w = await CreateAsync(PricingFixtures.Policy());
++        await using var _ = w.Db;
++
++        var o = await w.Svc.ProposeAsync(Propose(w, 80m), PriceChangeSource.Ai, 9, Now);
++
++        Assert.Equal(GuardrailDecision.Allowed, o.Decision);
++        var md = Assert.Single(w.Db.ActiveMarkdowns.ToList());
++        Assert.True(md.IsActive);
++        Assert.Equal(80m, md.Price);
++        Assert.Equal(w.Batch.Id, md.BatchId);
++        Assert.Equal(o.ActiveMarkdownId, md.Id);
++        var pc = Assert.Single(w.Db.PriceChanges.ToList());
++        Assert.Equal(PriceChangeStatus.Applied, pc.Status);
++        Assert.Equal(100m, pc.PriceBefore);
++        Assert.Equal(80m, pc.PriceAfter);
++        Assert.Equal(20m, pc.DiscountPct);
++        Assert.Equal("pred-1", pc.PredictionRef);
++        Assert.Equal(PriceChangeSource.Ai, pc.Source);
++        var ev = Assert.Single(w.Db.BusinessEvents.ToList());
++        Assert.Equal(BusinessEventTypes.PriceChanged, ev.EventType);
++        Assert.Contains("\"kind\":\"markdown\"", ev.PayloadJson);
++    }
++
++    [Fact]
++    public async Task Below_hard_floor_is_rejected_and_recorded_but_never_applied()
++    {
++        var w = await CreateAsync(PricingFixtures.Policy());
++        await using var _ = w.Db;
++
++        var o = await w.Svc.ProposeAsync(Propose(w, 62m), PriceChangeSource.Ai, 9, Now);
++
++        Assert.Equal(GuardrailDecision.Rejected, o.Decision);
++        Assert.Equal(GuardrailCodes.BelowHardFloor, o.Code);
++        Assert.Empty(w.Db.ActiveMarkdowns.ToList());
++        Assert.Empty(w.Db.BusinessEvents.ToList());
++        var pc = Assert.Single(w.Db.PriceChanges.ToList());
++        Assert.Equal(PriceChangeStatus.Rejected, pc.Status);
++        Assert.Equal(GuardrailCodes.BelowHardFloor, pc.GuardrailCode);
++    }
++
++    [Fact]
++    public async Task Soft_floor_waits_for_approval_then_applies()
++    {
++        var w = await CreateAsync(PricingFixtures.Policy());
++        await using var _ = w.Db;
++
++        var o = await w.Svc.ProposeAsync(Propose(w, 68m), PriceChangeSource.Ai, 9, Now);
++        Assert.Equal(GuardrailDecision.NeedsApproval, o.Decision);
++        Assert.Null(o.ActiveMarkdownId);
++        Assert.Empty(w.Db.ActiveMarkdowns.ToList());
++        Assert.Equal(PriceChangeStatus.PendingApproval, w.Db.PriceChanges.Single().Status);
++
++        var a = await w.Svc.ApproveAsync(o.PriceChangeId, 42, Now.AddMinutes(5));
++
++        Assert.Equal(GuardrailDecision.Allowed, a.Decision);
++        var md = Assert.Single(w.Db.ActiveMarkdowns.ToList());
++        Assert.Equal(68m, md.Price);
++        var pc = w.Db.PriceChanges.Single();
++        Assert.Equal(PriceChangeStatus.Applied, pc.Status);
++        Assert.Equal(42, pc.DecidedBy);
++        Assert.Contains(w.Db.BusinessEvents.ToList(), e => e.EventType == BusinessEventTypes.PriceChanged);
++    }
++
++    [Fact]
++    public async Task Approval_cannot_waive_a_hard_floor_that_tightened_in_the_meantime()
++    {
++        var w = await CreateAsync(PricingFixtures.Policy());
++        await using var _ = w.Db;
++        var o = await w.Svc.ProposeAsync(Propose(w, 68m), PriceChangeSource.Ai, 9, Now);
++        var policy = w.Db.PricingPolicies.Single();
++        policy.HardMarginFloorPct = 20m;      // new hard floor = 72 > 68
++        await w.Db.SaveChangesAsync();
++
++        var a = await w.Svc.ApproveAsync(o.PriceChangeId, 42, Now.AddMinutes(5));
++
++        Assert.Equal(GuardrailDecision.Rejected, a.Decision);
++        Assert.Equal(GuardrailCodes.BelowHardFloor, a.Code);
++        Assert.Empty(w.Db.ActiveMarkdowns.ToList());
++        Assert.Equal(PriceChangeStatus.Rejected, w.Db.PriceChanges.Single().Status);
++    }
++
++    [Fact]
++    public async Task Pending_change_can_be_rejected_by_a_person()
++    {
++        var w = await CreateAsync(PricingFixtures.Policy());
++        await using var _ = w.Db;
++        var o = await w.Svc.ProposeAsync(Propose(w, 68m), PriceChangeSource.Ai, 9, Now);
++
++        var r = await w.Svc.RejectAsync(o.PriceChangeId, 42, "not today", Now);
++
++        Assert.Equal(GuardrailDecision.Rejected, r.Decision);
++        var pc = w.Db.PriceChanges.Single();
++        Assert.Equal(GuardrailCodes.RejectedByUser, pc.GuardrailCode);
++        Assert.Equal("not today", pc.GuardrailMessage);
++        Assert.Empty(w.Db.ActiveMarkdowns.ToList());
++    }
++
++    [Fact]
++    public async Task No_policy_rejects_with_NO_POLICY()
++    {
++        var w = await CreateAsync(policy: null);
++        await using var _ = w.Db;
++
++        var o = await w.Svc.ProposeAsync(Propose(w, 80m), PriceChangeSource.Manual, 9, Now);
++
++        Assert.Equal(GuardrailDecision.Rejected, o.Decision);
++        Assert.Equal(GuardrailCodes.NoPolicy, o.Code);
++        Assert.Equal(PriceChangeStatus.Rejected, w.Db.PriceChanges.Single().Status);
++    }
++
++    [Fact]
++    public async Task Autonomy_off_rejects()
++    {
++        var w = await CreateAsync(PricingFixtures.Policy(AutonomyModes.Off));
++        await using var _ = w.Db;
++
++        var o = await w.Svc.ProposeAsync(Propose(w, 80m), PriceChangeSource.Ai, 9, Now);
++
++        Assert.Equal(GuardrailCodes.AutonomyOff, o.Code);
++        Assert.Empty(w.Db.ActiveMarkdowns.ToList());
++    }
++
++    [Fact]
++    public async Task Fourth_change_inside_an_hour_is_rejected_but_an_hour_later_is_fine()
++    {
++        var w = await CreateAsync(PricingFixtures.Policy());
++        await using var _ = w.Db;
++        foreach (var price in new[] { 90m, 89m, 88m })
++        {
++            Assert.Equal(GuardrailDecision.Allowed, (await w.Svc.ProposeAsync(Propose(w, price), PriceChangeSource.Ai, 9, Now)).Decision);
++        }
++
++        var blocked = await w.Svc.ProposeAsync(Propose(w, 87m), PriceChangeSource.Ai, 9, Now.AddMinutes(30));
++        Assert.Equal(GuardrailCodes.TooManyChanges, blocked.Code);
++
++        var later = await w.Svc.ProposeAsync(Propose(w, 86m), PriceChangeSource.Ai, 9, Now.AddMinutes(61));
++        Assert.Equal(GuardrailDecision.Allowed, later.Decision);
++    }
++
++    [Fact]
++    public async Task A_new_markdown_on_the_same_batch_supersedes_the_old_one()
++    {
++        var w = await CreateAsync(PricingFixtures.Policy());
++        await using var _ = w.Db;
++        await w.Svc.ProposeAsync(Propose(w, 90m), PriceChangeSource.Ai, 9, Now);
++        await w.Svc.ProposeAsync(Propose(w, 85m), PriceChangeSource.Ai, 9, Now.AddMinutes(10));
++
++        var all = w.Db.ActiveMarkdowns.OrderBy(m => m.Id).ToList();
++        Assert.Equal(2, all.Count);
++        Assert.False(all[0].IsActive);
++        Assert.NotNull(all[0].EndsAt);
++        Assert.True(all[1].IsActive);
++        Assert.Equal(85m, all[1].Price);
++    }
++
++    [Fact]
++    public async Task Product_discount_is_included_when_checking_the_floor()
++    {
++        // list 100 with a 10% product discount -> list net 90. Batch cost 80 -> hard floor 84.
++        var w = await CreateAsync(PricingFixtures.Policy(), productDiscount: 10m, batchCost: 80m);
++        await using var _ = w.Db;
++
++        var rejected = await w.Svc.ProposeAsync(Propose(w, 90m), PriceChangeSource.Ai, 9, Now);   // net 81 < 84
++        Assert.Equal(GuardrailCodes.BelowHardFloor, rejected.Code);
++
++        var needsApproval = await w.Svc.ProposeAsync(Propose(w, 95m), PriceChangeSource.Ai, 9, Now);   // net 85.5, soft floor 92
++        Assert.Equal(GuardrailDecision.NeedsApproval, needsApproval.Decision);
++    }
++
++    [Fact]
++    public async Task Invalid_targets_throw_instead_of_producing_ledger_noise()
++    {
++        var expired = await CreateAsync(PricingFixtures.Policy(), expiryInDays: -1);
++        await using (expired.Db)
++            await Assert.ThrowsAsync<InvalidOperationException>(() => expired.Svc.ProposeAsync(Propose(expired, 80m), PriceChangeSource.Ai, 9, Now));
++
++        var plain = await CreateAsync(PricingFixtures.Policy(), monitorExpiry: false);
++        await using (plain.Db)
++            await Assert.ThrowsAsync<InvalidOperationException>(() => plain.Svc.ProposeAsync(Propose(plain, 80m), PriceChangeSource.Ai, 9, Now));
++
++        var empty = await CreateAsync(PricingFixtures.Policy());
++        await using (empty.Db)
++        {
++            empty.Batch.QtyOnHand = 0;
++            await empty.Db.SaveChangesAsync();
++            await Assert.ThrowsAsync<InvalidOperationException>(() => empty.Svc.ProposeAsync(Propose(empty, 80m), PriceChangeSource.Ai, 9, Now));
++        }
++
++        var unknown = await CreateAsync(PricingFixtures.Policy());
++        await using (unknown.Db)
++        {
++            var p = Propose(unknown, 80m);
++            p.BatchId = 999999;
++            await Assert.ThrowsAsync<InvalidOperationException>(() => unknown.Svc.ProposeAsync(p, PriceChangeSource.Ai, 9, Now));
++            Assert.Empty(unknown.Db.PriceChanges.ToList());
++        }
++    }
++
++    [Fact]
++    public async Task Another_tenant_cannot_mark_down_this_tenants_batch()
++    {
++        var w = await CreateAsync(PricingFixtures.Policy());
++        await using var _ = w.Db;
++        await using var other = new TestAppDbContext(w.DbName, 6);
++        var svc = new MarkdownService(other, PricingFixtures.Publisher(other));
++
++        await Assert.ThrowsAsync<InvalidOperationException>(() => svc.ProposeAsync(Propose(w, 80m), PriceChangeSource.Ai, 9, Now));
++    }
++
++    [Fact]
++    public async Task End_deactivates_records_a_restore_and_publishes_an_event_once()
++    {
++        var w = await CreateAsync(PricingFixtures.Policy());
++        await using var _ = w.Db;
++        var o = await w.Svc.ProposeAsync(Propose(w, 80m), PriceChangeSource.Ai, 9, Now);
++
++        Assert.True(await w.Svc.EndAsync(o.ActiveMarkdownId.Value, "sold out", Now.AddHours(1)));
++        Assert.False(await w.Svc.EndAsync(o.ActiveMarkdownId.Value, "again", Now.AddHours(2)));
++
++        Assert.False(w.Db.ActiveMarkdowns.Single().IsActive);
++        Assert.Contains(w.Db.PriceChanges.ToList(), c => c.Status == PriceChangeStatus.Ended && c.PriceAfter == 100m);
++        var events = w.Db.BusinessEvents.ToList();
++        Assert.Equal(2, events.Count);
++        Assert.Contains(events, e => e.PayloadJson.Contains("\"kind\":\"restore\""));
++    }
++}
+diff --git a/Retailo.Tests/Support/PricingFixtures.cs b/Retailo.Tests/Support/PricingFixtures.cs
+new file mode 100644
+index 0000000..07ca478
+--- /dev/null
++++ b/Retailo.Tests/Support/PricingFixtures.cs
+@@ -0,0 +1,34 @@
++using GoPosify.Data;
++using GoPosify.Models;
++using GoPosify.Services;
++using Microsoft.AspNetCore.Http;
++
++namespace Retailo.Tests.Support;
++
++public static class PricingFixtures
++{
++    public static PricingPolicy Policy(string mode = AutonomyModes.Autonomous) => new()
++    {
++        HardMarginFloorPct = 5m, SoftMarginFloorPct = 15m, MaxDiscountPct = 50m,
++        MaxChangesPerSkuPerHour = 3, AutonomyMode = mode
++    };
++
++    // InMemory enforces [Required]: Product needs ProductCode, BarcodeType and ProductName.
++    public static Product NewProduct(decimal price = 100m, decimal cost = 60m, decimal discount = 0m, bool monitorExpiry = true)
++        => new()
++        {
++            ProductName = "Fresh Milk", ProductCode = "MILK-" + Guid.NewGuid().ToString("N")[..6], BarcodeType = "CODE128",
++            Price = price, Cost = cost, Discount = discount,
++            MonitorExpiry = monitorExpiry, BatchTracking = monitorExpiry, ExpiryAlertDays = 30
++        };
++
++    public static ProductBatch NewBatch(int productId, DateTime expiry, decimal qty = 20m, decimal cost = 60m, int warehouseId = 1)
++        => new()
++        {
++            WarehouseId = warehouseId, ProductId = productId, BatchNo = "B-" + Guid.NewGuid().ToString("N")[..6],
++            ExpiryDate = expiry, QtyOnHand = qty, Cost = cost
++        };
++
++    public static IBusinessEventPublisher Publisher(AppDBContext db)
++        => new BusinessEventPublisher(db, new HttpContextAccessor { HttpContext = new DefaultHttpContext() });
++}
+diff --git a/Services/MarkdownService.cs b/Services/MarkdownService.cs
+new file mode 100644
+index 0000000..98108fb
+--- /dev/null
++++ b/Services/MarkdownService.cs
+@@ -0,0 +1,292 @@
++using GoPosify.Data;
++using GoPosify.Models;
++using Microsoft.EntityFrameworkCore;
++
++namespace GoPosify.Services;
++
++public sealed class MarkdownProposal
++{
++    public int WarehouseId { get; set; }
++    public int ProductId { get; set; }
++    public long BatchId { get; set; }
++    public decimal NewPrice { get; set; }          // base price, same unit as Product.Price
++    public string Reason { get; set; }
++    public string PredictionRef { get; set; }
++    public DateTime? EndsAt { get; set; }
++}
++
++public sealed class MarkdownOutcome
++{
++    public GuardrailDecision Decision { get; set; }
++    public string Code { get; set; }
++    public string Message { get; set; }
++    public long PriceChangeId { get; set; }
++    public long? ActiveMarkdownId { get; set; }
++}
++
++public interface IMarkdownService
++{
++    Task<MarkdownOutcome> ProposeAsync(MarkdownProposal p, string source, int? userId, DateTime now);
++    Task<MarkdownOutcome> ApproveAsync(long priceChangeId, int userId, DateTime now);
++    Task<MarkdownOutcome> RejectAsync(long priceChangeId, int userId, string reason, DateTime now);
++    Task<bool> EndAsync(long activeMarkdownId, string reason, DateTime now);
++}
++
++public sealed class MarkdownService : IMarkdownService
++{
++    private readonly AppDBContext _db;
++    private readonly IBusinessEventPublisher _events;
++
++    public MarkdownService(AppDBContext db, IBusinessEventPublisher events)
++    {
++        _db = db;
++        _events = events;
++    }
++
++    public async Task<MarkdownOutcome> ProposeAsync(MarkdownProposal p, string source, int? userId, DateTime now)
++    {
++        var (product, batch) = await LoadTargetsAsync(p.WarehouseId, p.ProductId, p.BatchId, now);
++        var policy = await _db.PricingPolicies.AsNoTracking().FirstOrDefaultAsync();
++
++        GuardrailResult result;
++        if (policy == null)
++        {
++            result = GuardrailResult.Reject(GuardrailCodes.NoPolicy, "No pricing policy is configured for this tenant.");
++        }
++        else
++        {
++            var changes = await CountRecentChangesAsync(p.WarehouseId, p.ProductId, now, null);
++            result = MarkdownGuardrails.Evaluate(
++                policy,
++                MarkdownGuardrails.NetPrice(product.Price, product.Discount),
++                MarkdownGuardrails.NetPrice(p.NewPrice, product.Discount),
++                ResolveCost(batch, product),
++                changes);
++        }
++
++        var change = new PriceChange
++        {
++            WarehouseId = p.WarehouseId,
++            ProductId = p.ProductId,
++            BatchId = p.BatchId,
++            PriceBefore = product.Price,
++            PriceAfter = p.NewPrice,
++            DiscountPct = product.Price > 0 ? (product.Price - p.NewPrice) / product.Price * 100m : 0m,
++            Reason = Trim(p.Reason, 300),
++            Source = source,
++            Status = result.Decision switch
++            {
++                GuardrailDecision.Allowed => PriceChangeStatus.Applied,
++                GuardrailDecision.NeedsApproval => PriceChangeStatus.PendingApproval,
++                _ => PriceChangeStatus.Rejected
++            },
++            GuardrailCode = result.Code,
++            GuardrailMessage = Trim(result.Message, 300),
++            PredictionRef = Trim(p.PredictionRef, 64),
++            EndsAt = p.EndsAt,
++            CreatedBy = userId,
++            CreatedAt = now
++        };
++        _db.PriceChanges.Add(change);
++        await _db.SaveChangesAsync();
++
++        long? activeId = null;
++        if (result.Decision == GuardrailDecision.Allowed)
++        {
++            activeId = await ActivateAsync(change, now);
++        }
++
++        return Outcome(result, change.Id, activeId);
++    }
++
++    public async Task<MarkdownOutcome> ApproveAsync(long priceChangeId, int userId, DateTime now)
++    {
++        var change = await GetPendingAsync(priceChangeId);
++
++        Product product;
++        ProductBatch batch;
++        try
++        {
++            var t = await LoadTargetsAsync(change.WarehouseId, change.ProductId, change.BatchId.Value, now);
++            product = t.Product;
++            batch = t.Batch;
++        }
++        catch (InvalidOperationException ex)
++        {
++            return await FinishRejectedAsync(change, GuardrailCodes.BatchUnavailable, ex.Message, userId, now);
++        }
++
++        var policy = await _db.PricingPolicies.AsNoTracking().FirstOrDefaultAsync();
++        if (policy == null)
++        {
++            return await FinishRejectedAsync(change, GuardrailCodes.NoPolicy, "No pricing policy is configured for this tenant.", userId, now);
++        }
++
++        var changes = await CountRecentChangesAsync(change.WarehouseId, change.ProductId, now, change.Id);
++        var result = MarkdownGuardrails.Evaluate(
++            policy,
++            MarkdownGuardrails.NetPrice(product.Price, product.Discount),
++            MarkdownGuardrails.NetPrice(change.PriceAfter, product.Discount),
++            ResolveCost(batch, product),
++            changes,
++            approved: true);
++
++        if (result.Decision != GuardrailDecision.Allowed)
++        {
++            return await FinishRejectedAsync(change, result.Code, result.Message, userId, now);
++        }
++
++        change.Status = PriceChangeStatus.Applied;
++        change.GuardrailCode = GuardrailCodes.Ok;
++        change.GuardrailMessage = "Approved.";
++        change.DecidedBy = userId;
++        change.DecidedAt = now;
++        await _db.SaveChangesAsync();
++
++        var activeId = await ActivateAsync(change, now);
++        return Outcome(GuardrailResult.Allow(), change.Id, activeId);
++    }
++
++    public async Task<MarkdownOutcome> RejectAsync(long priceChangeId, int userId, string reason, DateTime now)
++    {
++        var change = await GetPendingAsync(priceChangeId);
++        return await FinishRejectedAsync(change, GuardrailCodes.RejectedByUser,
++            string.IsNullOrWhiteSpace(reason) ? "Rejected by approver." : reason, userId, now);
++    }
++
++    public async Task<bool> EndAsync(long activeMarkdownId, string reason, DateTime now)
++    {
++        var md = await _db.ActiveMarkdowns.FirstOrDefaultAsync(m => m.Id == activeMarkdownId && m.IsActive);
++        if (md == null)
++        {
++            return false;
++        }
++
++        md.IsActive = false;
++        md.EndsAt = now;
++
++        var listPrice = await _db.Products.AsNoTracking().Where(x => x.Id == md.ProductId).Select(x => x.Price).FirstOrDefaultAsync();
++        var restore = new PriceChange
++        {
++            WarehouseId = md.WarehouseId,
++            ProductId = md.ProductId,
++            BatchId = md.BatchId,
++            PriceBefore = md.Price,
++            PriceAfter = listPrice,
++            DiscountPct = 0m,
++            Reason = Trim(reason, 300),
++            Source = md.Source ?? PriceChangeSource.Manual,
++            Status = PriceChangeStatus.Ended,
++            GuardrailCode = GuardrailCodes.Ok,
++            GuardrailMessage = "Markdown ended.",
++            CreatedAt = now
++        };
++        _db.PriceChanges.Add(restore);
++        await _db.SaveChangesAsync();
++
++        _events.Publish(BusinessEventTypes.PriceChanged, md.WarehouseId, $"pc-{restore.Id}",
++            new { kind = "restore", priceChangeId = restore.Id, activeMarkdownId = md.Id, productId = md.ProductId, batchId = md.BatchId, priceBefore = md.Price, priceAfter = listPrice },
++            now);
++        await _db.SaveChangesAsync();
++        return true;
++    }
++
++    private async Task<(Product Product, ProductBatch Batch)> LoadTargetsAsync(int warehouseId, int productId, long batchId, DateTime now)
++    {
++        var product = await _db.Products.FirstOrDefaultAsync(x => x.Id == productId)
++            ?? throw new InvalidOperationException("Product not found.");
++        if (!product.MonitorExpiry)
++        {
++            throw new InvalidOperationException("Product is not expiry-tracked, so it cannot be marked down per batch.");
++        }
++
++        var batch = await _db.ProductBatches.FirstOrDefaultAsync(b => b.Id == batchId && b.WarehouseId == warehouseId && b.ProductId == productId)
++            ?? throw new InvalidOperationException("Batch not found for this branch and product.");
++        if (batch.QtyOnHand <= 0)
++        {
++            throw new InvalidOperationException("Batch has no stock.");
++        }
++
++        if (batch.ExpiryDate.HasValue && batch.ExpiryDate.Value.Date < now.Date)
++        {
++            throw new InvalidOperationException("Batch is already expired.");
++        }
++
++        return (product, batch);
++    }
++
++    private static decimal? ResolveCost(ProductBatch batch, Product product)
++    {
++        var cost = batch.Cost ?? product.Cost;
++        return cost > 0m ? cost : null;
++    }
++
++    private Task<int> CountRecentChangesAsync(int warehouseId, int productId, DateTime now, long? excludeId)
++    {
++        var since = now.AddHours(-1);
++        return _db.PriceChanges.CountAsync(c =>
++            c.WarehouseId == warehouseId && c.ProductId == productId && c.CreatedAt > since
++            && (c.Status == PriceChangeStatus.Applied || c.Status == PriceChangeStatus.PendingApproval)
++            && (!excludeId.HasValue || c.Id != excludeId.Value));
++    }
++
++    private async Task<PriceChange> GetPendingAsync(long priceChangeId)
++        => await _db.PriceChanges.FirstOrDefaultAsync(c => c.Id == priceChangeId && c.Status == PriceChangeStatus.PendingApproval)
++           ?? throw new InvalidOperationException("Price change not found or not pending.");
++
++    private async Task<MarkdownOutcome> FinishRejectedAsync(PriceChange change, string code, string message, int? userId, DateTime now)
++    {
++        change.Status = PriceChangeStatus.Rejected;
++        change.GuardrailCode = code;
++        change.GuardrailMessage = Trim(message, 300);
++        change.DecidedBy = userId;
++        change.DecidedAt = now;
++        await _db.SaveChangesAsync();
++        return Outcome(GuardrailResult.Reject(code, message), change.Id, null);
++    }
++
++    private async Task<long> ActivateAsync(PriceChange change, DateTime now)
++    {
++        var existing = await _db.ActiveMarkdowns
++            .Where(m => m.IsActive && m.WarehouseId == change.WarehouseId && m.ProductId == change.ProductId && m.BatchId == change.BatchId.Value)
++            .ToListAsync();
++        foreach (var e in existing)
++        {
++            e.IsActive = false;
++            e.EndsAt = now;
++        }
++
++        var md = new ActiveMarkdown
++        {
++            WarehouseId = change.WarehouseId,
++            ProductId = change.ProductId,
++            BatchId = change.BatchId.Value,
++            Price = change.PriceAfter,
++            StartsAt = now,
++            EndsAt = change.EndsAt,
++            IsActive = true,
++            PriceChangeId = change.Id,
++            Source = change.Source
++        };
++        _db.ActiveMarkdowns.Add(md);
++        await _db.SaveChangesAsync();
++
++        _events.Publish(BusinessEventTypes.PriceChanged, change.WarehouseId, $"pc-{change.Id}",
++            new
++            {
++                kind = "markdown", priceChangeId = change.Id, activeMarkdownId = md.Id, productId = change.ProductId,
++                batchId = change.BatchId, priceBefore = change.PriceBefore, priceAfter = change.PriceAfter,
++                discountPct = change.DiscountPct, source = change.Source, predictionRef = change.PredictionRef
++            },
++            now);
++        await _db.SaveChangesAsync();
++        return md.Id;
++    }
++
++    private static MarkdownOutcome Outcome(GuardrailResult r, long priceChangeId, long? activeId) => new()
++    {
++        Decision = r.Decision, Code = r.Code, Message = r.Message, PriceChangeId = priceChangeId, ActiveMarkdownId = activeId
++    };
++
++    private static string Trim(string s, int max) => string.IsNullOrEmpty(s) || s.Length <= max ? s : s.Substring(0, max);
++}
+-- 
+2.46.0.windows.1
+

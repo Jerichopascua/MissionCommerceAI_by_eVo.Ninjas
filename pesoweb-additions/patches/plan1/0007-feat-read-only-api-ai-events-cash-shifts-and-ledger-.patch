@@ -1,0 +1,95 @@
+From 8258828229945fab1e3818ee5b8d09fa5b16e1d6 Mon Sep 17 00:00:00 2001
+From: unknown <jericho.pascua@gmail.com>
+Date: Mon, 5 Oct 2026 02:16:23 +0800
+Subject: [PATCH 7/7] feat: read-only /api/ai events, cash-shifts and
+ ledger-drift endpoints
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+---
+ Controllers/AiController.cs | 74 +++++++++++++++++++++++++++++++++++++
+ 1 file changed, 74 insertions(+)
+ create mode 100644 Controllers/AiController.cs
+
+diff --git a/Controllers/AiController.cs b/Controllers/AiController.cs
+new file mode 100644
+index 0000000..b6308d8
+--- /dev/null
++++ b/Controllers/AiController.cs
+@@ -0,0 +1,74 @@
++using System.Text.Json;
++using GoPosify.Data;
++using GoPosify.Services;
++using Microsoft.AspNetCore.Authorization;
++using Microsoft.AspNetCore.Mvc;
++using Microsoft.EntityFrameworkCore;
++
++namespace GoPosify.Controllers
++{
++    // Read-only, structured data for the simulator and the AI layer. Never mutates business data.
++    [Route("api/[controller]/[action]")]
++    [ApiController]
++    [Authorize]
++    public class AiController : BaseController
++    {
++        private readonly ILedgerService _ledger;
++
++        public AiController(AppDBContext dbContext, ILedgerService ledger) : base(dbContext)
++        {
++            _ledger = ledger;
++        }
++
++        // GET: api/ai/events?afterId=0&take=500&simRunId=run-42
++        [HttpGet("~/api/ai/events")]
++        [Authorize(Policy = "AI.Read")]
++        public async Task<IActionResult> Events(long afterId = 0, int take = 500, string simRunId = null)
++        {
++            take = Math.Clamp(take, 1, 1000);
++
++            var q = _dbContext.BusinessEvents.AsNoTracking().Where(e => e.Id > afterId);
++            if (!string.IsNullOrWhiteSpace(simRunId))
++            {
++                q = q.Where(e => e.SimRunId == simRunId);
++            }
++
++            var rows = await q.OrderBy(e => e.Id).Take(take).ToListAsync();
++            var events = rows.Select(e => new
++            {
++                e.Id,
++                e.EventType,
++                e.WarehouseId,
++                e.ReferenceNo,
++                e.SimRunId,
++                e.OccurredAt,
++                Payload = string.IsNullOrWhiteSpace(e.PayloadJson) ? (JsonElement?)null : JsonDocument.Parse(e.PayloadJson).RootElement.Clone()
++            }).ToList();
++
++            return Ok(new { events, nextAfterId = rows.Count > 0 ? rows[^1].Id : afterId });
++        }
++
++        // GET: api/ai/cash-shifts?warehouseId=1&closedOnly=true
++        [HttpGet("~/api/ai/cash-shifts")]
++        [Authorize(Policy = "AI.Read")]
++        public async Task<IActionResult> CashShifts(int? warehouseId, bool closedOnly = true)
++        {
++            var q = _dbContext.CashShifts.AsNoTracking().AsQueryable();
++            if (warehouseId.HasValue) q = q.Where(s => s.WarehouseId == warehouseId.Value);
++            if (closedOnly) q = q.Where(s => s.Status == CashShiftStatus.Closed);
++
++            var shifts = await q.OrderByDescending(s => s.OpenedAt).Take(1000)
++                .Select(s => new { s.Id, s.WarehouseId, s.CashierId, s.OpenedAt, s.ClosedAt, s.OpeningCash, s.ExpectedCash, s.ActualCash, s.Variance, s.Status })
++                .ToListAsync();
++            return Ok(shifts);
++        }
++
++        // GET: api/ai/ledger-drift?warehouseId=1&tolerance=0
++        [HttpGet("~/api/ai/ledger-drift")]
++        [Authorize(Policy = "AI.Read")]
++        public async Task<IActionResult> LedgerDrift(int? warehouseId, decimal tolerance = 0m)
++        {
++            return Ok(await _ledger.GetDriftAsync(warehouseId, tolerance));
++        }
++    }
++}
+-- 
+2.46.0.windows.1
+

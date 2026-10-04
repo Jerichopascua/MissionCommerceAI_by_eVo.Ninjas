@@ -23,6 +23,16 @@
 | 5 | AI on AMD: demand-response model, markdown optimizer, prediction recorder, mission signals, investigator | after plan 4 |
 | 6 | Proof (three-way runs, calibration), Quick Sim lane, UI, packaging, demo | after plan 5 |
 
+## Execution log and corrections (2026-10-05)
+
+Executed inline in the worktree `D:\git\Retailo_v1_mission` (branch `Retail_MissionCommerceAI`), right after Plan 1. Tasks 1 to 7 are done with **69 tests passing** (Plan 1's 23 plus 46). Task 8 (`pricing-smoke.ps1`) is written and syntax-checked but **not run** because SQL Server was stopped; Task 9 shipped the SQL script (`scripts/20261004_sim_foundation_and_markdown_core.sql`, all six new tables, every migration guarded) and the patch series.
+
+Corrections found while executing:
+1. `PricingFixtures.NewProduct` needs `BarcodeType` (the in-memory database enforces `[Required]`); the fixture code above is corrected in the source.
+2. Every migration needs its scaffolded `UpdateData` seed noise stripped (see Plan 1's log, correction 3).
+3. Task 6 Step 6: Plan 1 already grants `Cash.*` and `AI.Read` to all `SuperAdmin` roles, so `GrantPricingPermissionsToOwnerRoles` grants only the four `Pricing.*` permissions.
+4. Task 4: the `AddSale` anchor was unique (count 1) and the hook compiled cleanly.
+
 ## Global Constraints
 
 - Everything from Plan 1's Global Constraints applies (additive only, `TenantID` on tenant tables, PesoWeb controller conventions, new permissions go in `Helpers/Permissions.cs`, branch `Retail_MissionCommerceAI` of `D:\git\Retailo_v1`, never `git add .` there, migrations applied to the local dev database only, "variance" wording, no secrets in git).

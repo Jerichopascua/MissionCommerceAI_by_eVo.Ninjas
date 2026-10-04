@@ -1,0 +1,224 @@
+From 5c7c716c734faa120e62728f5a9e1a1cc2b386ed Mon Sep 17 00:00:00 2001
+From: unknown <jericho.pascua@gmail.com>
+Date: Mon, 5 Oct 2026 02:16:03 +0800
+Subject: [PATCH 6/7] feat: inventory ledger vs on-hand drift service; exclude
+ test project content from main build
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+---
+ Program.cs                          |  1 +
+ Retailo.Tests/LedgerServiceTests.cs | 93 +++++++++++++++++++++++++++++
+ Retailo.csproj                      |  2 +
+ Services/LedgerService.cs           | 75 +++++++++++++++++++++++
+ 4 files changed, 171 insertions(+)
+ create mode 100644 Retailo.Tests/LedgerServiceTests.cs
+ create mode 100644 Services/LedgerService.cs
+
+diff --git a/Program.cs b/Program.cs
+index 6848441..de54ba3 100644
+--- a/Program.cs
++++ b/Program.cs
+@@ -319,6 +319,7 @@ builder.Services.AddScoped<IStockService, StockService>();
+ builder.Services.AddScoped<IInventoryBatchService, InventoryBatchService>();
+ builder.Services.AddScoped<IBusinessEventPublisher, BusinessEventPublisher>();
+ builder.Services.AddScoped<ICashShiftService, CashShiftService>();
++builder.Services.AddScoped<ILedgerService, LedgerService>();
+ builder.Services.AddScoped<IDocService, DocService>();
+ builder.Services.AddScoped<ISyncService, SyncService>();
+ 
+diff --git a/Retailo.Tests/LedgerServiceTests.cs b/Retailo.Tests/LedgerServiceTests.cs
+new file mode 100644
+index 0000000..4369d5e
+--- /dev/null
++++ b/Retailo.Tests/LedgerServiceTests.cs
+@@ -0,0 +1,93 @@
++using GoPosify.Models;
++using GoPosify.Services;
++using Retailo.Tests.Support;
++using Xunit;
++
++namespace Retailo.Tests;
++
++public class LedgerServiceTests
++{
++    private static InventoryTransaction Tx(int wh, int product, decimal qtyIn, decimal qtyOut)
++        => new() { WarehouseId = wh, ProductId = product, QtyIn = qtyIn, QtyOut = qtyOut, TransactionType = "test" };
++
++    [Fact]
++    public async Task No_drift_when_ledger_equals_on_hand()
++    {
++        await using var db = new TestAppDbContext(TestAppDbContext.NewDbName(), 5);
++        db.InventoryTransactions.Add(Tx(1, 10, 100, 0));
++        db.InventoryTransactions.Add(Tx(1, 10, 0, 50));
++        db.ProductWarehouses.Add(new ProductWarehouse { WarehouseId = 1, ProductId = 10, Quantity = 50 });
++        await db.SaveChangesAsync();
++
++        var rows = await new LedgerService(db).GetDriftAsync(null, 0m);
++
++        Assert.Empty(rows);
++    }
++
++    [Fact]
++    public async Task Reports_eight_missing_units_for_the_milk_example()
++    {
++        await using var db = new TestAppDbContext(TestAppDbContext.NewDbName(), 5);
++        db.InventoryTransactions.Add(Tx(1, 10, 100, 0));
++        db.InventoryTransactions.Add(Tx(1, 10, 0, 50));      // ledger says 50
++        db.ProductWarehouses.Add(new ProductWarehouse { WarehouseId = 1, ProductId = 10, Quantity = 42 });   // shelf says 42
++        await db.SaveChangesAsync();
++
++        var row = Assert.Single(await new LedgerService(db).GetDriftAsync(null, 0m));
++
++        Assert.Equal(50m, row.LedgerBalance);
++        Assert.Equal(42m, row.OnHand);
++        Assert.Equal(-8m, row.Drift);
++    }
++
++    [Fact]
++    public async Task Tolerance_hides_small_drift_and_sorts_largest_first()
++    {
++        await using var db = new TestAppDbContext(TestAppDbContext.NewDbName(), 5);
++        db.InventoryTransactions.Add(Tx(1, 1, 10, 0));
++        db.InventoryTransactions.Add(Tx(1, 2, 100, 0));
++        db.InventoryTransactions.Add(Tx(1, 3, 100, 0));
++        db.ProductWarehouses.Add(new ProductWarehouse { WarehouseId = 1, ProductId = 1, Quantity = 9 });     // drift -1
++        db.ProductWarehouses.Add(new ProductWarehouse { WarehouseId = 1, ProductId = 2, Quantity = 90 });    // drift -10
++        db.ProductWarehouses.Add(new ProductWarehouse { WarehouseId = 1, ProductId = 3, Quantity = 105 });   // drift +5
++        await db.SaveChangesAsync();
++
++        var rows = await new LedgerService(db).GetDriftAsync(null, 2m);
++
++        Assert.Equal(new[] { 2, 3 }, rows.Select(r => r.ProductId).ToArray());
++    }
++
++    [Fact]
++    public async Task On_hand_with_no_ledger_rows_is_reported_as_drift()
++    {
++        await using var db = new TestAppDbContext(TestAppDbContext.NewDbName(), 5);
++        db.ProductWarehouses.Add(new ProductWarehouse { WarehouseId = 1, ProductId = 7, Quantity = 12 });
++        await db.SaveChangesAsync();
++
++        var row = Assert.Single(await new LedgerService(db).GetDriftAsync(null, 0m));
++
++        Assert.Equal(0m, row.LedgerBalance);
++        Assert.Equal(12m, row.Drift);
++    }
++
++    [Fact]
++    public async Task Warehouse_filter_and_tenant_isolation_apply()
++    {
++        var name = TestAppDbContext.NewDbName();
++        await using (var t5 = new TestAppDbContext(name, 5))
++        {
++            t5.InventoryTransactions.Add(Tx(1, 10, 10, 0));
++            t5.ProductWarehouses.Add(new ProductWarehouse { WarehouseId = 1, ProductId = 10, Quantity = 5 });
++            t5.InventoryTransactions.Add(Tx(2, 10, 10, 0));
++            t5.ProductWarehouses.Add(new ProductWarehouse { WarehouseId = 2, ProductId = 10, Quantity = 5 });
++            await t5.SaveChangesAsync();
++        }
++
++        await using var asTenant5 = new TestAppDbContext(name, 5);
++        await using var asTenant6 = new TestAppDbContext(name, 6);
++
++        Assert.Equal(2, (await new LedgerService(asTenant5).GetDriftAsync(null, 0m)).Count);
++        Assert.Single(await new LedgerService(asTenant5).GetDriftAsync(2, 0m));
++        Assert.Empty(await new LedgerService(asTenant6).GetDriftAsync(null, 0m));
++    }
++}
+diff --git a/Retailo.csproj b/Retailo.csproj
+index 8872340..0dd097f 100644
+--- a/Retailo.csproj
++++ b/Retailo.csproj
+@@ -45,6 +45,8 @@
+   <ItemGroup>
+     <Compile Remove="Retailo.Tests\**\*.cs" />
+     <None Remove="Retailo.Tests\**\*" />
++    <Content Remove="Retailo.Tests\**\*" />
++    <EmbeddedResource Remove="Retailo.Tests\**\*" />
+   </ItemGroup>
+ 
+   <ItemGroup>
+diff --git a/Services/LedgerService.cs b/Services/LedgerService.cs
+new file mode 100644
+index 0000000..1c4cd06
+--- /dev/null
++++ b/Services/LedgerService.cs
+@@ -0,0 +1,75 @@
++using GoPosify.Data;
++using Microsoft.EntityFrameworkCore;
++
++namespace GoPosify.Services;
++
++public sealed class LedgerDriftRow
++{
++    public int WarehouseId { get; set; }
++    public int ProductId { get; set; }
++    public int? VariantId { get; set; }
++    public decimal LedgerBalance { get; set; }
++    public decimal OnHand { get; set; }
++    public decimal Drift { get; set; }   // OnHand - LedgerBalance; negative = stock missing vs the ledger
++}
++
++public interface ILedgerService
++{
++    Task<List<LedgerDriftRow>> GetDriftAsync(int? warehouseId, decimal tolerance);
++}
++
++public sealed class LedgerService : ILedgerService
++{
++    private readonly AppDBContext _db;
++
++    public LedgerService(AppDBContext db)
++    {
++        _db = db;
++    }
++
++    public async Task<List<LedgerDriftRow>> GetDriftAsync(int? warehouseId, decimal tolerance)
++    {
++        var ledger = await _db.InventoryTransactions.AsNoTracking()
++            .Where(t => !warehouseId.HasValue || t.WarehouseId == warehouseId.Value)
++            .GroupBy(t => new { t.WarehouseId, t.ProductId, t.VariantId })
++            .Select(g => new { g.Key.WarehouseId, g.Key.ProductId, g.Key.VariantId, Balance = g.Sum(t => t.QtyIn - t.QtyOut) })
++            .ToListAsync();
++
++        var onHand = await _db.ProductWarehouses.AsNoTracking()
++            .Where(p => !warehouseId.HasValue || p.WarehouseId == warehouseId.Value)
++            .Select(p => new { p.WarehouseId, p.ProductId, p.VariantId, p.Quantity })
++            .ToListAsync();
++
++        var rows = new Dictionary<(int, int, int?), LedgerDriftRow>();
++
++        foreach (var l in ledger)
++        {
++            rows[(l.WarehouseId, l.ProductId, l.VariantId)] = new LedgerDriftRow
++            {
++                WarehouseId = l.WarehouseId, ProductId = l.ProductId, VariantId = l.VariantId, LedgerBalance = l.Balance
++            };
++        }
++
++        foreach (var p in onHand)
++        {
++            var key = (p.WarehouseId, p.ProductId, p.VariantId);
++            if (!rows.TryGetValue(key, out var row))
++            {
++                row = new LedgerDriftRow { WarehouseId = p.WarehouseId, ProductId = p.ProductId, VariantId = p.VariantId };
++                rows[key] = row;
++            }
++
++            row.OnHand += p.Quantity;
++        }
++
++        foreach (var r in rows.Values)
++        {
++            r.Drift = r.OnHand - r.LedgerBalance;
++        }
++
++        return rows.Values
++            .Where(r => Math.Abs(r.Drift) > tolerance)
++            .OrderByDescending(r => Math.Abs(r.Drift))
++            .ToList();
++    }
++}
+-- 
+2.46.0.windows.1
+
