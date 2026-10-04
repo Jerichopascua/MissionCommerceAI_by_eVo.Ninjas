@@ -173,7 +173,7 @@ def run_day(ctx: Context, day: int, log=print, hooks=None, incidents: bool = Tru
     arrivals = behavior.day_arrivals(plan, people, day, seed)
     planned = inc.plan_incidents(plan, seed, day) if incidents else []
     ledger = inc.Ledger.load(ctx.run_dir / "ledger.json") if (ctx.run_dir / "ledger.json").exists() else inc.Ledger()
-    action_log, stats = [], {"sales": 0, "sale_failed": 0, "returns": 0, "refusals": 0, "units": 0, "revenue": 0.0}
+    action_log, stats = [], {"sales": 0, "sale_failed": 0, "returns": 0, "refusals": 0, "units": 0, "revenue": 0.0, "cogs": 0.0}
     shifts = {}
 
     def live(bkey):
@@ -229,6 +229,7 @@ def run_day(ctx: Context, day: int, log=print, hooks=None, incidents: bool = Tru
         cs = ctx.state["companies"][c.key]
         wh = cs["branches"][v.branch]["warehouse_id"]
         spec_price = {p.code: p.price for p in c.catalog}
+        spec_cost = {p.code: p.cost for p in c.catalog}
         lines = [(cs["products"][code], q) for code, q in v.lines]
         total = sum(round(spec_price[code] * (ratio_fn(v.branch, code) if ratio_fn else 1.0), 2) * q for code, q in v.lines)
         action_log.append({"t": "sale", "visit": v.id, "branch": v.branch, "lines": list(v.lines)})
@@ -236,6 +237,7 @@ def run_day(ctx: Context, day: int, log=print, hooks=None, incidents: bool = Tru
             sale = drv.sell(ctx.cashier(v.branch), wh, cs["customer_id"], lines, v.payment, total)
             stats["sales"] += 1
             stats["units"] += sum(q for _, q in v.lines)
+            stats["cogs"] += sum(spec_cost[code] * q for code, q in v.lines)
             stats["revenue"] += float(sale.get("totalAmount") or 0)
             sale_n += 1
             if sale.get("id") and rng.derive(seed, "return", v.id).random() < RETURN_RATE:

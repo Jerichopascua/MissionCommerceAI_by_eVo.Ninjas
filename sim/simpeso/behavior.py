@@ -198,3 +198,19 @@ def day_visits(plan, individuals: list, day: int, seed: int, price_ratio=None) -
 def _vertical_missions(vertical: str) -> tuple:
     from . import verticals
     return verticals.load_all()[vertical].missions
+
+
+def population_arrays() -> dict:
+    """Per-archetype arrays for the vectorised Quick Sim lane (numpy). The hidden price response is returned here, inside
+    behavior.py, so the aggregated lane can simulate shoppers without any other module naming it."""
+    import numpy as np
+    lib = list(_library().values())
+    hours = list(range(OPEN_H, CLOSE_H))
+    hour_weights = np.array([[HOUR_CURVES[a.time].get(h, 0.0) for h in hours] for a in lib], dtype=np.float64)
+    hour_weights /= hour_weights.sum(axis=1, keepdims=True)
+    return {"ids": [a.id for a in lib], "hours": hours, "hour_weights": hour_weights,
+            "visits_per_week": np.array([a.visits_per_week for a in lib]), "basket": np.array([a.basket for a in lib], dtype=np.float64),
+            "weekend_shopper": np.array([a.time == "weekend" for a in lib]), "response": np.array([a.price_response for a in lib])}
+
+
+OPEN_H, CLOSE_H = 6, 24

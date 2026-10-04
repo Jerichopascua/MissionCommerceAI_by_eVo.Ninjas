@@ -302,6 +302,42 @@ class AiHooks:
         return [json.loads(l) for l in path.read_text(encoding="utf-8").splitlines() if l.strip()]
 
 
+class FixedRuleHooks(AiHooks):
+    """The baseline a store without the agent might run: 30% off every batch on its last day, opening the day.
+    If PesoWeb's guardrails refuse 30%, it falls back to 20% then 10%; it never reacts to demand during the day."""
+    RULE = (30, 20, 10)
+
+    def __init__(self, ctx):
+        super().__init__(ctx, agent_on=False)
+        self.fixed_applied = self.fixed_refused = 0
+        self._done = False
+
+    def before_hour(self, ctx, hour):
+        if not self._done and self.lots:
+            self._done = True
+            for ckey, bkey, wh in self.live_branches():
+                owner = ctx.owner(ckey)
+                for b in self.batches(owner, wh):
+                    info = self._catalog.get(b["productId"])
+                    if not info or b["daysLeft"] != 1 or float(b["qtyOnHand"]) <= 0:
+                        continue
+                    for d in self.RULE:
+                        status, _ = ctx.driver.markdown(owner, wh, b["productId"], b["batchId"],
+                                                        round(info["list_price"] * (1 - d / 100), 2), f"fixed rule {d}% last day", None, "Manual")
+                        if status == 200:
+                            self.fixed_applied += 1
+                            break
+                    else:
+                        self.fixed_refused += 1
+        self._refresh_ratios()
+
+    def run_trial(self, day=TRIAL_DAY, log=print) -> dict:
+        self._done = False
+        stats = super().run_trial(day, log)
+        stats["markdowns_applied"], stats["markdowns_refused"] = self.fixed_applied, self.fixed_refused
+        return stats
+
+
 # ---- incident finding by risk-ranked counts ---------------------------------------------------------------------
 def find_incidents(ctx, k: int = 4, log=print) -> list:
     drv = ctx.driver

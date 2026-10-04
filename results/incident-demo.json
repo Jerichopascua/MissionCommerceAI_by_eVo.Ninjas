@@ -1,0 +1,60 @@
+{
+  "seed": 21,
+  "profile": "smoke",
+  "by_budget": [
+    {
+      "label": "PesoWeb alone",
+      "caught": 3,
+      "ai_found": 0,
+      "undetected": 2,
+      "coverage": 0.6
+    },
+    {
+      "label": "AI counts 4 SKUs per branch",
+      "caught": 3,
+      "ai_found": 1,
+      "undetected": 1,
+      "coverage": 0.8
+    },
+    {
+      "label": "AI counts 8 SKUs per branch (every SKU)",
+      "caught": 3,
+      "ai_found": 2,
+      "undetected": 0,
+      "coverage": 1.0
+    }
+  ],
+  "incidents": [
+    {
+      "type": "UNREPORTED_SHORT_DELIVERY",
+      "branch": "c1-b2",
+      "status": "ai_found",
+      "how": "A risk-ranked stock count came back short after a delivery with no receiving report."
+    },
+    {
+      "type": "HIDDEN_SHRINK",
+      "branch": "c3-b1",
+      "status": "ai_found",
+      "how": "A risk-ranked stock count came back short on a high-value fast mover."
+    },
+    {
+      "type": "NEAR_EXPIRY_BATCH",
+      "branch": "c2-b2",
+      "status": "caught",
+      "how": "PesoWeb's expiry detection raised an EXPIRY_ALERT for that exact batch."
+    },
+    {
+      "type": "CASH_SHORT",
+      "branch": "c2-b1",
+      "status": "caught",
+      "how": "PesoWeb closed the shift with a variance and raised a CASH_VARIANCE exception (unexplained cash variance)."
+    },
+    {
+      "type": "CASH_SHORT",
+      "branch": "c5-b2",
+      "status": "caught",
+      "how": "PesoWeb closed the shift with a variance and raised a CASH_VARIANCE exception (unexplained cash variance)."
+    }
+  ],
+  "note": "Ground truth is the simulator's incident ledger; PesoWeb alerts that no incident explains are not counted as findings."
+}

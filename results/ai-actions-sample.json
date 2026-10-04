@@ -1,0 +1,114 @@
+[
+  {
+    "status": "refused",
+    "discount_pct": 20,
+    "code": "TOO_MANY_CHANGES",
+    "explanation": "20% off Peanuts (batch 2566, 9 units, 1 day(s) left): 20% off lifts expected sales from 5.5 to 9.0 units and cuts expected waste from 32 to 0 pesos. Prediction: 9 units (5 to 9), about 0 pesos wasted. PesoWeb refused it because this product already had the maximum number of price changes this hour (TOO_MANY_CHANGES).",
+    "hour": 6,
+    "warehouse_id": 1223
+  },
+  {
+    "status": "refused",
+    "discount_pct": 20,
+    "code": "TOO_MANY_CHANGES",
+    "explanation": "20% off Peanuts (batch 2574, 9 units, 1 day(s) left): 20% off lifts expected sales from 5.5 to 9.0 units and cuts expected waste from 32 to 0 pesos. Prediction: 9 units (5 to 9), about 0 pesos wasted. PesoWeb refused it because this product already had the maximum number of price changes this hour (TOO_MANY_CHANGES).",
+    "hour": 6,
+    "warehouse_id": 1224
+  },
+  {
+    "status": "refused",
+    "discount_pct": 10,
+    "code": "TOO_MANY_CHANGES",
+    "explanation": "10% off Paracetamol 500mg (batch 2585, 12 units, 1 day(s) left): 10% off lifts expected sales from 7.5 to 8.6 units and cuts expected waste from 612 to 456 pesos. Prediction: 9 units (5 to 12), about 456 pesos wasted. PesoWeb refused it because this product already had the maximum number of price changes this hour (TOO_MANY_CHANGES).",
+    "hour": 6,
+    "warehouse_id": 1226
+  },
+  {
+    "status": "refused",
+    "discount_pct": 20,
+    "code": "TOO_MANY_CHANGES",
+    "explanation": "20% off Iced Tea 500ml (batch 2594, 8 units, 1 day(s) left): 20% off lifts expected sales from 4.5 to 8.0 units and cuts expected waste from 84 to 0 pesos. Prediction: 8 units (7 to 8), about 0 pesos wasted. PesoWeb refused it because this product already had the maximum number of price changes this hour (TOO_MANY_CHANGES).",
+    "hour": 6,
+    "warehouse_id": 1229
+  },
+  {
+    "status": "applied",
+    "discount_pct": 20,
+    "code": "OK",
+    "explanation": "20% off Chicken Adobo Meal (batch 2561, 16 units, 1 day(s) left): 20% off lifts expected sales from 10.0 to 15.1 units and cuts expected waste from 408 to 63 pesos. Prediction: 15 units (10 to 16), about 63 pesos wasted.",
+    "hour": 6,
+    "warehouse_id": 1223
+  },
+  {
+    "status": "applied",
+    "discount_pct": 30,
+    "code": "OK",
+    "explanation": "30% off Chicken Adobo Meal (batch 2477, 79 units, 2 day(s) left): 30% off lifts expected sales from 4.0 to 22.5 units and cuts expected waste from 5100 to 3841 pesos. Prediction: 23 units (15 to 30), about 3841 pesos wasted.",
+    "hour": 6,
+    "warehouse_id": 1223
+  },
+  {
+    "status": "applied",
+    "discount_pct": 20,
+    "code": "OK",
+    "explanation": "20% off Potato Chips (batch 2562, 18 units, 1 day(s) left): 20% off lifts expected sales from 11.0 to 18.0 units and cuts expected waste from 203 to 0 pesos. Prediction: 18 units (13 to 18), about 0 pesos wasted.",
+    "hour": 6,
+    "warehouse_id": 1223
+  },
+  {
+    "status": "applied",
+    "discount_pct": 20,
+    "code": "OK",
+    "explanation": "20% off Corn Crackers (batch 2563, 16 units, 1 day(s) left): 20% off lifts expected sales from 10.0 to 16.0 units and cuts expected waste from 108 to 0 pesos. Prediction: 16 units (12 to 16), about 0 pesos wasted.",
+    "hour": 6,
+    "warehouse_id": 1223
+  },
+  {
+    "status": "applied",
+    "discount_pct": 30,
+    "code": "OK",
+    "explanation": "30% off Fresh Milk 1L (batch 2564, 4 units, 1 day(s) left): 30% off lifts expected sales from 1.0 to 1.7 units and cuts expected waste from 213 to 166 pesos. Prediction: 2 units (0 to 3), about 166 pesos wasted.",
+    "hour": 6,
+    "warehouse_id": 1223
+  },
+  {
+    "status": "applied",
+    "discount_pct": 10,
+    "code": "OK",
+    "explanation": "10% off Iced Tea 500ml (batch 2565, 11 units, 1 day(s) left): 10% off lifts expected sales from 6.5 to 9.8 units and cuts expected waste from 171 to 46 pesos. Prediction: 10 units (6 to 11), about 46 pesos wasted.",
+    "hour": 6,
+    "warehouse_id": 1223
+  },
+  {
+    "status": "applied",
+    "discount_pct": 20,
+    "code": "OK",
+    "explanation": "20% off Choco Biscuits (batch 2567, 16 units, 1 day(s) left): 20% off lifts expected sales from 9.5 to 15.9 units and cuts expected waste from 65 to 1 pesos. Prediction: 16 units (11 to 16), about 1 pesos wasted.",
+    "hour": 6,
+    "warehouse_id": 1223
+  },
+  {
+    "status": "applied",
+    "discount_pct": 20,
+    "code": "OK",
+    "explanation": "20% off Instant Noodles Cup (batch 2568, 13 units, 1 day(s) left): 20% off lifts expected sales from 8.0 to 13.0 units and cuts expected waste from 55 to 0 pesos. Prediction: 13 units (9 to 13), about 0 pesos wasted.",
+    "hour": 6,
+    "warehouse_id": 1223
+  },
+  {
+    "status": "applied",
+    "discount_pct": 20,
+    "code": "OK",
+    "explanation": "20% off Chicken Adobo Meal (batch 2569, 16 units, 1 day(s) left): 20% off lifts expected sales from 9.5 to 14.3 units and cuts expected waste from 442 to 115 pesos. Prediction: 14 units (9 to 16), about 115 pesos wasted.",
+    "hour": 6,
+    "warehouse_id": 1224
+  },
+  {
+    "status": "applied",
+    "discount_pct": 30,
+    "code": "OK",
+    "explanation": "30% off Chicken Adobo Meal (batch 2493, 66 units, 2 day(s) left): 30% off lifts expected sales from 3.0 to 20.6 units and cuts expected waste from 4284 to 3088 pesos. Prediction: 21 units (13 to 28), about 3088 pesos wasted.",
+    "hour": 6,
+    "warehouse_id": 1224
+  }
+]

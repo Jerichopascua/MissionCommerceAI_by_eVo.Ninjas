@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sim.PesoWeb Results</title>
+<style>
+:root{--bg:#f4f6fb;--card:#fff;--ink:#0f1b2d;--mut:#66758c;--line:#e3e8f1;--pri:#1861ac;--soft:#e8f1fb;--ok:#1f9d55;--okbg:#e5f6ec;--bad:#d6334a;--badbg:#fdebee;--warn:#b7791f;--warnbg:#fff4de;--none:#9aa7ba;--fixed:#e0a030;--ai:#1f9d55;color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#04100b;--card:#082016;--ink:#eafff3;--mut:#8fc3a8;--line:#1d4a34;--pri:#2fdc82;--soft:#0c2f20;--ok:#3dff8f;--okbg:#0c3a25;--bad:#ff6b81;--badbg:#3a1119;--warn:#f0b24a;--warnbg:#3a2a0c;--none:#5f7f70;--fixed:#e0a030;--ai:#3dff8f;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#04100b;--card:#082016;--ink:#eafff3;--mut:#8fc3a8;--line:#1d4a34;--pri:#2fdc82;--soft:#0c2f20;--ok:#3dff8f;--okbg:#0c3a25;--bad:#ff6b81;--badbg:#3a1119;--warn:#f0b24a;--warnbg:#3a2a0c;--none:#5f7f70;--fixed:#e0a030;--ai:#3dff8f;color-scheme:dark}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font:14px/1.45 "Segoe UI",Inter,system-ui,Arial,sans-serif;padding:20px 18px 40px}
+.wrap{max-width:1180px;margin:0 auto}
+header{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-bottom:16px}
+header h1{font-size:22px;font-weight:800}
+header .sub{color:var(--mut);font-size:13px}
+.sp{flex:1}
+button{border:1px solid var(--line);background:var(--card);color:var(--ink);padding:7px 12px;border-radius:10px;font-weight:600;cursor:pointer;font-size:13px}
+.grid{display:grid;gap:14px}
+.g4{grid-template-columns:repeat(auto-fit,minmax(210px,1fr))}
+.g2{grid-template-columns:repeat(auto-fit,minmax(340px,1fr))}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px}
+.card h2{font-size:14px;font-weight:700;margin-bottom:4px}
+.card .note{color:var(--mut);font-size:12px;margin-bottom:10px}
+.kpi .l{color:var(--mut);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.kpi .v{font-size:28px;font-weight:800;font-variant-numeric:tabular-nums;margin-top:2px}
+.kpi .d{font-size:12px;color:var(--mut);margin-top:2px}
+.good{color:var(--ok)}.bad{color:var(--bad)}
+table{width:100%;border-collapse:collapse}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--mut);text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}
+td{padding:7px 8px;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums;vertical-align:top}
+td.n,th.n{text-align:right}
+.scroll{overflow-x:auto}
+.pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11.5px;font-weight:700}
+.pill.caught{background:var(--okbg);color:var(--ok)}.pill.ai_found{background:var(--soft);color:var(--pri)}.pill.undetected{background:var(--badbg);color:var(--bad)}
+.pill.applied{background:var(--okbg);color:var(--ok)}.pill.refused{background:var(--badbg);color:var(--bad)}.pill.pending{background:var(--warnbg);color:var(--warn)}
+.bars{display:grid;gap:7px}
+.bar{display:grid;grid-template-columns:70px 1fr 86px;gap:8px;align-items:center;font-size:12.5px}
+.bar .track{background:var(--soft);border-radius:6px;height:16px;overflow:hidden}
+.bar .fill{height:100%;border-radius:6px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--mut);margin-top:8px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px}
+.limits{border-color:var(--warn);background:var(--warnbg)}
+.limits ul{margin:6px 0 0 18px}
+.empty{color:var(--mut);padding:18px;text-align:center}
+code{background:var(--soft);padding:1px 6px;border-radius:6px;font-size:12px}
+.expl{font-size:12.5px;color:var(--mut);max-width:560px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div><h1>Sim.PesoWeb results</h1><div class="sub">MissionCommerce AI on a simulated retail group. Every number comes from a recorded run in <code>results/</code>.</div></div>
+  <div class="sp"></div>
+  <button id="theme" type="button">Theme</button>
+</header>
+<div id="app"><div class="empty">Loading results...</div></div>
+</div>
+<script>
+(function(){
+  var root=document.documentElement,btn=document.getElementById('theme');
+  try{var t=localStorage.getItem('theme');if(t)root.setAttribute('data-theme',t)}catch(e){}
+  btn.onclick=function(){var dark=(root.getAttribute('data-theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'))==='dark';var n=dark?'light':'dark';root.setAttribute('data-theme',n);try{localStorage.setItem('theme',n)}catch(e){}};
+  var BASE=(location.pathname.replace(/\/ui\/dashboard\/.*$/,'/')||'/')+'results/';
+  var $=function(s){return document.getElementById(s)};
+  function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+  function fmt(n,d){return n==null?'-':Number(n).toLocaleString(undefined,{maximumFractionDigits:d==null?0:d})}
+  function peso(n){return '₱'+fmt(n)}
+  function get(name){return fetch(BASE+name).then(function(r){if(!r.ok)throw new Error(name+' '+r.status);return r.json()}).catch(function(){return null})}
+
+  function kpi(l,v,d,cls){return '<div class="card kpi"><div class="l">'+esc(l)+'</div><div class="v '+(cls||'')+'">'+v+'</div><div class="d">'+d+'</div></div>'}
+  function pct(a,b){return b?((a-b)/b*100):0}
+
+  function proofSection(p){
+    if(!p)return '<div class="card"><h2>Three-way proof</h2><div class="empty">No <code>proof-smoke.json</code> yet. Run <code>python -m simpeso.proof --seeds 1-5 --out ../results/proof-smoke.json</code>.</div></div>';
+    var s=p.summary,a=s.arms,vn=s.paired.ai_vs_none,vf=s.paired.ai_vs_fixed;
+    var wasteVsNone=pct(a.ai.waste_pesos,a.none.waste_pesos),wasteVsFixed=pct(a.ai.waste_pesos,a.fixed.waste_pesos);
+    var h='<div class="grid g4">'
+      +kpi('Waste vs no markdown',fmt(wasteVsNone,0)+'%',peso(a.ai.waste_pesos)+' vs '+peso(a.none.waste_pesos)+' per trial day (mean of '+s.seeds.length+' seeds)',wasteVsNone<0?'good':'bad')
+      +kpi('Waste vs fixed rule',fmt(wasteVsFixed,0)+'%',peso(a.ai.waste_pesos)+' vs '+peso(a.fixed.waste_pesos),wasteVsFixed<0?'good':'bad')
+      +kpi('Margin vs no markdown',(vn.margin.mean_diff>=0?'+':'')+peso(vn.margin.mean_diff),'AI better on margin in '+vn.margin.seeds_ai_better+' of '+vn.margin.of+' seeds',vn.margin.mean_diff>=0?'good':'bad')
+      +kpi('Net after waste vs none',(vn.net.mean_diff>=0?'+':'')+peso(vn.net.mean_diff),'AI better in '+vn.net.seeds_ai_better+' of '+vn.net.of+' seeds',vn.net.mean_diff>=0?'good':'bad')
+      +'</div>';
+    var max=Math.max.apply(null,['none','fixed','ai'].map(function(k){return a[k].waste_pesos}))||1;
+    function bar(k,label,color){return '<div class="bar"><span>'+label+'</span><span class="track"><span class="fill" style="display:block;width:'+(a[k].waste_pesos/max*100)+'%;background:'+color+'"></span></span><span class="n">'+peso(a[k].waste_pesos)+'</span></div>'}
+    var rows=s.seeds.map(function(sd){var r=p.per_seed[sd];return '<tr><td>'+sd+'</td>'+['none','fixed','ai'].map(function(k){return '<td class="n">'+peso(r[k].waste_pesos)+'</td>'}).join('')+'<td class="n">'+peso(r.ai.net-r.none.net)+'</td><td class="n">'+fmt(r.ai.markdowns_applied)+'</td></tr>'}).join('');
+    h+='<div class="grid g2" style="margin-top:14px"><div class="card"><h2>Waste at the end of the trial day</h2><div class="note">Same seeded world three ways. Lower is better.</div><div class="bars">'
+      +bar('none','No markdown','var(--none)')+bar('fixed','Fixed rule','var(--fixed)')+bar('ai','AI agent','var(--ai)')+'</div>'
+      +'<div class="legend"><span><i style="background:var(--none)"></i>no markdown</span><span><i style="background:var(--fixed)"></i>30% off last day, falling back to 20 and 10</span><span><i style="background:var(--ai)"></i>AI, hour by hour, inside guardrails</span></div></div>'
+      +'<div class="card"><h2>Per seed</h2><div class="note">Waste per arm, and the AI\'s net gain over doing nothing (margin minus waste).</div><div class="scroll"><table><thead><tr><th>Seed</th><th class="n">None</th><th class="n">Fixed</th><th class="n">AI</th><th class="n">AI net vs none</th><th class="n">Markdowns</th></tr></thead><tbody>'+rows+'</tbody></table></div></div></div>';
+    if(s.calibration){var c=s.calibration;
+      h+='<div class="grid g4" style="margin-top:14px">'
+        +kpi('Predicted waste',peso(c.predicted_waste_pesos),'what the agent wrote down before acting ('+c.resolved+' predictions)')
+        +kpi('Realized waste',peso(c.realized_waste_pesos),'what PesoWeb\'s batches showed afterward',c.realized_waste_pesos>c.predicted_waste_pesos*1.15?'bad':'')
+        +kpi('Inside the 80% interval',fmt(c.interval_coverage*100,0)+'%','of realized unit sales')
+        +kpi('Units error vs naive',fmt(c.units_mae,1)+' vs '+fmt(c.naive_units_mae,1),'mean absolute error, units per batch')+'</div>'}
+    return h;
+  }
+
+  function actionsSection(rows){
+    if(!rows||!rows.length)return '';
+    var body=rows.slice(0,14).map(function(r){return '<tr><td><span class="pill '+esc(r.status)+'">'+esc(r.status)+'</span></td><td class="n">'+fmt(r.discount_pct)+'%</td><td>'+esc(r.code||'')+'</td><td class="expl">'+esc(r.explanation)+'</td></tr>'}).join('');
+    return '<div class="card" style="margin-top:14px"><h2>Agent decisions and guardrails</h2><div class="note">PesoWeb enforces margin floors, the maximum discount and the change rate. The agent records a prediction first, posts, and reports what PesoWeb said. A refusal is shown, never worked around.</div><div class="scroll"><table><thead><tr><th>Result</th><th class="n">Discount</th><th>Code</th><th>Explanation</th></tr></thead><tbody>'+body+'</tbody></table></div></div>';
+  }
+
+  function incidentSection(d){
+    if(!d)return '<div class="card" style="margin-top:14px"><h2>Caught vs missed</h2><div class="empty">No <code>incident-demo.json</code> yet. Run <code>sim/scripts/export_results.py</code> after an AI pass.</div></div>';
+    var steps=d.by_budget.map(function(b){return '<tr><td>'+esc(b.label)+'</td><td class="n">'+b.caught+'</td><td class="n">'+b.ai_found+'</td><td class="n">'+b.undetected+'</td><td class="n"><b>'+fmt(b.coverage*100,0)+'%</b></td></tr>'}).join('');
+    var rows=d.incidents.map(function(i){return '<tr><td>'+esc(i.type.replace(/_/g,' ').toLowerCase())+'</td><td>'+esc(i.branch)+'</td><td><span class="pill '+esc(i.status)+'">'+esc(i.status.replace('_',' '))+'</span></td><td class="expl">'+esc(i.how)+'</td></tr>'}).join('');
+    return '<div class="grid g2" style="margin-top:14px"><div class="card"><h2>Caught vs missed</h2><div class="note">Every injected incident is scored against ground truth: raised by PesoWeb, found by the AI, or undetected.</div><div class="scroll"><table><thead><tr><th>Incident</th><th>Branch</th><th>Outcome</th><th>How</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>'
+      +'<div class="card"><h2>Coverage rises with counting effort</h2><div class="note">The AI finds what a stock count can reveal; counts cost labor. PesoWeb alone catches the cash and expiry incidents.</div><table><thead><tr><th>Counting budget</th><th class="n">Caught</th><th class="n">AI found</th><th class="n">Missed</th><th class="n">Coverage</th></tr></thead><tbody>'+steps+'</tbody></table></div></div>';
+  }
+
+  function quickSection(q){
+    if(!q)return '<div class="card" style="margin-top:14px"><h2>Quick Sim (aggregated lane)</h2><div class="empty">No <code>quicksim.json</code> yet. Run <code>python -m simpeso.quicksim --out ../results/quicksim.json</code>.</div></div>';
+    var f=q.forecast,m=q.anomalies.model_detector,n=q.anomalies.naive_detector;
+    return '<div class="card" style="margin-top:14px"><h2>Quick Sim, aggregated lane <span class="pill ai_found">not through PesoWeb</span></h2><div class="note">'+fmt(q.individuals)+' persistent individuals, '+q.days+' days, '+q.branches+' branches. Device: '+esc(q.gpu||q.device)+'.</div>'
+      +'<div class="grid g4">'+kpi('Events per second',fmt(q.events_per_s),fmt(q.events)+' events in '+fmt(q.generation_s,1)+' s')
+      +kpi('Virtual days per second',fmt(q.virtual_days_per_s,1),'for the whole population')
+      +kpi('Forecast error',fmt(f.model_wape*100,1)+'%','price-aware model vs '+fmt(f.naive_wape*100,1)+'% seasonal naive (WAPE)',f.model_wape<f.naive_wape?'good':'bad')
+      +kpi('Anomaly alerts',fmt(m.flagged)+' vs '+fmt(n.flagged),'found '+m.found+' and '+n.found+' of '+q.anomalies.planted+' planted (model vs naive)')+'</div></div>';
+  }
+
+  function limits(p){
+    return '<div class="card limits" style="margin-top:14px"><h2>What this does and does not show</h2><ul>'
+      +'<li>Shoppers\' price response is the simulator\'s own assumption. The AI never sees it and learns it from sales. The proof shows the mechanism, the guardrails and the prediction accuracy under that assumption, not a real-market lift.</li>'
+      +'<li>The proof is a one-day trial of short-dated perishable lots on a small world, repeated over several seeds. It is not a full-year result.</li>'
+      +'<li>The Quick Sim lane is aggregated and does not go through PesoWeb. The Day-to-Day lane (everything above except Quick Sim) uses the real PesoWeb API.</li>'
+      +'<li>The agent\'s predictions are optimistic when realized waste exceeds predicted waste; that gap is reported, not hidden.</li></ul></div>';
+  }
+
+  Promise.all([get('proof-smoke.json'),get('incident-demo.json'),get('quicksim.json'),get('ai-actions-sample.json')]).then(function(r){
+    $('app').innerHTML=proofSection(r[0])+actionsSection(r[3])+incidentSection(r[1])+quickSection(r[2])+limits(r[0]);
+  });
+})();
+</script>
+</body>
+</html>

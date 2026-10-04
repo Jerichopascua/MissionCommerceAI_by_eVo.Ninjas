@@ -1,0 +1,323 @@
+{
+  "profile": "smoke",
+  "policy": {
+    "hard_floor_pct": 0,
+    "soft_floor_pct": 5
+  },
+  "per_seed": {
+    "1": {
+      "none": {
+        "waste_pesos": 22310.0,
+        "revenue": 97824.0,
+        "margin": 30917.0,
+        "net": 8607.0,
+        "units": 551,
+        "markdowns_applied": 0,
+        "markdowns_refused": 0
+      },
+      "fixed": {
+        "waste_pesos": 13894.0,
+        "revenue": 110164.86000000003,
+        "margin": 30169.86000000003,
+        "net": 16275.86000000003,
+        "units": 797,
+        "markdowns_applied": 33,
+        "markdowns_refused": 9
+      },
+      "ai": {
+        "waste_pesos": 13896.0,
+        "revenue": 109700.30999999998,
+        "margin": 29831.309999999983,
+        "net": 15935.309999999983,
+        "units": 788,
+        "markdowns_applied": 35,
+        "markdowns_refused": 7,
+        "calibration": {
+          "resolved": 38,
+          "units_mae": 3.8686951137133225,
+          "naive_units_mae": 5.276315789473684,
+          "units_skill": 0.2667809759545823,
+          "waste_mae_pesos": 223.12627050243066,
+          "naive_waste_mae_pesos": 271.8157894736842,
+          "margin_mae_pesos": 29.651273413167786,
+          "interval_coverage": 0.6052631578947368,
+          "predicted_waste_pesos": 7054.561055430642,
+          "realized_waste_pesos": 7527.0
+        }
+      }
+    },
+    "2": {
+      "none": {
+        "waste_pesos": 19430.0,
+        "revenue": 175894.0,
+        "margin": 46079.0,
+        "net": 26649.0,
+        "units": 864,
+        "markdowns_applied": 0,
+        "markdowns_refused": 0
+      },
+      "fixed": {
+        "waste_pesos": 5498.0,
+        "revenue": 209651.3099999999,
+        "margin": 45972.30999999991,
+        "net": 40474.30999999991,
+        "units": 1319,
+        "markdowns_applied": 32,
+        "markdowns_refused": 8
+      },
+      "ai": {
+        "waste_pesos": 7848.0,
+        "revenue": 202035.27000000002,
+        "margin": 44775.27000000002,
+        "net": 36927.27000000002,
+        "units": 1268,
+        "markdowns_applied": 27,
+        "markdowns_refused": 5,
+        "calibration": {
+          "resolved": 28,
+          "units_mae": 3.9678291622582402,
+          "naive_units_mae": 9.785714285714286,
+          "units_skill": 0.5945284067765302,
+          "waste_mae_pesos": 109.35348887810979,
+          "naive_waste_mae_pesos": 628.875,
+          "margin_mae_pesos": 17.404375386792665,
+          "interval_coverage": 0.75,
+          "predicted_waste_pesos": 2599.449171108253,
+          "realized_waste_pesos": 1692.0
+        }
+      }
+    },
+    "3": {
+      "none": {
+        "waste_pesos": 12945.0,
+        "revenue": 220427.0,
+        "margin": 77274.0,
+        "net": 64329.0,
+        "units": 575,
+        "markdowns_applied": 0,
+        "markdowns_refused": 0
+      },
+      "fixed": {
+        "waste_pesos": 5782.0,
+        "revenue": 231338.31000000008,
+        "margin": 75392.31000000008,
+        "net": 69610.31000000008,
+        "units": 762,
+        "markdowns_applied": 28,
+        "markdowns_refused": 10
+      },
+      "ai": {
+        "waste_pesos": 5461.0,
+        "revenue": 230546.91000000006,
+        "margin": 75886.91000000006,
+        "net": 70425.91000000006,
+        "units": 715,
+        "markdowns_applied": 28,
+        "markdowns_refused": 5,
+        "calibration": {
+          "resolved": 30,
+          "units_mae": 2.6530090143382945,
+          "naive_units_mae": 4.516666666666667,
+          "units_skill": 0.41261793040480566,
+          "waste_mae_pesos": 135.51337457027364,
+          "naive_waste_mae_pesos": 346.43333333333334,
+          "margin_mae_pesos": 17.842285830219858,
+          "interval_coverage": 0.7333333333333333,
+          "predicted_waste_pesos": 3037.2248254841597,
+          "realized_waste_pesos": 2021.0
+        }
+      }
+    },
+    "4": {
+      "none": {
+        "waste_pesos": 19630.0,
+        "revenue": 152228.0,
+        "margin": 45170.0,
+        "net": 25540.0,
+        "units": 568,
+        "markdowns_applied": 0,
+        "markdowns_refused": 0
+      },
+      "fixed": {
+        "waste_pesos": 5962.0,
+        "revenue": 182407.08000000002,
+        "margin": 44352.080000000016,
+        "net": 38390.080000000016,
+        "units": 817,
+        "markdowns_applied": 31,
+        "markdowns_refused": 7
+      },
+      "ai": {
+        "waste_pesos": 6166.0,
+        "revenue": 179645.44000000006,
+        "margin": 44606.44000000006,
+        "net": 38440.44000000006,
+        "units": 753,
+        "markdowns_applied": 29,
+        "markdowns_refused": 2,
+        "calibration": {
+          "resolved": 27,
+          "units_mae": 3.0088437987239294,
+          "naive_units_mae": 5.944444444444445,
+          "units_skill": 0.4938393609623296,
+          "waste_mae_pesos": 322.84962088207766,
+          "naive_waste_mae_pesos": 870.2037037037037,
+          "margin_mae_pesos": 53.71840647973008,
+          "interval_coverage": 0.7777777777777778,
+          "predicted_waste_pesos": 10167.113173591712,
+          "realized_waste_pesos": 3522.0
+        }
+      }
+    },
+    "5": {
+      "none": {
+        "waste_pesos": 27151.0,
+        "revenue": 155692.0,
+        "margin": 39535.0,
+        "net": 12384.0,
+        "units": 902,
+        "markdowns_applied": 0,
+        "markdowns_refused": 0
+      },
+      "fixed": {
+        "waste_pesos": 9035.0,
+        "revenue": 193235.9599999999,
+        "margin": 37764.959999999905,
+        "net": 28729.959999999905,
+        "units": 1259,
+        "markdowns_applied": 36,
+        "markdowns_refused": 4
+      },
+      "ai": {
+        "waste_pesos": 8726.0,
+        "revenue": 193163.84,
+        "margin": 38326.84,
+        "net": 29600.839999999997,
+        "units": 1219,
+        "markdowns_applied": 41,
+        "markdowns_refused": 0,
+        "calibration": {
+          "resolved": 36,
+          "units_mae": 2.519262150706891,
+          "naive_units_mae": 6.805555555555555,
+          "units_skill": 0.6298227043859262,
+          "waste_mae_pesos": 353.54258668786383,
+          "naive_waste_mae_pesos": 739.7638888888889,
+          "margin_mae_pesos": 32.81011595147054,
+          "interval_coverage": 0.8055555555555556,
+          "predicted_waste_pesos": 12057.391613836282,
+          "realized_waste_pesos": 1148.0
+        }
+      }
+    }
+  },
+  "summary": {
+    "seeds": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "arms": {
+      "none": {
+        "waste_pesos": 20293.2,
+        "revenue": 160413.0,
+        "margin": 47795.0,
+        "net": 27501.8,
+        "units": 692,
+        "markdowns_applied": 0,
+        "markdowns_refused": 0
+      },
+      "fixed": {
+        "waste_pesos": 8034.2,
+        "revenue": 185359.504,
+        "margin": 46730.30399999999,
+        "net": 38696.10399999999,
+        "units": 990.8,
+        "markdowns_applied": 32,
+        "markdowns_refused": 7.6
+      },
+      "ai": {
+        "waste_pesos": 8419.4,
+        "revenue": 183018.35400000002,
+        "margin": 46685.35400000002,
+        "net": 38265.95400000003,
+        "units": 948.6,
+        "markdowns_applied": 32,
+        "markdowns_refused": 3.8
+      }
+    },
+    "paired": {
+      "ai_vs_none": {
+        "waste_pesos": {
+          "mean_diff": -11873.8,
+          "min_diff": -18425.0,
+          "max_diff": -7484.0,
+          "seeds_ai_better": 5,
+          "of": 5
+        },
+        "margin": {
+          "mean_diff": -1109.6459999999759,
+          "min_diff": -1387.0899999999383,
+          "max_diff": -563.5599999999395,
+          "seeds_ai_better": 0,
+          "of": 5
+        },
+        "net": {
+          "mean_diff": 10764.154000000024,
+          "min_diff": 6096.910000000062,
+          "max_diff": 17216.839999999997,
+          "seeds_ai_better": 5,
+          "of": 5
+        },
+        "revenue": {
+          "mean_diff": 22605.354000000025,
+          "min_diff": 10119.910000000062,
+          "max_diff": 37471.84,
+          "seeds_ai_better": 5,
+          "of": 5
+        }
+      },
+      "ai_vs_fixed": {
+        "waste_pesos": {
+          "mean_diff": 385.2,
+          "min_diff": -321.0,
+          "max_diff": 2350.0,
+          "seeds_ai_better": 2,
+          "of": 5
+        },
+        "margin": {
+          "mean_diff": -44.94999999996507,
+          "min_diff": -1197.0399999998917,
+          "max_diff": 561.880000000092,
+          "seeds_ai_better": 3,
+          "of": 5
+        },
+        "net": {
+          "mean_diff": -430.1499999999651,
+          "min_diff": -3547.0399999998917,
+          "max_diff": 870.880000000092,
+          "seeds_ai_better": 3,
+          "of": 5
+        },
+        "revenue": {
+          "mean_diff": -2341.149999999965,
+          "min_diff": -7616.039999999892,
+          "max_diff": -72.11999999990803,
+          "seeds_ai_better": 0,
+          "of": 5
+        }
+      }
+    },
+    "calibration": {
+      "resolved": 159,
+      "interval_coverage": 0.7343859649122807,
+      "predicted_waste_pesos": 34915.739839451046,
+      "realized_waste_pesos": 15910.0,
+      "units_mae": 3.2035278479481355,
+      "naive_units_mae": 6.465739348370928
+    }
+  },
+  "note": "Shopper price response is the simulator's own assumption; this shows mechanism and guardrails, not real-market lift."
+}

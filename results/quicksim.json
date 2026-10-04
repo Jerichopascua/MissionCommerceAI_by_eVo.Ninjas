@@ -1,0 +1,37 @@
+{
+  "mode": "aggregated (not through PesoWeb)",
+  "device": "cpu",
+  "gpu": null,
+  "individuals": 200000,
+  "days": 28,
+  "branches": 20,
+  "skus": 60,
+  "seed": 1,
+  "events": 1671896,
+  "generation_s": 5.963,
+  "events_per_s": 280359,
+  "virtual_days_per_s": 4.7,
+  "revenue_checksum": 379973664,
+  "model_and_detection_s": 0.004,
+  "forecast": {
+    "price_slope": -1.776,
+    "dispersion": 2.31,
+    "model_wape": 0.1629,
+    "naive_wape": 0.2667
+  },
+  "anomalies": {
+    "planted": 12,
+    "model_detector": {
+      "flagged": 74,
+      "found": 12,
+      "precision": 0.16216216216216217,
+      "recall": 1.0
+    },
+    "naive_detector": {
+      "flagged": 655,
+      "found": 12,
+      "precision": 0.0183206106870229,
+      "recall": 1.0
+    }
+  }
+}
