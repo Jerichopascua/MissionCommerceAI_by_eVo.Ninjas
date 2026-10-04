@@ -28,7 +28,7 @@
 - New permission strings go in `Helpers/Permissions.cs` `GetAllPermissions()`; policies are auto-registered from that list; new tenants get all of them at registration.
 - Simulator traffic is tagged with the HTTP header `X-Sim-Run` (max 64 chars kept).
 - Cash wording in any user-visible text: "variance" / "unexplained variance", never "theft".
-- PesoWeb work happens on branch `hackathon/sim-foundation` of `D:\git\Retailo_v1` (base branch `main`). That repo has **unrelated uncommitted changes**; never `git add .` or `git add -A` there. Add explicit file paths only.
+- PesoWeb work happens on branch `Retail_MissionCommerceAI` of `D:\git\Retailo_v1` (base branch `main`). That repo has **unrelated uncommitted changes**; never `git add .` or `git add -A` there. Add explicit file paths only.
 - No secrets in git. Use environment variables.
 - Migrations are applied to the **local dev database only**. Production gets an idempotent script (Task 10).
 - Tests: xUnit, `Retailo.Tests` project inside `D:\git\Retailo_v1` (the main csproj already excludes `Retailo.Tests\**` from its compile).
@@ -177,11 +177,12 @@ git commit -m "P0: AMD ROCm and vLLM smoke test"
 
 - [ ] **Step 1: Create the branch**
 
+The branch already exists (created 2026-10-04 from `main`). Verify and stay on it:
+
 ```bash
 cd /d/git/Retailo_v1
-git branch --show-current          # expect: main
-git checkout -b hackathon/sim-foundation
-git status --short | head -5       # unrelated modified files may appear; leave them alone
+git branch --show-current          # expect: Retail_MissionCommerceAI
+git status --short | head -5       # ~87 unrelated modified files travelled with the checkout; leave them alone
 ```
 
 - [ ] **Step 2: Create the test project file**
@@ -1995,7 +1996,7 @@ git commit -m "chore: idempotent deployment script for sim foundation migrations
 ```bash
 cd /d/git/Retailo_v1
 mkdir -p /d/git/AMD/hackathon_amd_act3/MissionCommerceAI_by_eVo.Ninjas/pesoweb-additions/patches
-git format-patch main..hackathon/sim-foundation -o /d/git/AMD/hackathon_amd_act3/MissionCommerceAI_by_eVo.Ninjas/pesoweb-additions/patches
+git format-patch main..Retail_MissionCommerceAI -o /d/git/AMD/hackathon_amd_act3/MissionCommerceAI_by_eVo.Ninjas/pesoweb-additions/patches
 ls /d/git/AMD/hackathon_amd_act3/MissionCommerceAI_by_eVo.Ninjas/pesoweb-additions/patches
 ```
 
@@ -2019,7 +2020,7 @@ PesoWeb (the system under test) is a separate product repository. This folder ca
 - xUnit test project `Retailo.Tests` (23 tests)
 
 ## Apply
-    git checkout -b hackathon/sim-foundation
+    git checkout -b Retail_MissionCommerceAI
     git am pesoweb-additions/patches/*.patch
     dotnet test Retailo.Tests/Retailo.Tests.csproj
     dotnet ef database update            # local/dev database
