@@ -1,0 +1,13 @@
+name: sports
+tier: C
+expiry: false
+catalog_size: [24, 60]
+margin_band: [0.22, 0.5]
+ticket: [200, 3500]
+txns_per_day: [30, 150]
+missions: [event_driven, hobby]
+categories:
+  - {name: Balls, expiry: false, weight: 3, cost: [180, 1400], items: [Basketball, Volleyball, Football, Badminton Shuttlecocks 12pc]}
+  - {name: Apparel, expiry: false, weight: 3, cost: [150, 1200], items: [Jersey, Shorts, Sports Socks 3-pack, Dri-Fit Shirt]}
+  - {name: Footwear, expiry: false, weight: 2, cost: [600, 3200], items: [Running Shoes, Court Shoes, Slides]}
+  - {name: Equipment, expiry: false, weight: 2, cost: [120, 2400], items: [Badminton Racket, Dumbbell Pair 5kg, Yoga Mat, Jump Rope, Water Bottle 1L]}

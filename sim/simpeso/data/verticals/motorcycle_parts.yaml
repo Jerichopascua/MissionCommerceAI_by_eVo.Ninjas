@@ -1,0 +1,15 @@
+name: motorcycle_parts
+tier: B
+expiry: false
+catalog_size: [30, 80]
+margin_band: [0.2, 0.5]
+ticket: [150, 4500]
+txns_per_day: [40, 200]
+missions: [repair_urgent, scheduled_maintenance, accessory_browse]
+categories:
+  - {name: Engine oil and fluids, expiry: false, weight: 3, cost: [120, 650], items: [Engine Oil 1L, Gear Oil, Brake Fluid, Coolant 1L, Chain Lube]}
+  - {name: Brakes, expiry: false, weight: 2, cost: [180, 900], items: [Brake Pads Front, Brake Pads Rear, Brake Shoe Set, Brake Cable]}
+  - {name: Drive and chain, expiry: false, weight: 2, cost: [350, 2400], items: [Chain and Sprocket Set, Drive Belt, Clutch Lining Set]}
+  - {name: Electrical, expiry: false, weight: 2, cost: [90, 1800], items: [Spark Plug, Headlight Bulb, Battery 12V, Flasher Relay, Horn]}
+  - {name: Tires and tubes, expiry: false, weight: 2, cost: [380, 2600], items: [Tire 80/90-14, Tire 90/90-14, Inner Tube, Tubeless Valve]}
+  - {name: Accessories, expiry: false, weight: 3, cost: [60, 1500], items: [Phone Holder, Helmet, Grip Set, Side Mirror, Seat Cover]}

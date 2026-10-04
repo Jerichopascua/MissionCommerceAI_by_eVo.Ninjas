@@ -1,0 +1,15 @@
+name: convenience
+tier: A
+expiry: true
+catalog_size: [24, 60]
+margin_band: [0.18, 0.45]
+ticket: [60, 350]
+txns_per_day: [150, 600]
+missions: [grab_and_go, after_work_topup, late_night]
+categories:
+  - {name: Ready meals, expiry: true, shelf_life_days: [1, 3], weight: 2, cost: [28, 70], items: [Chicken Adobo Meal, Pork Sisig Rice, Tuna Sandwich, Egg Sandwich, Pasta Bowl, Siopao]}
+  - {name: Bakery, expiry: true, shelf_life_days: [2, 5], weight: 2, cost: [8, 35], items: [Pandesal Pack, Ensaymada, Cheese Bread, Choco Loaf, Monay]}
+  - {name: Fresh dairy, expiry: true, shelf_life_days: [7, 21], weight: 2, cost: [18, 90], items: [Fresh Milk 1L, Yogurt Cup, Chocolate Milk, Cheese Slice Pack, Butter 100g]}
+  - {name: Chilled drinks, expiry: true, shelf_life_days: [30, 90], weight: 3, cost: [14, 45], items: [Iced Tea 500ml, Cold Coffee, Mango Juice, Soda 500ml, Sports Drink]}
+  - {name: Snacks, expiry: true, shelf_life_days: [90, 365], weight: 4, cost: [6, 30], items: [Potato Chips, Corn Crackers, Peanuts, Choco Biscuits, Instant Noodles Cup]}
+  - {name: Personal care, expiry: true, shelf_life_days: [365, 1095], weight: 1, cost: [20, 120], items: [Shampoo Sachet Pack, Toothpaste, Hand Soap, Wet Wipes]}

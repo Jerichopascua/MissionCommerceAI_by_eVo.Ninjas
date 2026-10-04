@@ -1,0 +1,13 @@
+name: mixed
+tier: C
+expiry: true
+catalog_size: [30, 70]
+margin_band: [0.15, 0.4]
+ticket: [80, 900]
+txns_per_day: [100, 500]
+missions: [grab_and_go, weekly_restock, repair_urgent]
+categories:
+  - {name: Snacks, expiry: true, shelf_life_days: [90, 365], weight: 3, cost: [6, 30], items: [Potato Chips, Peanuts, Choco Biscuits, Crackers]}
+  - {name: Chilled drinks, expiry: true, shelf_life_days: [30, 90], weight: 3, cost: [14, 45], items: [Iced Tea 500ml, Mango Juice, Soda 500ml]}
+  - {name: Household, expiry: false, weight: 2, cost: [25, 260], items: [Dishwashing Liquid, Laundry Detergent, Trash Bags, Light Bulb]}
+  - {name: Hardware basics, expiry: false, weight: 2, cost: [30, 420], items: [Duct Tape, Screwdriver Set, Extension Cord, Padlock]}

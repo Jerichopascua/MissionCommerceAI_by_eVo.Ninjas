@@ -1,0 +1,15 @@
+name: grocery_pharmacy
+tier: A
+expiry: true
+catalog_size: [40, 90]
+margin_band: [0.08, 0.32]
+ticket: [250, 1800]
+txns_per_day: [300, 2000]
+missions: [weekly_restock, urgent_medicine, grab_and_go]
+categories:
+  - {name: Fresh produce, expiry: true, shelf_life_days: [3, 7], weight: 3, cost: [20, 110], items: [Tomatoes 500g, Onions 500g, Banana Bunch, Cabbage, Carrots 500g, Calamansi]}
+  - {name: Fresh dairy, expiry: true, shelf_life_days: [7, 21], weight: 2, cost: [18, 120], items: [Fresh Milk 1L, Eggs Tray, Yogurt 4-pack, Cream Cheese]}
+  - {name: Meat and fish, expiry: true, shelf_life_days: [2, 5], weight: 2, cost: [90, 320], items: [Chicken Breast 1kg, Pork Belly 1kg, Bangus, Tilapia 1kg]}
+  - {name: Canned and dry, expiry: true, shelf_life_days: [365, 720], weight: 4, cost: [18, 160], items: [Sardines, Corned Beef, Rice 5kg, Cooking Oil 1L, Pasta 500g, Canned Tuna]}
+  - {name: Packaged drinks, expiry: true, shelf_life_days: [90, 365], weight: 2, cost: [12, 80], items: [Bottled Water 1L, Orange Juice 1L, Soda 1.5L, Coffee 3in1 Pack]}
+  - {name: Medicines, expiry: true, shelf_life_days: [365, 1095], weight: 3, cost: [3, 140], items: [Paracetamol 500mg, Cough Syrup, Antacid, Vitamin C, Oral Rehydration Salts]}
