@@ -1,2 +1,5 @@
 __pycache__/
 *.pyc
+
+# user prototype, kept out of the public repo
+ai/smoke/mainsample.py
