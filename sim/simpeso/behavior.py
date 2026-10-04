@@ -120,14 +120,14 @@ def _buy_probability(base: float, elasticity: float, ratio: float, noise: float)
     return max(0.0, min(0.98, base * boost * noise))
 
 
-def day_visits(plan, individuals: list, day: int, seed: int, price_ratio=None) -> list:
-    """All visits of one virtual day, sorted by time. price_ratio(branch, product_code) -> current/list price (1 = list)."""
+def day_arrivals(plan, individuals: list, day: int, seed: int) -> list:
+    """Who walks in, where and when, with their mission. Baskets are decided later, at the moment of shopping,
+    so shoppers see the prices in force at that hour (see fill_basket)."""
     lib = _library()
     by_branch = {}
     for p in individuals:
         by_branch.setdefault(p.home_branch, []).append(p)
-    visits = []
-    ratio = price_ratio or (lambda branch, code: 1.0)
+    out = []
     for c, b in _branches(plan):
         if day < b.opens_day:
             continue
@@ -157,25 +157,41 @@ def day_visits(plan, individuals: list, day: int, seed: int, price_ratio=None) -
             if not valid:
                 continue
             mission = r.choices([m for m, _ in valid], weights=[w for _, w in valid])[0]
-            catalog = tuple(c.catalog)
-            weights = _product_weights(catalog, mission, seed)
-            wanted = max(1, round(a.basket * r.uniform(0.6, 1.4)))
-            chosen = {}
-            for _ in range(wanted * 3):
-                if len(chosen) >= wanted:
-                    break
-                prod = r.choices(catalog, weights=weights)[0]
-                q = _buy_probability(0.6, a.price_response, ratio(b.key, prod.code), r.uniform(0.9, 1.1))
-                if r.random() < q:
-                    qty = 1 + (1 if r.random() < max(0.0, (ratio(b.key, prod.code) < 1.0) * 0.25 * a.price_response) else 0)
-                    chosen[prod.code] = chosen.get(prod.code, 0) + qty
-            if not chosen:
-                continue
             pay = "Card" if (a.income == "high" and r.random() < 0.6) or r.random() < 0.1 else "Cash"
-            visits.append(Visit(f"d{day}-{b.key}-v{n + 1}", day, hour, r.randint(0, 59), c.key, b.key, who, a.id, mission,
-                                tuple(sorted(chosen.items())), pay))
-    visits.sort(key=lambda v: (v.hour, v.minute, v.id))
-    return visits
+            out.append(Visit(f"d{day}-{b.key}-v{n + 1}", day, hour, r.randint(0, 59), c.key, b.key, who, a.id, mission, (), pay))
+    out.sort(key=lambda v: (v.hour, v.minute, v.id))
+    return out
+
+
+def fill_basket(plan, visit: Visit, seed: int, price_ratio=None):
+    """The shopper's basket at the prices in force now. price_ratio(branch, product_code) -> current/list price.
+    Returns the visit with lines, or None when they buy nothing."""
+    from dataclasses import replace
+    ratio = price_ratio or (lambda branch, code: 1.0)
+    a = _library()[visit.archetype]
+    catalog = tuple(next(c for c in plan.companies if c.key == visit.company).catalog)
+    r = rng.derive(seed, "basket", visit.id)
+    weights = _product_weights(catalog, visit.mission, seed)
+    wanted = max(1, round(a.basket * r.uniform(0.6, 1.4)))
+    chosen = {}
+    for _ in range(wanted * 3):
+        if len(chosen) >= wanted:
+            break
+        prod = r.choices(catalog, weights=weights)[0]
+        ratio_now = ratio(visit.branch, prod.code)
+        q = _buy_probability(0.6, a.price_response, ratio_now, r.uniform(0.9, 1.1))
+        if r.random() < q:
+            qty = 1 + (1 if r.random() < max(0.0, (ratio_now < 1.0) * 0.25 * a.price_response) else 0)
+            chosen[prod.code] = chosen.get(prod.code, 0) + qty
+    if not chosen:
+        return None
+    return replace(visit, lines=tuple(sorted(chosen.items())))
+
+
+def day_visits(plan, individuals: list, day: int, seed: int, price_ratio=None) -> list:
+    """All visits of one virtual day with baskets, sorted by time (prices fixed for the whole day)."""
+    filled = (fill_basket(plan, v, seed, price_ratio) for v in day_arrivals(plan, individuals, day, seed))
+    return [v for v in filled if v]
 
 
 @lru_cache(maxsize=None)

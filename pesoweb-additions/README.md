@@ -55,6 +55,13 @@ Also verified live as the root `SuperAdmin` (user 1) on the restored database: `
 - Patches: `patches/plan3` (8 patches, tag `plan3-complete`).
 - New APIs: `Exceptions/*`, `StockCounts/*`, `Receiving/*`, `Group/Overview` (root `SuperAdmin` only), `/api/ai/exceptions`, `/api/ai/receiving-reports`.
 
+## Plan 5 additions (read-only AI feeds)
+
+`patches/plan5` (3 patches, tag `plan5-complete`) adds to `AiController`, all `AI.Read`, no new tables and no migration:
+- `GET /api/ai/receipts?warehouseId=&afterId=&take=` stock received through purchases (`PURCHASE_IN` ledger rows) with `hasReceivingReport`.
+- `GET /api/ai/movements?warehouseId=&type=SALE_OUT&afterId=&take=` inventory ledger rows (what moved, when, from which batch).
+- `GET /api/ai/batches?warehouseId=` every batch with stock on hand (the expiry feed lists only the alert window).
+
 ## Live verification environment (no admin rights needed)
 
 PesoWeb databases come from a backup plus SQL scripts, not from running every EF migration (an old migration has a foreign-key cycle, and the history is incomplete). To get a throwaway database on SQL Server LocalDB:

@@ -64,7 +64,7 @@ class PesoWebDriver:
         self.refusals = []
 
     # ---- plumbing -------------------------------------------------------------------------------------------
-    def _call(self, method: str, path: str, token: str = None, json_body=None, form: dict = None, expect_json=True):
+    def _call(self, method: str, path: str, token: str = None, json_body=None, form: dict = None, expect_json=True, raw=False):
         headers = {"X-Sim-Run": self.run_id}
         if token:
             headers["Authorization"] = f"Bearer {token}"
@@ -84,6 +84,11 @@ class PesoWebDriver:
                 time.sleep(0.5 * (attempt + 1))
         else:
             raise DriverError(f"{method} {path} unreachable after 3 tries: {type(last).__name__}")
+        if raw:
+            try:
+                return resp.status_code, resp.json()
+            except ValueError:
+                return resp.status_code, {"message": resp.text[:300]}
         if resp.status_code >= 400:
             text = resp.text[:300]
             try:
@@ -249,3 +254,59 @@ class PesoWebDriver:
 
     def near_expiry(self, acct: Account, warehouse_id: int) -> list:
         return self._call("GET", f"/api/Inventory/NearExpiryBatches?warehouse={warehouse_id}&pageSize=200", acct.token).get("data", [])
+
+    # ---- pricing, expiry and AI feeds ---------------------------------------------------------------------
+    def pricing_policy(self, acct: Account) -> dict:
+        return self._call("GET", "/api/Pricing/Policy", acct.token)
+
+    def set_pricing_policy(self, acct: Account, mode: str, hard_floor: float, soft_floor: float, max_discount: float, max_changes_per_hour: int) -> dict:
+        body = {"AutonomyMode": mode, "HardMarginFloorPct": hard_floor, "SoftMarginFloorPct": soft_floor,
+                "MaxDiscountPct": max_discount, "MaxChangesPerSkuPerHour": max_changes_per_hour}
+        return self._call("PUT", "/api/Pricing/Policy", acct.token, json_body=body)
+
+    def markdown(self, acct: Account, warehouse_id: int, product_id: int, batch_id: int, new_price: float,
+                 reason: str = "", prediction_ref: str = None, source: str = "Ai"):
+        """Returns (http status, outcome body). 200 applied, 202 needs approval, 422 refused by a guardrail."""
+        body = {"WarehouseId": warehouse_id, "ProductId": product_id, "BatchId": batch_id, "NewPrice": new_price,
+                "Reason": reason[:300], "Source": source}
+        if prediction_ref:
+            body["PredictionRef"] = prediction_ref
+        return self._call("POST", "/api/Pricing/Markdown", acct.token, json_body=body, raw=True)
+
+    def end_markdown(self, acct: Account, active_markdown_id: int, reason: str = "") -> None:
+        self._call("POST", "/api/Pricing/End", acct.token, json_body={"ActiveMarkdownId": active_markdown_id, "Reason": reason}, expect_json=False)
+
+    def active_markdown_rows(self, acct: Account, warehouse_id: int = None) -> list:
+        q = f"?warehouseId={warehouse_id}" if warehouse_id else ""
+        return self._call("GET", f"/api/Pricing/Active{q}", acct.token) or []
+
+    def expiry_batches(self, acct: Account, warehouse_id: int) -> list:
+        return (self._call("GET", f"/api/Expiry/Risk?warehouseId={warehouse_id}", acct.token) or {}).get("batches", [])
+
+    def all_batches(self, acct: Account, warehouse_id: int) -> list:
+        """Every batch with stock on hand (the at-risk list from expiry_batches is only the alert window)."""
+        return self._call("GET", f"/api/ai/batches?warehouseId={warehouse_id}", acct.token) or []
+
+    def write_off_expired(self, acct: Account, warehouse_id: int) -> dict:
+        return self._call("POST", f"/api/Expiry/WriteOffExpired?warehouseId={warehouse_id}", acct.token)
+
+    def receipts(self, acct: Account, warehouse_id: int = None, after_id: int = 0) -> list:
+        q = f"?afterId={after_id}&take=1000" + (f"&warehouseId={warehouse_id}" if warehouse_id else "")
+        return (self._call("GET", f"/api/ai/receipts{q}", acct.token) or {}).get("receipts", [])
+
+    def movements(self, acct: Account, warehouse_id: int = None, kind: str = "SALE_OUT", after_id: int = 0) -> list:
+        q = f"?type={kind}&afterId={after_id}&take=5000" + (f"&warehouseId={warehouse_id}" if warehouse_id else "")
+        return (self._call("GET", f"/api/ai/movements{q}", acct.token) or {}).get("movements", [])
+
+    # ---- stock counts -------------------------------------------------------------------------------------
+    def create_count(self, acct: Account, warehouse_id: int, product_ids: list, note: str = "") -> dict:
+        return self._call("POST", "/api/StockCounts/Create", acct.token,
+                          json_body={"warehouseId": warehouse_id, "productIds": product_ids, "note": note})
+
+    def submit_count(self, acct: Account, count_id: int, counts: list) -> dict:
+        """counts: dicts {productId, countedQty, reason}."""
+        return self._call("POST", "/api/StockCounts/Submit", acct.token, json_body={"stockCountId": count_id, "counts": counts})
+
+    def approve_count(self, acct: Account, count_id: int) -> dict:
+        return self._call("POST", "/api/StockCounts/Approve", acct.token, json_body={"stockCountId": count_id})
+

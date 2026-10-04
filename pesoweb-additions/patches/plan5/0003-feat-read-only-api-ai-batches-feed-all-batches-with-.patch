@@ -1,0 +1,38 @@
+From 2eb3ccb3a658866aebca99f2b7268aaa5b9344f8 Mon Sep 17 00:00:00 2001
+From: unknown <jericho.pascua@gmail.com>
+Date: Mon, 5 Oct 2026 04:56:49 +0800
+Subject: [PATCH 3/3] feat: read-only /api/ai/batches feed (all batches with
+ stock on hand)
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+---
+ Controllers/AiController.cs | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+
+diff --git a/Controllers/AiController.cs b/Controllers/AiController.cs
+index 95d4b4b..fbf1b2e 100644
+--- a/Controllers/AiController.cs
++++ b/Controllers/AiController.cs
+@@ -165,5 +165,19 @@ namespace GoPosify.Controllers
+                 .ToListAsync();
+             return Ok(new { movements = rows, nextAfterId = rows.Count > 0 ? rows[^1].Id : afterId });
+         }
++
++        // GET: api/ai/batches?warehouseId=1
++        // Every batch with stock on hand (not only the ones inside the expiry alert window).
++        [HttpGet("~/api/ai/batches")]
++        [Authorize(Policy = "AI.Read")]
++        public async Task<IActionResult> Batches(int? warehouseId)
++        {
++            var q = _dbContext.ProductBatches.AsNoTracking().Where(b => b.QtyOnHand > 0);
++            if (warehouseId.HasValue) q = q.Where(b => b.WarehouseId == warehouseId.Value);
++            var rows = await q.OrderBy(b => b.ExpiryDate).ThenBy(b => b.Id).Take(5000)
++                .Select(b => new { b.Id, b.WarehouseId, b.ProductId, b.BatchNo, b.ExpiryDate, b.QtyOnHand, b.Cost })
++                .ToListAsync();
++            return Ok(rows);
++        }
+     }
+ }
+-- 
+2.46.0.windows.1
+

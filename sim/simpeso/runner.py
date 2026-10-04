@@ -73,7 +73,7 @@ def _lines_for(ctx: Context, ckey: str, bkey: str, demand: dict, seed: int) -> l
     products = ctx.state["companies"][ckey]["products"]
     lines = []
     for spec in comp.catalog:
-        qty = max(15, math.ceil(demand.get((bkey, spec.code), 0) * 10))
+        qty = max(30, math.ceil(demand.get((bkey, spec.code), 0) * 25))
         r = rng.derive(seed, "batch", bkey, spec.code)
         for n, b in enumerate(_batches(spec, qty, r)):
             line = {"product_id": products[spec.code], "unit_cost": spec.cost, "quantity": b["qty"]}
@@ -141,6 +141,9 @@ def build(ctx: Context, log=print) -> None:
         cs["suppliers"] = [drv.add_supplier(owner, s.name, i + 1) for i, s in enumerate(comp.suppliers)]
         cs["role_id"] = drv.role_id(owner)
         cs["customer_id"] = int(drv.customers(owner)[0]["id"])
+        pol = ctx.state.get("policy")
+        if pol:
+            drv.set_pricing_policy(owner, pol["mode"], pol["hard"], pol["soft"], pol["max_discount"], pol["max_changes"])
         cs["products"] = {p.code: drv.add_product(owner, p, cs["categories"][p.category], cs["basics"]) for p in comp.catalog}
         ctx.save()
         for n, b in enumerate(comp.branches):
@@ -164,11 +167,11 @@ def _find_batch_id(drv, acct, wh: int, batch_no: str):
     return None
 
 
-def run_day(ctx: Context, day: int, log=print) -> dict:
+def run_day(ctx: Context, day: int, log=print, hooks=None, incidents: bool = True) -> dict:
     drv, plan, seed = ctx.driver, ctx.plan, ctx.state["seed"]
     people = behavior.make_individuals(plan, seed)
-    visits = behavior.day_visits(plan, people, day, seed)
-    planned = inc.plan_incidents(plan, seed, day)
+    arrivals = behavior.day_arrivals(plan, people, day, seed)
+    planned = inc.plan_incidents(plan, seed, day) if incidents else []
     ledger = inc.Ledger.load(ctx.run_dir / "ledger.json") if (ctx.run_dir / "ledger.json").exists() else inc.Ledger()
     action_log, stats = [], {"sales": 0, "sale_failed": 0, "returns": 0, "refusals": 0, "units": 0, "revenue": 0.0}
     shifts = {}
@@ -185,15 +188,22 @@ def run_day(ctx: Context, day: int, log=print) -> dict:
                 shifts[bkey] = drv.open_shift(ctx.cashier(bkey), wh, "POS-01", OPENING_CASH)
                 action_log.append({"t": "open_shift", "branch": bkey})
 
-    timeline = [(v.hour, v.minute, 1, v) for v in visits]
+    timeline = [(v.hour, v.minute, 1, v) for v in arrivals]
     timeline += [(e["hour"], 0, 0, e) for e in plan.expansions if e["day"] == day]
     timeline += [(i.hour, 30, 0, i) for i in planned if i.type not in (inc.CASH_SHORT, inc.NEAR_EXPIRY_BATCH)]
     timeline.sort(key=lambda t: (t[0], t[1], t[2], getattr(t[3], "id", "") if not isinstance(t[3], dict) else t[3]["branch"]))
     cash_short = {i.branch: i for i in planned if i.type == inc.CASH_SHORT}
-    last_sale = {}
+    ratio_fn = getattr(hooks, "ratio", None)
+    cur_hour = SHIFT_OPEN_HOUR + 1
+    if hooks:
+        hooks.start_day(ctx, day)
+        hooks.before_hour(ctx, cur_hour)
     demand = None
     sale_n = 0
     for hour, minute, _, item in timeline:
+        while hooks and cur_hour < hour:
+            cur_hour += 1
+            hooks.before_hour(ctx, cur_hour)
         if isinstance(item, dict):                                  # a branch opens mid-run
             if demand is None:
                 demand = estimate_demand(plan, seed, people)
@@ -212,15 +222,15 @@ def run_day(ctx: Context, day: int, log=print) -> dict:
         if isinstance(item, inc.Incident):
             _inject(ctx, item, ledger, action_log)
             continue
-        v = item
-        if v.branch not in shifts or not live(v.branch):
+        v = behavior.fill_basket(plan, item, seed, ratio_fn)
+        if v is None or v.branch not in shifts or not live(v.branch):
             continue
         c, _b = ctx.bmap[v.branch]
         cs = ctx.state["companies"][c.key]
         wh = cs["branches"][v.branch]["warehouse_id"]
         spec_price = {p.code: p.price for p in c.catalog}
         lines = [(cs["products"][code], q) for code, q in v.lines]
-        total = sum(spec_price[code] * q for code, q in v.lines)
+        total = sum(round(spec_price[code] * (ratio_fn(v.branch, code) if ratio_fn else 1.0), 2) * q for code, q in v.lines)
         action_log.append({"t": "sale", "visit": v.id, "branch": v.branch, "lines": list(v.lines)})
         try:
             sale = drv.sell(ctx.cashier(v.branch), wh, cs["customer_id"], lines, v.payment, total)
@@ -238,6 +248,12 @@ def run_day(ctx: Context, day: int, log=print) -> dict:
             stats.setdefault("failure_samples", [])
             if len(stats["failure_samples"]) < 3:
                 stats["failure_samples"].append(str(exc)[:160])
+
+    if hooks:
+        while cur_hour < SHIFT_CLOSE_HOUR - 1:
+            cur_hour += 1
+            hooks.before_hour(ctx, cur_hour)
+        hooks.end_day(ctx, day, stats)
 
     # a short-dated delivery lands after trading stops: FEFO would otherwise sell it through before any alert could fire
     for i in planned:
@@ -299,9 +315,12 @@ def _inject(ctx: Context, incident: inc.Incident, ledger: inc.Ledger, action_log
             line.update(batch_no=f"{incident.id}-delivery", expiry_date=(_today() + dt.timedelta(days=max(10, spec.shelf_life_days[0]))).isoformat(),
                         manufacturing_date=(_today() - dt.timedelta(days=1)).isoformat())
         drv.receive_stock(owner, wh, cs["suppliers"][0], [line], _today().isoformat())     # no receiving report on purpose
+        loss = bs.setdefault("physical_loss", {})
+        loss[spec.code] = loss.get(spec.code, 0) + (n - incident.detail["units_arrived"])
     elif incident.type == inc.HIDDEN_SHRINK:
         # physical loss only: PesoWeb is never told. Kept so a later stock count can reveal it.
-        bs.setdefault("physical_loss", {})[incident.detail["product_code"]] = incident.detail["units"]
+        loss = bs.setdefault("physical_loss", {})
+        loss[incident.detail["product_code"]] = loss.get(incident.detail["product_code"], 0) + incident.detail["units"]
     ledger.add(incident)
     action_log.append({"t": "incident", "id": incident.id})
 
@@ -328,6 +347,9 @@ def _load(args) -> Context:
         state = json.loads(path.read_text(encoding="utf-8"))
     else:
         state = {"run": args.run, "seed": args.seed, "profile": args.profile, "tag": args.run, "companies": {}}
+        if args.policy != "off":
+            state["policy"] = {"mode": {"autonomous": "Autonomous", "approval": "Approval"}[args.policy], "hard": args.hard_floor, "soft": args.soft_floor,
+                               "max_discount": args.max_discount, "max_changes": 6}
     plan = world.plan_group(state["seed"], state["profile"])
     drv = PesoWebDriver(args.base_url, args.run)
     root = None
@@ -344,6 +366,10 @@ def main(argv=None) -> int:
     ap.add_argument("--profile", default="smoke", choices=sorted(world.PROFILES))
     ap.add_argument("--run", default="run1")
     ap.add_argument("--day", type=int, default=0)
+    ap.add_argument("--hard-floor", type=float, default=10, help="hard margin floor, percent over cost")
+    ap.add_argument("--soft-floor", type=float, default=20, help="soft margin floor, percent over cost")
+    ap.add_argument("--max-discount", type=float, default=50)
+    ap.add_argument("--policy", choices=["off", "autonomous", "approval"], default="off", help="pricing autonomy set at build")
     args = ap.parse_args(argv)
     ctx = _load(args)
     if args.command in ("build", "all"):

@@ -11,7 +11,7 @@ PesoWeb must be running with the Retail_MissionCommerceAI migrations applied (re
     cd sim
     python -m simpeso.runner all --seed 21 --profile smoke --run demo1     # build, one day, score
     python -m simpeso.runner build|day|score --run demo1                   # or step by step
-    python -m unittest discover -s tests -t .                              # 58 unit tests
+    python -m unittest discover -s tests -t .                              # 63 unit tests
 
 `smoke` = 5 companies, 2 branches each (10 + 2 opened mid-run), 8 products, about 110 sales a day. `starter` = about 17 branches plus 2 mid-run openings, 30 products, about 460 sales a day (26 s on a laptop). Run state (throwaway credentials, ledger, scorecard) goes to `sim/runs/<run>/`, which is git-ignored.
 
@@ -28,4 +28,12 @@ PesoWeb must be running with the Retail_MissionCommerceAI migrations applied (re
 - Archetype and owner libraries are a hand-authored starter set that stands in for the cached LLM library; validators (grid coverage, near-duplicates, mission fit) apply to both.
 - PesoWeb runs on the real clock, so day indexes choose the dice, not the date. Virtual time for multi-day proof runs is Plan 6.
 - Incidents `UNREPORTED_SHORT_DELIVERY` and `HIDDEN_SHRINK` are invisible to PesoWeb by design; they exist so the AI has something real to find. Variances are "unexplained", never an accusation.
-- Shoppers pay as PesoWeb's default "Cash Customer"; per-shopper customer records (needed for mission detection from loyalty history) are a Plan 5 item.
+- Shoppers pay as PesoWeb's default "Cash Customer"; per-shopper customer records (needed for mission detection from loyalty history) are a Plan 6 item.
+
+## AI pass (`simpeso.ai_hook`, needs the PesoWeb additions from `pesoweb-additions/patches/plan5`)
+
+    sim/scripts/ai_demo.sh <run> on|off [hard-floor] [soft-floor]     # build, incident day, learn, markdown trial, find, score
+    python -m simpeso.ai_hook history|trial|find|report --run <run>
+
+`history` runs two baseline days and four promo days (the tenant's own promo calendar) so the model sees price variation. `trial` adds short-dated perishable lots sized at 1.6 days of demand, lets the agent mark them down hour by hour through the real pricing API, and resolves every prediction against what sold. `find` spends a counting budget (`--k` SKUs per branch) on risk-ranked stock counts; the sim plays the physical shelf. Results of the first runs are in `Docs/superpowers/plans/2026-10-06-plan5-ai-core.md`.
+

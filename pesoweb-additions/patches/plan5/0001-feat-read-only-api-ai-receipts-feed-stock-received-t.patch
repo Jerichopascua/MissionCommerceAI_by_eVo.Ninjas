@@ -1,0 +1,49 @@
+From 6c83f9fbd096c0a1166140a0ad5f51c92c98f888 Mon Sep 17 00:00:00 2001
+From: unknown <jericho.pascua@gmail.com>
+Date: Mon, 5 Oct 2026 04:46:43 +0800
+Subject: [PATCH 1/3] feat: read-only /api/ai/receipts feed (stock received
+ through purchases, with receiving-report flag)
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+---
+ Controllers/AiController.cs | 25 +++++++++++++++++++++++++
+ 1 file changed, 25 insertions(+)
+
+diff --git a/Controllers/AiController.cs b/Controllers/AiController.cs
+index 057c2d5..3ad9ab1 100644
+--- a/Controllers/AiController.cs
++++ b/Controllers/AiController.cs
+@@ -124,5 +124,30 @@ namespace GoPosify.Controllers
+             if (warehouseId.HasValue) q = q.Where(m => m.WarehouseId == warehouseId.Value);
+             return Ok(await q.OrderBy(m => m.Id).Take(2000).ToListAsync());
+         }
++
++        // GET: api/ai/receipts?warehouseId=1&afterId=0&take=500
++        // Stock received through purchases (the PURCHASE_IN ledger rows) and whether a receiving report exists for the line.
++        [HttpGet("~/api/ai/receipts")]
++        [Authorize(Policy = "AI.Read")]
++        public async Task<IActionResult> Receipts(int? warehouseId, long afterId = 0, int take = 500)
++        {
++            take = Math.Clamp(take, 1, 1000);
++            var q = _dbContext.InventoryTransactions.AsNoTracking()
++                .Where(t => t.TransactionType == "PURCHASE_IN" && t.Id > afterId);
++            if (warehouseId.HasValue) q = q.Where(t => t.WarehouseId == warehouseId.Value);
++            var rows = await q.OrderBy(t => t.Id).Take(take).ToListAsync();
++            var purchaseIds = rows.Where(r => r.ReferenceId.HasValue).Select(r => (int)r.ReferenceId.Value).Distinct().ToList();
++            var reported = await _dbContext.ReceivingReports.AsNoTracking()
++                .Where(r => r.SourceType == GoPosify.Models.ReceivingSourceType.Purchase && purchaseIds.Contains(r.SourceId))
++                .Select(r => new { r.SourceId, r.ProductId }).ToListAsync();
++            var receipts = rows.Select(r => new
++            {
++                r.Id, r.WarehouseId, r.ProductId, r.BatchId, r.ReferenceNo,
++                PurchaseId = r.ReferenceId,
++                Quantity = r.QtyIn, r.UnitCost, r.TransactionDate,
++                HasReceivingReport = r.ReferenceId.HasValue && reported.Any(x => x.SourceId == (int)r.ReferenceId.Value && x.ProductId == r.ProductId)
++            }).ToList();
++            return Ok(new { receipts, nextAfterId = rows.Count > 0 ? rows[^1].Id : afterId });
++        }
+     }
+ }
+-- 
+2.46.0.windows.1
+

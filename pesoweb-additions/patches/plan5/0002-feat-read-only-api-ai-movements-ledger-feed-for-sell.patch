@@ -1,0 +1,40 @@
+From 5cd6ad5beea7fb2781c480b34f2cdfd74337f6c9 Mon Sep 17 00:00:00 2001
+From: unknown <jericho.pascua@gmail.com>
+Date: Mon, 5 Oct 2026 04:49:05 +0800
+Subject: [PATCH 2/3] feat: read-only /api/ai/movements ledger feed for
+ sell-through learning
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+---
+ Controllers/AiController.cs | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
+
+diff --git a/Controllers/AiController.cs b/Controllers/AiController.cs
+index 3ad9ab1..95d4b4b 100644
+--- a/Controllers/AiController.cs
++++ b/Controllers/AiController.cs
+@@ -149,5 +149,21 @@ namespace GoPosify.Controllers
+             }).ToList();
+             return Ok(new { receipts, nextAfterId = rows.Count > 0 ? rows[^1].Id : afterId });
+         }
++
++        // GET: api/ai/movements?warehouseId=1&type=SALE_OUT&afterId=0&take=1000
++        // Inventory ledger rows (what moved, when, from which batch): the AI learns sell-through from these.
++        [HttpGet("~/api/ai/movements")]
++        [Authorize(Policy = "AI.Read")]
++        public async Task<IActionResult> Movements(int? warehouseId, string type, long afterId = 0, int take = 1000)
++        {
++            take = Math.Clamp(take, 1, 5000);
++            var q = _dbContext.InventoryTransactions.AsNoTracking().Where(t => t.Id > afterId);
++            if (warehouseId.HasValue) q = q.Where(t => t.WarehouseId == warehouseId.Value);
++            if (!string.IsNullOrWhiteSpace(type)) q = q.Where(t => t.TransactionType == type);
++            var rows = await q.OrderBy(t => t.Id).Take(take)
++                .Select(t => new { t.Id, t.TransactionType, t.WarehouseId, t.ProductId, t.BatchId, t.QtyIn, t.QtyOut, t.UnitCost, t.TransactionDate })
++                .ToListAsync();
++            return Ok(new { movements = rows, nextAfterId = rows.Count > 0 ? rows[^1].Id : afterId });
++        }
+     }
+ }
+-- 
+2.46.0.windows.1
+
