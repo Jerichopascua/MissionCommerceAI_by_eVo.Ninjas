@@ -42,6 +42,7 @@ class ProductSpec:
     expiry: bool
     shelf_life_days: tuple = ()
     alert_days: int = 0
+    popularity: float = 1.0          # relative pull on shoppers; real sales concentration for a real catalog
 
 
 def _from_dict(d: dict) -> Vertical:

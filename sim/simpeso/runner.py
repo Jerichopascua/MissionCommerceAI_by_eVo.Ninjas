@@ -50,6 +50,14 @@ class Context:
         return self.account(s["email"], s["password"])
 
 
+MAX_LINES_PER_PURCHASE = 60      # PesoWeb rejects forms with more than 1,024 values; each line is about 8 values
+
+
+def chunks(items: list, n: int = MAX_LINES_PER_PURCHASE):
+    for i in range(0, len(items), n):
+        yield items[i:i + n]
+
+
 def _tagged(email: str, tag: str) -> str:
     return email.replace("@", f".{tag}@")
 
@@ -115,7 +123,8 @@ def build_branch(ctx: Context, ckey: str, bkey: str, demand: dict, first: bool =
             bstate["staff"][s.key] = {"email": _tagged(s.email, ctx.state["tag"]), "password": s.password}
     if not bstate.get("stocked"):
         lines = _lines_for(ctx, ckey, bkey, demand, ctx.state["seed"])
-        drv.receive_stock(owner, bstate["warehouse_id"], cstate["suppliers"][0], lines, _today().isoformat())
+        for part in chunks(lines):
+            drv.receive_stock(owner, bstate["warehouse_id"], cstate["suppliers"][0], part, _today().isoformat())
         bstate["stocked"] = True
     ctx.save()
 
@@ -353,7 +362,11 @@ def _load(args) -> Context:
         if args.policy != "off":
             state["policy"] = {"mode": {"autonomous": "Autonomous", "approval": "Approval"}[args.policy], "hard": args.hard_floor, "soft": args.soft_floor,
                                "max_discount": args.max_discount, "max_changes": 6}
-    plan = world.plan_group(state["seed"], state["profile"])
+    cat = state.get("catalog") or ({"path": args.catalog, "size": args.catalog_size} if getattr(args, "catalog", None) else None)
+    if cat and not state.get("catalog"):
+        state["catalog"] = cat
+    items = json.loads(Path(cat["path"]).read_text(encoding="utf-8"))["items"] if cat else None
+    plan = world.plan_group(state["seed"], state["profile"], catalog=items, catalog_size=cat["size"] if cat else None)
     drv = PesoWebDriver(args.base_url, args.run)
     root = None
     if os.environ.get("PESOWEB_ROOT_PASSWORD"):
@@ -379,6 +392,8 @@ def main(argv=None) -> int:
     ap.add_argument("--hard-floor", type=float, default=10, help="hard margin floor, percent over cost")
     ap.add_argument("--soft-floor", type=float, default=20, help="soft margin floor, percent over cost")
     ap.add_argument("--max-discount", type=float, default=50)
+    ap.add_argument("--catalog", default=None, help="path to a real catalog json (sim/runs/real_catalog.json): every company and branch sells it")
+    ap.add_argument("--catalog-size", type=int, default=None, help="use only the N best sellers plus a seeded sample (default: all)")
     ap.add_argument("--calibration", default=None, help="path to real-calibration.json: use the real hour profile and basket size")
     ap.add_argument("--calib-weight", type=float, default=0.5, help="weight on the real hour profile (the sample is small)")
     ap.add_argument("--policy", choices=["off", "autonomous", "approval"], default="off", help="pricing autonomy set at build")

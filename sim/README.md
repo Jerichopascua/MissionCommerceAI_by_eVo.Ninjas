@@ -44,3 +44,10 @@ PesoWeb must be running with the Retail_MissionCommerceAI migrations applied (re
 
 `calibrate_real.py` reads every tenant and branch, reports bootstrap intervals, and writes `runs/real-calibration.json` and `.md` (git-ignored, because they are derived from a real business). `--calibration` blends the real hour-of-day profile into shopper arrivals (weight = how far to trust a small sample) and scales basket size to the real lines per sale. Without the flag nothing changes. Price response is not calibrated: the real sample has too few discounted sales to fit it.
 
+## Using a real product catalog (optional)
+
+    python scripts/extract_real_catalog.py --db PesoWeb_V2_Real --tenants 6,17          # real names, costs, prices, real sales concentration
+    python -m simpeso.runner build --seed 21 --profile smoke --run real1 --catalog runs/real_catalog.json --calibration runs/real-calibration.json --policy autonomous
+
+Every company and every branch then sells the real products with their real cost and price (opening stock goes in through purchases of at most 60 lines each, because PesoWeb rejects forms with more than 1,024 values). Best-selling real products pull more shoppers, matching the real concentration. The real source data has no expiry information, so these products are non-expiry: the markdown agent and the near-expiry incident have nothing to act on until perishable lots are added. `runs/real_catalog.json` is git-ignored: it is a real business's product list.
+

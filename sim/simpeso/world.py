@@ -107,8 +107,25 @@ def _password(rnd) -> str:
     return "Sim!" + "".join(rnd.choice("abcdefghjkmnpqrstuvwxyz23456789") for _ in range(8))
 
 
-def plan_group(seed: int, profile: str = "starter") -> WorldPlan:
+def real_specs(items: list, size: int = None, seed: int = 0) -> list:
+    """A real product list (name, cost, price, barcode, popularity) as ProductSpecs. All real products are non-expiry here:
+    the source data has no expiry information. A smaller size keeps the best sellers and a seeded sample of the rest."""
+    items = list(items)
+    if size and size < len(items):
+        ranked = sorted(items, key=lambda i: -i.get('sold_units', 0))
+        keep = [i for i in ranked if i.get('sold_units', 0) > 0][:size]
+        rest = [i for i in ranked if i not in keep]
+        rng.derive(seed, 'real-catalog').shuffle(rest)
+        items = keep + rest[:size - len(keep)]
+    def num(x):
+        return int(x) if float(x).is_integer() else round(float(x), 2)
+    return [vt.ProductSpec(i['code'], i['name'], 'Grocery', num(i['cost']), num(i['price']), False, (), 0, float(i.get('popularity', 1.0))) for i in items]
+
+
+def plan_group(seed: int, profile: str = "starter", catalog: list = None, catalog_size: int = None) -> WorldPlan:
+    """catalog: optional real product list (see real_specs); when given, EVERY company and branch sells it."""
     settings = dict(PROFILES[profile])
+    settings['catalog_source'] = 'real' if catalog else 'generated'
     verts = vt.load_all()
     owner_lib = {o.id: o for o in archetypes.owner_archetypes()}
     companies, decisions, expansions = [], [], []
@@ -149,6 +166,8 @@ def plan_group(seed: int, profile: str = "starter") -> WorldPlan:
             c.branches.append(nb)
             expansions.append({"company": c.key, "branch": nb.key, "day": 0, "hour": nb.opens_hour})
         _staff_and_catalog(c, verts[c.vertical], seed, settings, oa, decisions)
+        if catalog:
+            c.catalog = real_specs(catalog, catalog_size, seed)
         c.suppliers = [SupplierPlan(f"{c.name} Supplier {n + 1}", rng.derive(seed, "supplier", c.key, n).randint(1, 4))
                        for n in range(2)]
     return WorldPlan(seed, profile, "Evo Retail Holdings", companies, expansions, decisions, settings)

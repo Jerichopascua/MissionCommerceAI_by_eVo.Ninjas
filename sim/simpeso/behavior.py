@@ -107,7 +107,7 @@ def _popularity(seed: int, code: str) -> float:
 @lru_cache(maxsize=None)
 def _product_weights(catalog: tuple, mission: str, seed: int) -> tuple:
     words = MISSION_KEYWORDS.get(mission, [])
-    return tuple(_popularity(seed, p.code) * (3.0 if any(w in p.category.lower() for w in words) else 0.3) for p in catalog)
+    return tuple(_popularity(seed, p.code) * p.popularity * (3.0 if any(w in p.category.lower() for w in words) else 0.3) for p in catalog)
 
 
 @lru_cache(maxsize=None)
