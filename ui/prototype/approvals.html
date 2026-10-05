@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Approval Center Prototype</title>
+<style>
+:root{--bg:#f4f6fb;--card:#fff;--ink:#0f1b2d;--mut:#66758c;--line:#e3e8f1;--pri:#1861ac;--soft:#e8f1fb;--ok:#1f9d55;--okbg:#e5f6ec;--bad:#d6334a;--badbg:#fdebee;--warn:#b7791f;--warnbg:#fff4de;color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#04100b;--card:#082016;--ink:#eafff3;--mut:#8fc3a8;--line:#1d4a34;--pri:#2fdc82;--soft:#0c2f20;--ok:#3dff8f;--okbg:#0c3a25;--bad:#ff6b81;--badbg:#3a1119;--warn:#f0b24a;--warnbg:#3a2a0c;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#04100b;--card:#082016;--ink:#eafff3;--mut:#8fc3a8;--line:#1d4a34;--pri:#2fdc82;--soft:#0c2f20;--ok:#3dff8f;--okbg:#0c3a25;--bad:#ff6b81;--badbg:#3a1119;--warn:#f0b24a;--warnbg:#3a2a0c;color-scheme:dark}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font:14px/1.45 "Segoe UI",Inter,system-ui,Arial,sans-serif;padding:18px 16px 40px}
+.wrap{max-width:1240px;margin:0 auto}
+header{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:14px}
+header h1{font-size:21px;font-weight:800}.sub{color:var(--mut);font-size:12.5px}.sp{flex:1}
+.mock{background:var(--warnbg);color:var(--warn);border:1px solid var(--warn);border-radius:999px;padding:3px 10px;font-size:11.5px;font-weight:700}
+button,select{border:1px solid var(--line);background:var(--card);color:var(--ink);padding:7px 12px;border-radius:10px;font-weight:600;cursor:pointer;font-size:13px}
+button.pri{background:var(--pri);color:#fff;border-color:var(--pri)}:root[data-theme="dark"] button.pri{color:#04100b}
+button.ok{background:var(--ok);border-color:var(--ok);color:#fff}button.bad{color:var(--bad);border-color:var(--bad)}
+button[disabled]{opacity:.45;cursor:not-allowed}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}.seg button{border:0;border-radius:0}.seg button.on{background:var(--soft);color:var(--pri)}
+.kpis{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));margin-bottom:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px}
+.kpi .l{color:var(--mut);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}.kpi .v{font-size:24px;font-weight:800;font-variant-numeric:tabular-nums}
+.main{display:grid;gap:14px;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr)}
+@media (max-width:900px){.main{grid-template-columns:1fr}}
+.tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px}
+.list{display:grid;gap:8px;max-height:640px;overflow:auto}
+.row{display:grid;grid-template-columns:22px 1fr auto;gap:10px;align-items:center;padding:10px;border:1px solid var(--line);border-radius:12px;cursor:pointer;background:var(--card)}
+.row.sel{border-color:var(--pri);background:var(--soft)}
+.row .n{font-weight:700}.row .m{color:var(--mut);font-size:12px}
+.price{font-variant-numeric:tabular-nums;font-weight:700;text-align:right}.price small{display:block;color:var(--mut);font-weight:500;font-size:11.5px}
+.chip{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700;margin:2px 3px 0 0;background:var(--soft);color:var(--pri)}
+.chip.ok{background:var(--okbg);color:var(--ok)}.chip.warn{background:var(--warnbg);color:var(--warn)}.chip.bad{background:var(--badbg);color:var(--bad)}
+.lane{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--mut);margin:10px 2px 2px}
+.detail h2{font-size:16px;margin-bottom:2px}.detail .big{display:flex;align-items:baseline;gap:10px;margin:8px 0}.big b{font-size:28px;font-variant-numeric:tabular-nums}.big span{color:var(--mut)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:13px;margin:8px 0}.kv dt{color:var(--mut)}
+.check{display:flex;gap:8px;align-items:flex-start;font-size:13px;padding:3px 0}.check i{font-style:normal;font-weight:800}
+.note{color:var(--mut);font-size:12px;margin-top:8px}.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.slider{width:100%;margin:6px 0}
+.log{font-size:12.5px;color:var(--mut);max-height:150px;overflow:auto;margin-top:10px}.log div{padding:3px 0;border-bottom:1px dashed var(--line)}
+.toast{position:fixed;right:16px;bottom:16px;background:var(--ink);color:var(--bg);padding:10px 14px;border-radius:12px;font-weight:600;opacity:0;transform:translateY(8px);transition:.2s;pointer-events:none}
+.toast.on{opacity:1;transform:none}
+.banner{padding:8px 12px;border-radius:12px;margin-bottom:12px;font-size:13px;background:var(--soft);color:var(--ink);border:1px solid var(--line)}
+.empty{color:var(--mut);padding:24px;text-align:center}
+kbd{border:1px solid var(--line);border-radius:6px;padding:0 5px;font-size:11px;background:var(--card)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div><h1>Approval Center</h1><div class="sub">One inbox for every change that needs a person. Mock data, nothing here is real.</div></div>
+  <span class="mock">PROTOTYPE</span>
+  <div class="sp"></div>
+  <div class="seg" id="modeSeg" role="group" aria-label="Mode">
+    <button type="button" data-mode="real" class="on">Real shop: people approve</button>
+    <button type="button" data-mode="sim">Simulation: auto within limits</button>
+  </div>
+  <button id="theme" type="button">Theme</button>
+</header>
+<div class="banner" id="banner"></div>
+<div class="kpis" id="kpis"></div>
+<div class="main">
+  <div class="card">
+    <div class="tools">
+      <div class="seg" id="tabs" role="group" aria-label="Type"></div>
+      <select id="lane" aria-label="Lane"><option value="">All lanes</option><option>Store manager</option><option>Pricing manager</option><option>Owner</option></select>
+      <div class="sp"></div>
+      <button id="bulk" type="button" class="ok">Approve all low-risk (0)</button>
+    </div>
+    <div class="list" id="list"></div>
+    <div class="note">Keys: <kbd>j</kbd>/<kbd>k</kbd> move, <kbd>a</kbd> approve, <kbd>r</kbd> reject. Bulk approve only covers items that pass every check and move the price by 5% or less.</div>
+  </div>
+  <div class="card detail" id="detail"></div>
+</div>
+<div class="toast" id="toast" role="status"></div>
+</div>
+<script>
+(function(){
+  var root=document.documentElement;
+  try{var t=localStorage.getItem("theme");if(t)root.setAttribute("data-theme",t)}catch(e){}
+  document.getElementById("theme").onclick=function(){var dark=(root.getAttribute("data-theme")||(matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light"))==="dark";var n=dark?"light":"dark";root.setAttribute("data-theme",n);try{localStorage.setItem("theme",n)}catch(e){}};
+
+  // mock queue: lane follows the routing rule (size of the move, top seller, below soft floor, bulk impact)
+  var NOW=new Date();
+  var items=[
+    {id:1,type:"Price",name:"Cooking oil 1L",scope:"All branches",cost:113,from:120,to:127,gain:6.2,gainSafe:4.1,conf:"learned",top:false,soft:true,age:35,reason:"Raise 120 to 127 (+6%): expected profit 7.0 to 13.2 pesos a day with a sensitivity learned from this shop's sales.",units:2.1,evidence:"learned -1.4 (range -2.2 to -0.5)"},
+    {id:2,type:"Price",name:"Instant noodles beef 55g",scope:"All branches",cost:9.5,from:12,to:12.5,gain:3.0,gainSafe:2.2,conf:"learned",top:false,soft:true,age:20,reason:"Raise 12 to 12.5 (+4%): small step on a steady seller.",units:14,evidence:"learned -1.4 (range -2.2 to -0.5)"},
+    {id:3,type:"Price",name:"Bottled water 500ml",scope:"All branches",cost:9,from:15,to:15.5,gain:1.4,gainSafe:1.0,conf:"learned",top:false,soft:true,age:22,reason:"Raise 15 to 15.5 (+3%).",units:30,evidence:"learned -1.4 (range -2.2 to -0.5)"},
+    {id:4,type:"Price",name:"Beer 1L bottle",scope:"All branches",cost:100,from:125,to:138,gain:25.2,gainSafe:19.1,conf:"assumed",top:true,soft:true,age:140,reason:"Raise 125 to 138 (+10%): expected profit 75 to 100 pesos a day, but the sensitivity is assumed and this is a top seller.",units:5,evidence:"assumed -1.3 (not yet learned)"},
+    {id:5,type:"Price",name:"Canned luncheon meat",scope:"All branches",cost:218,from:225,to:248,gain:19.4,gainSafe:13.0,conf:"assumed",top:false,soft:false,age:75,reason:"Raise 225 to 248 (+10%): thin margin today (3%). Verify against rival prices first.",units:1.8,evidence:"assumed -1.3 (not yet learned)"},
+    {id:6,type:"Price",name:"Shampoo sachet 180ml",scope:"All branches",cost:190,from:210,to:231,gain:16.2,gainSafe:11.7,conf:"learned",top:false,soft:true,age:50,reason:"Raise 210 to 231 (+10%).",units:2,evidence:"learned -1.4 (range -2.2 to -0.5)"},
+    {id:7,type:"Markdown",name:"Fresh milk 1L, lot expiring tomorrow",scope:"Branch 2",cost:75,from:98,to:84,gain:0,gainSafe:0,conf:"learned",top:false,soft:false,age:12,reason:"14% off: expected 7 of 9 units sold instead of 4; waste falls from 225 to 150 pesos. Price 84 is below the soft margin floor (88): needs approval.",units:4,evidence:"learned -2.6 (range -3.4 to -1.8)",deadline:"decide before 20:30 or the lot expires"},
+    {id:8,type:"Markdown",name:"Yakult light, lot expiring tomorrow",scope:"Branch 1",cost:11,from:15,to:13,gain:0,gainSafe:0,conf:"learned",top:false,soft:true,age:6,reason:"13% off on a lot of 4 units.",units:2,evidence:"learned -2.6 (range -3.4 to -1.8)",deadline:"decide before 20:30 or the lot expires"}
+  ];
+  items.forEach(function(i){i.pct=(i.to-i.from)/i.from*100;i.state="pending";
+    i.risk=Math.abs(i.pct)<=5&&!i.top&&i.soft&&i.conf==="learned"&&i.type==="Price";
+    i.lane=(i.top||!i.soft||Math.abs(i.pct)>8)?(Math.abs(i.pct)>8&&i.type==="Price"&&(i.top||!i.soft)?"Owner":"Pricing manager"):(Math.abs(i.pct)<=5?"Store manager":"Pricing manager");
+    if(i.type==="Markdown")i.lane="Store manager";});
+  var mode="real",tab="All",lane="",sel=1,log=[];
+  var $=function(id){return document.getElementById(id)};
+  function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]})}
+  function money(n){return "₱"+n.toFixed(n%1?1:0)}
+  function pending(){return items.filter(function(i){return i.state==="pending"})}
+  function guard(i){
+    var floor=i.cost*1.05,gs=[];
+    gs.push([i.to>=floor,"Price "+i.to+" is at or above the margin price "+floor.toFixed(1)+" (cost "+i.cost+" + 5%)"]);
+    gs.push([i.type==="Price"?Math.abs(i.pct)<=15:Math.abs(i.pct)<=50,"Size of the move "+i.pct.toFixed(0)+"% is within the limit"]);
+    gs.push([true,"Within the hourly change limit"]);
+    gs.push([i.soft,i.soft?"Above the soft margin floor":"Below the soft margin floor: needs a person"]);
+    gs.push([i.conf==="learned",i.conf==="learned"?"Based on a sensitivity learned from sales":"Based on an assumed sensitivity: treat as a hypothesis"]);
+    return gs;}
+  function render(){
+    var p=pending(),low=p.filter(function(i){return i.risk});
+    var waitMin=p.length?Math.max.apply(null,p.map(function(i){return i.age})):0;
+    $("banner").innerHTML=mode==="real"?"<b>Real shop.</b> Nothing changes until a person approves. The AI proposes, PesoWeb checks the rules, and every decision is logged with who made it.":
+      "<b>Simulation.</b> A simulated approver applies safe changes automatically (small, learned, inside the soft floor) and sends the rest to this queue, so the human step is still exercised and its delay is measured. Real tenants keep this switch off.";
+    $("kpis").innerHTML=[["Waiting",p.length],["Oldest waiting",waitMin+" min"],["Profit at stake (conservative)",money(p.reduce(function(a,i){return a+i.gainSafe},0))+"/day"],["Approved today",items.filter(function(i){return i.state==="approved"}).length],["Auto-approved",items.filter(function(i){return i.state==="auto"}).length]].map(function(k){return "<div class=\"card kpi\"><div class=\"l\">"+k[0]+"</div><div class=\"v\">"+k[1]+"</div></div>"}).join("");
+    var tabs=["All","Price","Markdown"];
+    $("tabs").innerHTML=tabs.map(function(t){return "<button type=\"button\" data-tab=\""+t+"\" class=\""+(t===tab?"on":"")+"\">"+t+(t==="All"?" ("+p.length+")":" ("+p.filter(function(i){return i.type===t}).length+")")+"</button>"}).join("");
+    var vis=p.filter(function(i){return (tab==="All"||i.type===tab)&&(!lane||i.lane===lane)});
+    var h="",lastLane="";
+    ["Store manager","Pricing manager","Owner"].forEach(function(L){var g=vis.filter(function(i){return i.lane===L});if(!g.length)return;h+="<div class=\"lane\">"+L+" ("+g.length+")</div>";
+      g.forEach(function(i){h+="<div class=\"row"+(i.id===sel?" sel":"")+"\" data-id=\""+i.id+"\" tabindex=\"0\"><input type=\"checkbox\" "+(i.risk?"checked":"disabled")+" aria-label=\"low risk\"><div><div class=\"n\">"+esc(i.name)+"</div><div class=\"m\">"+i.type+" · "+i.scope+" · waiting "+i.age+" min</div><div>"+(i.conf==="learned"?"<span class=\"chip ok\">learned</span>":"<span class=\"chip warn\">assumed</span>")+(i.top?"<span class=\"chip warn\">top seller</span>":"")+(i.soft?"":"<span class=\"chip bad\">below soft floor</span>")+(i.risk?"<span class=\"chip ok\">low risk</span>":"")+(i.deadline?"<span class=\"chip bad\">time limit</span>":"")+"</div></div><div class=\"price\">"+i.from+" → "+i.to+"<small>"+(i.pct>0?"+":"")+i.pct.toFixed(0)+"%</small></div></div>"});});
+    $("list").innerHTML=h||"<div class=\"empty\">Nothing waiting. All caught up.</div>";
+    $("bulk").textContent="Approve all low-risk ("+low.length+")";$("bulk").disabled=!low.length;
+    renderDetail();
+  }
+  function renderDetail(){
+    var i=items.filter(function(x){return x.id===sel})[0];
+    if(!i){$("detail").innerHTML="<div class=\"empty\">Select a change to see the evidence.</div>";return}
+    var gs=guard(i).map(function(g){return "<div class=\"check\"><i style=\"color:var(--"+(g[0]?"ok":"warn")+")\">"+(g[0]?"✓":"!")+"</i><span>"+esc(g[1])+"</span></div>"}).join("");
+    var done=i.state!=="pending";
+    $("detail").innerHTML="<h2>"+esc(i.name)+"</h2><div class=\"sub\">"+i.type+" change · "+i.scope+" · proposed by the AI · routed to <b>"+i.lane+"</b></div>"
+      +"<div class=\"big\"><b>"+i.from+" → "+(i.edit||i.to)+"</b><span>"+((i.edit||i.to)>i.from?"+":"")+(((i.edit||i.to)-i.from)/i.from*100).toFixed(1)+"%</span></div>"
+      +"<div class=\"note\" style=\"margin-top:0\">"+esc(i.reason)+"</div>"
+      +"<dl class=\"kv\"><dt>Cost</dt><dd>"+i.cost+"</dd><dt>Margin now → after</dt><dd>"+((i.from-i.cost)/i.cost*100).toFixed(0)+"% → "+(((i.edit||i.to)-i.cost)/i.cost*100).toFixed(0)+"%</dd><dt>Sells now</dt><dd>about "+i.units+" units a day</dd><dt>Price sensitivity</dt><dd>"+esc(i.evidence)+"</dd>"+(i.gain?"<dt>Profit per day</dt><dd>+"+money(i.gain)+" expected, +"+money(i.gainSafe)+" if customers are more sensitive</dd>":"")+(i.deadline?"<dt>Time limit</dt><dd>"+esc(i.deadline)+"</dd>":"")+"</dl>"
+      +"<div class=\"lane\" style=\"margin-top:6px\">Rule checks</div>"+gs
+      +(i.type==="Price"&&!done?"<div class=\"lane\">Approve with a different price</div><input class=\"slider\" id=\"edit\" type=\"range\" min=\""+Math.ceil(i.cost*1.05)+"\" max=\""+(Math.round(i.from*1.15))+"\" step=\"0.5\" value=\""+(i.edit||i.to)+"\" aria-label=\"price\"><div class=\"note\" style=\"margin-top:0\">Between the margin price and the largest allowed step. Now: <b id=\"editv\">"+(i.edit||i.to)+"</b></div>":"")
+      +(i.conf==="assumed"&&!done?"<div class=\"note\">No competitor price feed yet: check what rivals charge before approving a raise on a thin-margin staple.</div>":"")
+      +"<div class=\"actions\">"+(done?"<span class=\"chip "+(i.state==="rejected"?"bad":"ok")+"\">"+i.state+"</span> <button type=\"button\" id=\"undo\">Undo (restore through the same checks)</button>":"<button class=\"ok\" id=\"approve\" type=\"button\">Approve (a)</button><button class=\"bad\" id=\"reject\" type=\"button\">Reject (r)</button><button id=\"test\" type=\"button\">Ask for a price test first</button>")+"</div>"
+      +"<div class=\"log\" id=\"log\">"+(log.length?log.map(function(l){return "<div>"+esc(l)+"</div>"}).join(""):"<div>Decision log: nothing yet.</div>")+"</div>";
+  }
+  function decide(i,state,why){i.state=state;log.unshift(new Date().toTimeString().slice(0,5)+"  "+i.name+": "+state+(why?" ("+why+")":"")+" by "+(state==="auto"?"the simulated approver":"you")+(i.edit?", price changed to "+i.edit:""));
+    var nxt=pending()[0];sel=nxt?nxt.id:sel;toast(i.name+" "+state);render();}
+  function toast(m){var t=$("toast");t.textContent=m;t.classList.add("on");clearTimeout(toast.h);toast.h=setTimeout(function(){t.classList.remove("on")},1800)}
+  document.addEventListener("click",function(e){
+    var r=e.target.closest(".row");if(r&&!e.target.matches("input")){sel=+r.dataset.id;render();return}
+    var t=e.target.closest("[data-tab]");if(t){tab=t.dataset.tab;render();return}
+    var m=e.target.closest("[data-mode]");if(m){mode=m.dataset.mode;[].forEach.call(document.querySelectorAll("#modeSeg button"),function(b){b.classList.toggle("on",b===m)});
+      if(mode==="sim"){pending().filter(function(i){return i.risk}).forEach(function(i){i.state="auto";log.unshift("auto  "+i.name+": approved within limits (small, learned, above the soft floor) by the simulated approver")})}render();return}
+    var i=items.filter(function(x){return x.id===sel})[0];if(!i)return;
+    if(e.target.id==="approve")decide(i,"approved");
+    if(e.target.id==="reject")decide(i,"rejected","owner prefers to keep the price");
+    if(e.target.id==="test"){log.unshift("test  "+i.name+": sent to the price-test queue");toast("Added to the price-test queue");render()}
+    if(e.target.id==="undo"){i.state="pending";log.unshift(i.name+": undone, back in the queue");render()}
+    if(e.target.id==="bulk"){var b=pending().filter(function(x){return x.risk});b.forEach(function(x){x.state="approved";log.unshift(x.name+": approved in bulk (low risk)")});toast(b.length+" low-risk changes approved");sel=(pending()[0]||{}).id||sel;render()}
+  });
+  document.addEventListener("input",function(e){if(e.target.id==="edit"){var i=items.filter(function(x){return x.id===sel})[0];i.edit=+e.target.value;$("editv").textContent=i.edit}});
+  $("lane").onchange=function(){lane=this.value;render()};
+  document.addEventListener("keydown",function(e){if(/INPUT|SELECT|TEXTAREA/.test(e.target.tagName))return;var v=pending();var idx=v.findIndex(function(x){return x.id===sel});
+    if(e.key==="j"&&v.length){sel=v[Math.min(v.length-1,idx+1)].id;render()}if(e.key==="k"&&v.length){sel=v[Math.max(0,idx-1)].id;render()}
+    var i=items.filter(function(x){return x.id===sel})[0];if(i&&i.state==="pending"){if(e.key==="a")decide(i,"approved");if(e.key==="r")decide(i,"rejected","rejected from the keyboard")}});
+  render();
+})();
+</script>
+</body>
+</html>
