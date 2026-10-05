@@ -120,7 +120,7 @@ def _buy_probability(base: float, elasticity: float, ratio: float, noise: float)
     return max(0.0, min(0.98, base * boost * noise))
 
 
-def day_arrivals(plan, individuals: list, day: int, seed: int) -> list:
+def day_arrivals(plan, individuals: list, day: int, seed: int, calib=None) -> list:
     """Who walks in, where and when, with their mission. Baskets are decided later, at the moment of shopping,
     so shoppers see the prices in force at that hour (see fill_basket)."""
     lib = _library()
@@ -150,6 +150,11 @@ def day_arrivals(plan, individuals: list, day: int, seed: int) -> list:
             todays.append((f"walkin-{day}-{b.key}-{n + 1}", r.choices(fit, weights=[a.visits_per_week for a in fit])[0]))
         for n, (who, a) in enumerate(todays):
             hours, hw = _hour_weights(a.time)
+            if calib is not None:                      # blend with the real hour-of-day profile (see calibration.py)
+                curve = HOUR_CURVES[a.time]
+                base = [curve.get(h, 0.0) for h in range(OPEN_H, CLOSE_H)]
+                tot = sum(base) or 1.0
+                hours, hw = tuple(range(OPEN_H, CLOSE_H)), tuple(calib.blend([x / tot for x in base]))
             hour = r.choices(hours, weights=hw)[0]
             if day == b.opens_day and hour < b.opens_hour:
                 continue
@@ -163,7 +168,7 @@ def day_arrivals(plan, individuals: list, day: int, seed: int) -> list:
     return out
 
 
-def fill_basket(plan, visit: Visit, seed: int, price_ratio=None):
+def fill_basket(plan, visit: Visit, seed: int, price_ratio=None, calib=None):
     """The shopper's basket at the prices in force now. price_ratio(branch, product_code) -> current/list price.
     Returns the visit with lines, or None when they buy nothing."""
     from dataclasses import replace
@@ -172,7 +177,7 @@ def fill_basket(plan, visit: Visit, seed: int, price_ratio=None):
     catalog = tuple(next(c for c in plan.companies if c.key == visit.company).catalog)
     r = rng.derive(seed, "basket", visit.id)
     weights = _product_weights(catalog, visit.mission, seed)
-    wanted = max(1, round(a.basket * r.uniform(0.6, 1.4)))
+    wanted = max(1, round(a.basket * (calib.basket_scale if calib is not None else 1.0) * r.uniform(0.6, 1.4)))
     chosen = {}
     for _ in range(wanted * 3):
         if len(chosen) >= wanted:
@@ -188,9 +193,9 @@ def fill_basket(plan, visit: Visit, seed: int, price_ratio=None):
     return replace(visit, lines=tuple(sorted(chosen.items())))
 
 
-def day_visits(plan, individuals: list, day: int, seed: int, price_ratio=None) -> list:
+def day_visits(plan, individuals: list, day: int, seed: int, price_ratio=None, calib=None) -> list:
     """All visits of one virtual day with baskets, sorted by time (prices fixed for the whole day)."""
-    filled = (fill_basket(plan, v, seed, price_ratio) for v in day_arrivals(plan, individuals, day, seed))
+    filled = (fill_basket(plan, v, seed, price_ratio, calib) for v in day_arrivals(plan, individuals, day, seed, calib))
     return [v for v in filled if v]
 
 

@@ -24,8 +24,9 @@ RETURN_RATE = 0.02
 
 
 class Context:
-    def __init__(self, driver: PesoWebDriver, plan, state: dict, run_dir: Path, root: Account = None):
+    def __init__(self, driver: PesoWebDriver, plan, state: dict, run_dir: Path, root: Account = None, calib=None):
         self.driver, self.plan, self.state, self.run_dir, self.root = driver, plan, state, run_dir, root
+        self.calib = calib                  # optional real-data calibration of shopper behavior (calibration.py)
         self._tokens = {}
         self.cmap = {c.key: c for c in plan.companies}
         self.bmap = {b.key: (c, b) for c in plan.companies for b in c.branches}
@@ -85,11 +86,11 @@ def _lines_for(ctx: Context, ckey: str, bkey: str, demand: dict, seed: int) -> l
     return lines
 
 
-def estimate_demand(plan, seed: int, people=None) -> dict:
+def estimate_demand(plan, seed: int, people=None, calib=None) -> dict:
     people = people or behavior.make_individuals(plan, seed)
     out = {}
     for d in (1, 2, 3):
-        for v in behavior.day_visits(plan, people, d, seed):
+        for v in behavior.day_visits(plan, people, d, seed, calib=calib):
             for code, q in v.lines:
                 out[(v.branch, code)] = out.get((v.branch, code), 0) + q / 3
     return out
@@ -121,7 +122,7 @@ def build_branch(ctx: Context, ckey: str, bkey: str, demand: dict, first: bool =
 
 def build(ctx: Context, log=print) -> None:
     drv, plan = ctx.driver, ctx.plan
-    demand = estimate_demand(plan, ctx.state["seed"])
+    demand = estimate_demand(plan, ctx.state["seed"], calib=ctx.calib)
     for comp in plan.companies:
         cs = ctx.state["companies"].setdefault(comp.key, {"branches": {}})
         if cs.get("done"):
@@ -170,7 +171,7 @@ def _find_batch_id(drv, acct, wh: int, batch_no: str):
 def run_day(ctx: Context, day: int, log=print, hooks=None, incidents: bool = True) -> dict:
     drv, plan, seed = ctx.driver, ctx.plan, ctx.state["seed"]
     people = behavior.make_individuals(plan, seed)
-    arrivals = behavior.day_arrivals(plan, people, day, seed)
+    arrivals = behavior.day_arrivals(plan, people, day, seed, calib=ctx.calib)
     planned = inc.plan_incidents(plan, seed, day) if incidents else []
     ledger = inc.Ledger.load(ctx.run_dir / "ledger.json") if (ctx.run_dir / "ledger.json").exists() else inc.Ledger()
     action_log, stats = [], {"sales": 0, "sale_failed": 0, "returns": 0, "refusals": 0, "units": 0, "revenue": 0.0, "cogs": 0.0}
@@ -206,7 +207,7 @@ def run_day(ctx: Context, day: int, log=print, hooks=None, incidents: bool = Tru
             hooks.before_hour(ctx, cur_hour)
         if isinstance(item, dict):                                  # a branch opens mid-run
             if demand is None:
-                demand = estimate_demand(plan, seed, people)
+                demand = estimate_demand(plan, seed, people, calib=ctx.calib)
             ckey, bkey = item["company"], item["branch"]
             try:
                 build_branch(ctx, ckey, bkey, demand)
@@ -222,7 +223,7 @@ def run_day(ctx: Context, day: int, log=print, hooks=None, incidents: bool = Tru
         if isinstance(item, inc.Incident):
             _inject(ctx, item, ledger, action_log)
             continue
-        v = behavior.fill_basket(plan, item, seed, ratio_fn)
+        v = behavior.fill_basket(plan, item, seed, ratio_fn, ctx.calib)
         if v is None or v.branch not in shifts or not live(v.branch):
             continue
         c, _b = ctx.bmap[v.branch]
@@ -357,7 +358,14 @@ def _load(args) -> Context:
     root = None
     if os.environ.get("PESOWEB_ROOT_PASSWORD"):
         root = drv.login(os.environ.get("PESOWEB_ROOT_EMAIL", "superadmin@email.com"), os.environ["PESOWEB_ROOT_PASSWORD"])
-    return Context(drv, plan, state, run_dir, root)
+    calib = None
+    if getattr(args, "calibration", None):
+        from . import calibration
+        calib = calibration.load(args.calibration, weight=args.calib_weight)
+        pop = behavior.make_individuals(plan, state["seed"])
+        scale = calibration.fit_basket_scale(plan, pop, state["seed"], json.loads(Path(args.calibration).read_text(encoding="utf-8"))["all"]["lines_per_sale_mean"])
+        calib = calibration.Calibration(calib.hour_share, calib.weight, scale, calib.outside_hours_share)
+    return Context(drv, plan, state, run_dir, root, calib)
 
 
 def main(argv=None) -> int:
@@ -371,6 +379,8 @@ def main(argv=None) -> int:
     ap.add_argument("--hard-floor", type=float, default=10, help="hard margin floor, percent over cost")
     ap.add_argument("--soft-floor", type=float, default=20, help="soft margin floor, percent over cost")
     ap.add_argument("--max-discount", type=float, default=50)
+    ap.add_argument("--calibration", default=None, help="path to real-calibration.json: use the real hour profile and basket size")
+    ap.add_argument("--calib-weight", type=float, default=0.5, help="weight on the real hour profile (the sample is small)")
     ap.add_argument("--policy", choices=["off", "autonomous", "approval"], default="off", help="pricing autonomy set at build")
     args = ap.parse_args(argv)
     ctx = _load(args)

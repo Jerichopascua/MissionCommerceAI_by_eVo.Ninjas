@@ -37,3 +37,10 @@ PesoWeb must be running with the Retail_MissionCommerceAI migrations applied (re
 
 `history` runs two baseline days and four promo days (the tenant's own promo calendar) so the model sees price variation. `trial` adds short-dated perishable lots sized at 1.6 days of demand, lets the agent mark them down hour by hour through the real pricing API, and resolves every prediction against what sold. `find` spends a counting budget (`--k` SKUs per branch) on risk-ranked stock counts; the sim plays the physical shelf. Results of the first runs are in `Docs/superpowers/plans/2026-10-06-plan5-ai-core.md`.
 
+## Calibrating against real sales (optional)
+
+    python scripts/calibrate_real.py --db PesoWeb_V2_Real --fit          # reads a restored PesoWeb database, read-only
+    python -m simpeso.runner all --seed 21 --profile smoke --run cal1 --calibration runs/real-calibration.json --calib-weight 0.5
+
+`calibrate_real.py` reads every tenant and branch, reports bootstrap intervals, and writes `runs/real-calibration.json` and `.md` (git-ignored, because they are derived from a real business). `--calibration` blends the real hour-of-day profile into shopper arrivals (weight = how far to trust a small sample) and scales basket size to the real lines per sale. Without the flag nothing changes. Price response is not calibrated: the real sample has too few discounted sales to fit it.
+
