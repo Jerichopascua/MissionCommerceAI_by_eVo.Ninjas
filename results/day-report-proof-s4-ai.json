@@ -1,0 +1,397 @@
+{
+ "run": "proof-s4-ai",
+ "seed": 4,
+ "profile": "smoke",
+ "generated_at": "2026-10-05T14:41:59.4014298",
+ "totals": {
+  "branches": 10,
+  "salesToday": 1160982.3399999999,
+  "transactionsToday": 648,
+  "cashVarianceToday": -7.0,
+  "expiryAtRiskPesos": 6166.0,
+  "activeMarkdowns": 29,
+  "openExceptions": 34
+ },
+ "companies": [
+  {
+   "key": "c1",
+   "name": "Evo Quick Mart",
+   "vertical": "convenience",
+   "tenant_id": 150,
+   "totals": {
+    "branches": 2,
+    "salesToday": 18885.24,
+    "transactionsToday": 131,
+    "openShifts": 0,
+    "cashVarianceToday": -4.0,
+    "expiryAtRiskPesos": 1259.0,
+    "expiredUnwrittenPesos": 0,
+    "writtenOffPesos": 0,
+    "activeMarkdowns": 17,
+    "openExceptions": 12
+   },
+   "branches": [
+    {
+     "warehouseId": 1313,
+     "name": "Evo Quick Mart Main Warehouse",
+     "salesToday": 6118.04,
+     "transactionsToday": 39,
+     "openShifts": 0,
+     "cashVarianceToday": -2.0,
+     "expiryAtRiskPesos": 144.0,
+     "expiredUnwrittenPesos": 0,
+     "writtenOffPesos": 0,
+     "activeMarkdowns": 8,
+     "openExceptions": 3,
+     "key": "c1-b1",
+     "opened_midrun": null,
+     "exceptions_by_type": {
+      "CASH_VARIANCE": 1,
+      "EXPIRY_ALERT": 2
+     },
+     "ai_markdowns": {
+      "applied": 8
+     }
+    },
+    {
+     "warehouseId": 1314,
+     "name": "Evo Quick Mart Caloocan 2",
+     "salesToday": 12767.2,
+     "transactionsToday": 92,
+     "openShifts": 0,
+     "cashVarianceToday": -2.0,
+     "expiryAtRiskPesos": 1115.0,
+     "expiredUnwrittenPesos": 0,
+     "writtenOffPesos": 0,
+     "activeMarkdowns": 9,
+     "openExceptions": 9,
+     "key": "c1-b2",
+     "opened_midrun": null,
+     "exceptions_by_type": {
+      "CASH_VARIANCE": 1,
+      "EXPIRY_ALERT": 8
+     },
+     "ai_markdowns": {
+      "applied": 9
+     }
+    }
+   ]
+  },
+  {
+   "key": "c2",
+   "name": "Evo Fresh and Pharma",
+   "vertical": "grocery_pharmacy",
+   "tenant_id": 151,
+   "totals": {
+    "branches": 2,
+    "salesToday": 687236.7,
+    "transactionsToday": 345,
+    "openShifts": 0,
+    "cashVarianceToday": -2.0,
+    "expiryAtRiskPesos": 3575.0,
+    "expiredUnwrittenPesos": 0,
+    "writtenOffPesos": 0,
+    "activeMarkdowns": 10,
+    "openExceptions": 8
+   },
+   "branches": [
+    {
+     "warehouseId": 1315,
+     "name": "Evo Fresh and Pharma Main Warehouse",
+     "salesToday": 387831.9,
+     "transactionsToday": 180,
+     "openShifts": 0,
+     "cashVarianceToday": 0.0,
+     "expiryAtRiskPesos": 2350.0,
+     "expiredUnwrittenPesos": 0,
+     "writtenOffPesos": 0,
+     "activeMarkdowns": 6,
+     "openExceptions": 4,
+     "key": "c2-b1",
+     "opened_midrun": null,
+     "exceptions_by_type": {
+      "EXPIRY_ALERT": 4
+     },
+     "ai_markdowns": {
+      "applied": 6
+     }
+    },
+    {
+     "warehouseId": 1316,
+     "name": "Evo Fresh and Pharma Taguig 2",
+     "salesToday": 299404.8,
+     "transactionsToday": 165,
+     "openShifts": 0,
+     "cashVarianceToday": -2.0,
+     "expiryAtRiskPesos": 1225.0,
+     "expiredUnwrittenPesos": 0,
+     "writtenOffPesos": 0,
+     "activeMarkdowns": 4,
+     "openExceptions": 4,
+     "key": "c2-b2",
+     "opened_midrun": null,
+     "exceptions_by_type": {
+      "CASH_VARIANCE": 1,
+      "EXPIRY_ALERT": 3
+     },
+     "ai_markdowns": {
+      "refused": 2,
+      "applied": 4
+     }
+    }
+   ]
+  },
+  {
+   "key": "c3",
+   "name": "Evo Moto Parts",
+   "vertical": "motorcycle_parts",
+   "tenant_id": 152,
+   "totals": {
+    "branches": 2,
+    "salesToday": 333943.0,
+    "transactionsToday": 31,
+    "openShifts": 0,
+    "cashVarianceToday": -5.0,
+    "expiryAtRiskPesos": 0,
+    "expiredUnwrittenPesos": 0,
+    "writtenOffPesos": 0,
+    "activeMarkdowns": 0,
+    "openExceptions": 3
+   },
+   "branches": [
+    {
+     "warehouseId": 1317,
+     "name": "Evo Moto Parts Main Warehouse",
+     "salesToday": 245903.0,
+     "transactionsToday": 22,
+     "openShifts": 0,
+     "cashVarianceToday": 0.0,
+     "expiryAtRiskPesos": 0,
+     "expiredUnwrittenPesos": 0,
+     "writtenOffPesos": 0,
+     "activeMarkdowns": 0,
+     "openExceptions": 0,
+     "key": "c3-b1",
+     "opened_midrun": null,
+     "exceptions_by_type": {},
+     "ai_markdowns": {}
+    },
+    {
+     "warehouseId": 1318,
+     "name": "Evo Moto Parts Davao City 2",
+     "salesToday": 88040.0,
+     "transactionsToday": 9,
+     "openShifts": 0,
+     "cashVarianceToday": -5.0,
+     "expiryAtRiskPesos": 0,
+     "expiredUnwrittenPesos": 0,
+     "writtenOffPesos": 0,
+     "activeMarkdowns": 0,
+     "openExceptions": 3,
+     "key": "c3-b2",
+     "opened_midrun": null,
+     "exceptions_by_type": {
+      "CASH_VARIANCE": 3
+     },
+     "ai_markdowns": {}
+    }
+   ]
+  },
+  {
+   "key": "c4",
+   "name": "Evo General Trading",
+   "vertical": "mixed",
+   "tenant_id": 153,
+   "totals": {
+    "branches": 2,
+    "salesToday": 56337.4,
+    "transactionsToday": 109,
+    "openShifts": 0,
+    "cashVarianceToday": 0.0,
+    "expiryAtRiskPesos": 1332.0,
+    "expiredUnwrittenPesos": 0,
+    "writtenOffPesos": 0,
+    "activeMarkdowns": 2,
+    "openExceptions": 7
+   },
+   "branches": [
+    {
+     "warehouseId": 1319,
+     "name": "Evo General Trading Main Warehouse",
+     "salesToday": 24888.5,
+     "transactionsToday": 31,
+     "openShifts": 0,
+     "cashVarianceToday": 0.0,
+     "expiryAtRiskPesos": 455.0,
+     "expiredUnwrittenPesos": 0,
+     "writtenOffPesos": 0,
+     "activeMarkdowns": 1,
+     "openExceptions": 2,
+     "key": "c4-b1",
+     "opened_midrun": null,
+     "exceptions_by_type": {
+      "EXPIRY_ALERT": 2
+     },
+     "ai_markdowns": {
+      "applied": 1
+     }
+    },
+    {
+     "warehouseId": 1320,
+     "name": "Evo General Trading Marikina 2",
+     "salesToday": 31448.9,
+     "transactionsToday": 78,
+     "openShifts": 0,
+     "cashVarianceToday": 0.0,
+     "expiryAtRiskPesos": 877.0,
+     "expiredUnwrittenPesos": 0,
+     "writtenOffPesos": 0,
+     "activeMarkdowns": 1,
+     "openExceptions": 5,
+     "key": "c4-b2",
+     "opened_midrun": null,
+     "exceptions_by_type": {
+      "CASH_VARIANCE": 2,
+      "EXPIRY_ALERT": 3
+     },
+     "ai_markdowns": {
+      "applied": 1
+     }
+    }
+   ]
+  },
+  {
+   "key": "c5",
+   "name": "Evo Sports Hub",
+   "vertical": "sports",
+   "tenant_id": 154,
+   "totals": {
+    "branches": 2,
+    "salesToday": 64580.0,
+    "transactionsToday": 32,
+    "openShifts": 0,
+    "cashVarianceToday": 4.0,
+    "expiryAtRiskPesos": 0,
+    "expiredUnwrittenPesos": 0,
+    "writtenOffPesos": 0,
+    "activeMarkdowns": 0,
+    "openExceptions": 4
+   },
+   "branches": [
+    {
+     "warehouseId": 1321,
+     "name": "Evo Sports Hub Main Warehouse",
+     "salesToday": 55114.0,
+     "transactionsToday": 26,
+     "openShifts": 0,
+     "cashVarianceToday": 9.0,
+     "expiryAtRiskPesos": 0,
+     "expiredUnwrittenPesos": 0,
+     "writtenOffPesos": 0,
+     "activeMarkdowns": 0,
+     "openExceptions": 3,
+     "key": "c5-b1",
+     "opened_midrun": null,
+     "exceptions_by_type": {
+      "CASH_VARIANCE": 3
+     },
+     "ai_markdowns": {}
+    },
+    {
+     "warehouseId": 1322,
+     "name": "Evo Sports Hub Mandaluyong 2",
+     "salesToday": 9466.0,
+     "transactionsToday": 6,
+     "openShifts": 0,
+     "cashVarianceToday": -5.0,
+     "expiryAtRiskPesos": 0,
+     "expiredUnwrittenPesos": 0,
+     "writtenOffPesos": 0,
+     "activeMarkdowns": 0,
+     "openExceptions": 1,
+     "key": "c5-b2",
+     "opened_midrun": null,
+     "exceptions_by_type": {
+      "CASH_VARIANCE": 1
+     },
+     "ai_markdowns": {}
+    }
+   ]
+  }
+ ],
+ "ai_actions": {
+  "total": 31,
+  "applied": 29,
+  "refused": 2,
+  "examples": [
+   {
+    "status": "applied",
+    "discount_pct": 30,
+    "code": "OK",
+    "hour": 6,
+    "explanation": "30% off Fresh Milk 1L (batch 3633, 4 units, 1 day(s) left): 30% off lifts expected sales from 1.0 to 3.6 units and cuts expected waste from 96 to 13 pesos. Prediction: 4 units (1 to 4), about 13 pesos wasted."
+   },
+   {
+    "status": "applied",
+    "discount_pct": 20,
+    "code": "OK",
+    "hour": 6,
+    "explanation": "20% off Shampoo Sachet Pack (batch 3635, 4 units, 1 day(s) left): 20% off lifts expected sales from 1.0 to 1.3 units and cuts expected waste from 72 to 64 pesos. Prediction: 1 units (0 to 3), about 64 pesos wasted."
+   },
+   {
+    "status": "applied",
+    "discount_pct": 10,
+    "code": "OK",
+    "hour": 6,
+    "explanation": "10% off Potato Chips (batch 3636, 5 units, 1 day(s) left): 10% off lifts expected sales from 3.0 to 3.4 units and cuts expected waste from 22 to 17 pesos. Prediction: 3 units (1 to 5), about 17 pesos wasted."
+   },
+   {
+    "status": "applied",
+    "discount_pct": 30,
+    "code": "OK",
+    "hour": 6,
+    "explanation": "30% off Chicken Adobo Meal (batch 3637, 4 units, 1 day(s) left): 30% off lifts expected sales from 2.0 to 2.9 units and cuts expected waste from 130 to 68 pesos. Prediction: 3 units (1 to 4), about 68 pesos wasted."
+   },
+   {
+    "status": "applied",
+    "discount_pct": 30,
+    "code": "OK",
+    "hour": 6,
+    "explanation": "30% off Chicken Adobo Meal (batch 3565, 53 units, 2 day(s) left): 30% off lifts expected sales from 0.0 to 1.9 units and cuts expected waste from 3445 to 3322 pesos. Prediction: 2 units (0 to 5), about 3322 pesos wasted."
+   },
+   {
+    "status": "applied",
+    "discount_pct": 10,
+    "code": "OK",
+    "hour": 6,
+    "explanation": "10% off Pork Sisig Rice (batch 3639, 4 units, 1 day(s) left): 10% off lifts expected sales from 2.0 to 2.2 units and cuts expected waste from 124 to 109 pesos. Prediction: 2 units (0 to 4), about 109 pesos wasted."
+   },
+   {
+    "status": "applied",
+    "discount_pct": 10,
+    "code": "OK",
+    "hour": 6,
+    "explanation": "10% off Pork Sisig Rice (batch 3569, 31 units, 2 day(s) left): 10% off lifts expected sales from 0.0 to 0.5 units and cuts expected waste from 1922 to 1892 pesos. Prediction: 0 units (0 to 3), about 1892 pesos wasted."
+   },
+   {
+    "status": "applied",
+    "discount_pct": 20,
+    "code": "OK",
+    "hour": 6,
+    "explanation": "20% off Peanuts (batch 3640, 12 units, 1 day(s) left): 20% off lifts expected sales from 7.0 to 9.4 units and cuts expected waste from 100 to 53 pesos. Prediction: 9 units (5 to 12), about 53 pesos wasted."
+   }
+  ]
+ },
+ "incidents": [],
+ "timeline": [
+  {
+   "hour": 12,
+   "text": "Evo Quick Mart opened branch c1-b3"
+  },
+  {
+   "hour": 12,
+   "text": "Evo General Trading opened branch c4-b3"
+  }
+ ],
+ "note": "Sales, cash and exception figures are PesoWeb's own, for everything this run did today on PesoWeb's clock (incident day, learning days, markdown trial)."
+}

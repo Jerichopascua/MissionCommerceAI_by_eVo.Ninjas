@@ -1,0 +1,330 @@
+{
+ "run": "proof-s5-fixed",
+ "seed": 5,
+ "profile": "smoke",
+ "generated_at": "2026-10-05T14:41:59.877439",
+ "totals": {
+  "branches": 10,
+  "salesToday": 1200659.16,
+  "transactionsToday": 844,
+  "cashVarianceToday": -1.0,
+  "expiryAtRiskPesos": 9035.0,
+  "activeMarkdowns": 36,
+  "openExceptions": 26
+ },
+ "companies": [
+  {
+   "key": "c1",
+   "name": "Evo Quick Mart",
+   "vertical": "convenience",
+   "tenant_id": 160,
+   "totals": {
+    "branches": 2,
+    "salesToday": 30585.27,
+    "transactionsToday": 194,
+    "openShifts": 0,
+    "cashVarianceToday": 1.0,
+    "expiryAtRiskPesos": 476.0,
+    "expiredUnwrittenPesos": 0,
+    "writtenOffPesos": 0,
+    "activeMarkdowns": 16,
+    "openExceptions": 10
+   },
+   "branches": [
+    {
+     "warehouseId": 1333,
+     "name": "Evo Quick Mart Main Warehouse",
+     "salesToday": 14146.18,
+     "transactionsToday": 99,
+     "openShifts": 0,
+     "cashVarianceToday": 8.0,
+     "expiryAtRiskPesos": 102.0,
+     "expiredUnwrittenPesos": 0,
+     "writtenOffPesos": 0,
+     "activeMarkdowns": 8,
+     "openExceptions": 5,
+     "key": "c1-b1",
+     "opened_midrun": null,
+     "exceptions_by_type": {
+      "CASH_VARIANCE": 3,
+      "EXPIRY_ALERT": 2
+     },
+     "ai_markdowns": {}
+    },
+    {
+     "warehouseId": 1334,
+     "name": "Evo Quick Mart Taguig 2",
+     "salesToday": 16439.09,
+     "transactionsToday": 95,
+     "openShifts": 0,
+     "cashVarianceToday": -7.0,
+     "expiryAtRiskPesos": 374.0,
+     "expiredUnwrittenPesos": 0,
+     "writtenOffPesos": 0,
+     "activeMarkdowns": 8,
+     "openExceptions": 5,
+     "key": "c1-b2",
+     "opened_midrun": null,
+     "exceptions_by_type": {
+      "CASH_VARIANCE": 2,
+      "EXPIRY_ALERT": 3
+     },
+     "ai_markdowns": {}
+    }
+   ]
+  },
+  {
+   "key": "c2",
+   "name": "Evo Fresh and Pharma",
+   "vertical": "grocery_pharmacy",
+   "tenant_id": 161,
+   "totals": {
+    "branches": 2,
+    "salesToday": 577242.99,
+    "transactionsToday": 499,
+    "openShifts": 0,
+    "cashVarianceToday": 1.0,
+    "expiryAtRiskPesos": 7796.0,
+    "expiredUnwrittenPesos": 0,
+    "writtenOffPesos": 0,
+    "activeMarkdowns": 12,
+    "openExceptions": 6
+   },
+   "branches": [
+    {
+     "warehouseId": 1335,
+     "name": "Evo Fresh and Pharma Main Warehouse",
+     "salesToday": 293797.58,
+     "transactionsToday": 251,
+     "openShifts": 0,
+     "cashVarianceToday": 0.0,
+     "expiryAtRiskPesos": 3508.0,
+     "expiredUnwrittenPesos": 0,
+     "writtenOffPesos": 0,
+     "activeMarkdowns": 6,
+     "openExceptions": 2,
+     "key": "c2-b1",
+     "opened_midrun": null,
+     "exceptions_by_type": {
+      "EXPIRY_ALERT": 2
+     },
+     "ai_markdowns": {}
+    },
+    {
+     "warehouseId": 1336,
+     "name": "Evo Fresh and Pharma Taguig 2",
+     "salesToday": 283445.41,
+     "transactionsToday": 248,
+     "openShifts": 0,
+     "cashVarianceToday": 1.0,
+     "expiryAtRiskPesos": 4288.0,
+     "expiredUnwrittenPesos": 0,
+     "writtenOffPesos": 0,
+     "activeMarkdowns": 6,
+     "openExceptions": 4,
+     "key": "c2-b2",
+     "opened_midrun": null,
+     "exceptions_by_type": {
+      "CASH_VARIANCE": 3,
+      "EXPIRY_ALERT": 1
+     },
+     "ai_markdowns": {}
+    }
+   ]
+  },
+  {
+   "key": "c3",
+   "name": "Evo Moto Parts",
+   "vertical": "motorcycle_parts",
+   "tenant_id": 162,
+   "totals": {
+    "branches": 2,
+    "salesToday": 515257.0,
+    "transactionsToday": 44,
+    "openShifts": 0,
+    "cashVarianceToday": 0.0,
+    "expiryAtRiskPesos": 0,
+    "expiredUnwrittenPesos": 0,
+    "writtenOffPesos": 0,
+    "activeMarkdowns": 0,
+    "openExceptions": 2
+   },
+   "branches": [
+    {
+     "warehouseId": 1337,
+     "name": "Evo Moto Parts Main Warehouse",
+     "salesToday": 97190.0,
+     "transactionsToday": 13,
+     "openShifts": 0,
+     "cashVarianceToday": 0.0,
+     "expiryAtRiskPesos": 0,
+     "expiredUnwrittenPesos": 0,
+     "writtenOffPesos": 0,
+     "activeMarkdowns": 0,
+     "openExceptions": 0,
+     "key": "c3-b1",
+     "opened_midrun": null,
+     "exceptions_by_type": {},
+     "ai_markdowns": {}
+    },
+    {
+     "warehouseId": 1338,
+     "name": "Evo Moto Parts Mandaluyong 2",
+     "salesToday": 418067.0,
+     "transactionsToday": 31,
+     "openShifts": 0,
+     "cashVarianceToday": 0.0,
+     "expiryAtRiskPesos": 0,
+     "expiredUnwrittenPesos": 0,
+     "writtenOffPesos": 0,
+     "activeMarkdowns": 0,
+     "openExceptions": 2,
+     "key": "c3-b2",
+     "opened_midrun": null,
+     "exceptions_by_type": {
+      "LOW_STOCK": 2
+     },
+     "ai_markdowns": {}
+    }
+   ]
+  },
+  {
+   "key": "c4",
+   "name": "Evo General Trading",
+   "vertical": "mixed",
+   "tenant_id": 163,
+   "totals": {
+    "branches": 2,
+    "salesToday": 17453.9,
+    "transactionsToday": 85,
+    "openShifts": 0,
+    "cashVarianceToday": -1.0,
+    "expiryAtRiskPesos": 763.0,
+    "expiredUnwrittenPesos": 0,
+    "writtenOffPesos": 0,
+    "activeMarkdowns": 8,
+    "openExceptions": 7
+   },
+   "branches": [
+    {
+     "warehouseId": 1339,
+     "name": "Evo General Trading Main Warehouse",
+     "salesToday": 9616.5,
+     "transactionsToday": 55,
+     "openShifts": 0,
+     "cashVarianceToday": -1.0,
+     "expiryAtRiskPesos": 457.0,
+     "expiredUnwrittenPesos": 0,
+     "writtenOffPesos": 0,
+     "activeMarkdowns": 4,
+     "openExceptions": 4,
+     "key": "c4-b1",
+     "opened_midrun": null,
+     "exceptions_by_type": {
+      "CASH_VARIANCE": 1,
+      "EXPIRY_ALERT": 3
+     },
+     "ai_markdowns": {}
+    },
+    {
+     "warehouseId": 1340,
+     "name": "Evo General Trading Caloocan 2",
+     "salesToday": 7837.4,
+     "transactionsToday": 30,
+     "openShifts": 0,
+     "cashVarianceToday": 0.0,
+     "expiryAtRiskPesos": 306.0,
+     "expiredUnwrittenPesos": 0,
+     "writtenOffPesos": 0,
+     "activeMarkdowns": 4,
+     "openExceptions": 3,
+     "key": "c4-b2",
+     "opened_midrun": null,
+     "exceptions_by_type": {
+      "LOW_STOCK": 1,
+      "EXPIRY_ALERT": 2
+     },
+     "ai_markdowns": {}
+    }
+   ]
+  },
+  {
+   "key": "c5",
+   "name": "Evo Sports Hub",
+   "vertical": "sports",
+   "tenant_id": 164,
+   "totals": {
+    "branches": 2,
+    "salesToday": 60120.0,
+    "transactionsToday": 22,
+    "openShifts": 0,
+    "cashVarianceToday": -2.0,
+    "expiryAtRiskPesos": 0,
+    "expiredUnwrittenPesos": 0,
+    "writtenOffPesos": 0,
+    "activeMarkdowns": 0,
+    "openExceptions": 1
+   },
+   "branches": [
+    {
+     "warehouseId": 1341,
+     "name": "Evo Sports Hub Main Warehouse",
+     "salesToday": 40115.0,
+     "transactionsToday": 15,
+     "openShifts": 0,
+     "cashVarianceToday": 0.0,
+     "expiryAtRiskPesos": 0,
+     "expiredUnwrittenPesos": 0,
+     "writtenOffPesos": 0,
+     "activeMarkdowns": 0,
+     "openExceptions": 0,
+     "key": "c5-b1",
+     "opened_midrun": null,
+     "exceptions_by_type": {},
+     "ai_markdowns": {}
+    },
+    {
+     "warehouseId": 1342,
+     "name": "Evo Sports Hub Makati 2",
+     "salesToday": 20005.0,
+     "transactionsToday": 7,
+     "openShifts": 0,
+     "cashVarianceToday": -2.0,
+     "expiryAtRiskPesos": 0,
+     "expiredUnwrittenPesos": 0,
+     "writtenOffPesos": 0,
+     "activeMarkdowns": 0,
+     "openExceptions": 1,
+     "key": "c5-b2",
+     "opened_midrun": null,
+     "exceptions_by_type": {
+      "CASH_VARIANCE": 1
+     },
+     "ai_markdowns": {}
+    }
+   ]
+  }
+ ],
+ "ai_actions": {
+  "total": 0,
+  "applied": 0,
+  "refused": 0,
+  "examples": []
+ },
+ "incidents": [],
+ "timeline": [
+  {
+   "hour": 11,
+   "text": "Evo Sports Hub opened branch c5-b3"
+  },
+  {
+   "hour": 12,
+   "text": "Evo Moto Parts opened branch c3-b3"
+  },
+  {
+   "hour": 15,
+   "text": "Evo General Trading opened branch c4-b3"
+  }
+ ],
+ "note": "Sales, cash and exception figures are PesoWeb's own, for everything this run did today on PesoWeb's clock (incident day, learning days, markdown trial)."
+}

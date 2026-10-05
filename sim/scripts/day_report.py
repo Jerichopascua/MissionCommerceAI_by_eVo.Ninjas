@@ -68,18 +68,18 @@ def build(run: str, base_url: str) -> dict:
 
     timeline, incidents_out = [], []
     ledger_path = run_dir / "ledger.json"
-    if ledger_path.exists():
-        ledger = inc.Ledger.load(ledger_path)
-        findings_path = run_dir / "ai_findings.json"
-        findings = json.loads(findings_path.read_text(encoding="utf-8")) if findings_path.exists() else []
-        rows = []
-        for ck in state["companies"]:
-            rows += drv._call("GET", "/api/ai/exceptions?afterId=0&take=1000", drv.login(state["companies"][ck]["owner"]["email"], state["companies"][ck]["owner"]["password"]).token)["exceptions"]
-        card = scoring.score(ledger.incidents, rows, findings)
-        for i, o in zip(ledger.incidents, card.outcomes):
-            incidents_out.append({"id": i.id, "type": i.type, "branch": i.branch, "hour": i.hour, "detail": i.detail, "status": o.status})
-            timeline.append({"hour": i.hour, "text": f"Injected {i.type.replace('_', ' ').lower()} at {i.branch} ({o.status.replace('_', ' ')})"})
-        report["scorecard"] = card.summary()
+    ledger = inc.Ledger.load(ledger_path) if ledger_path.exists() else inc.Ledger()
+    if ledger.incidents:
+            findings_path = run_dir / "ai_findings.json"
+            findings = json.loads(findings_path.read_text(encoding="utf-8")) if findings_path.exists() else []
+            rows = []
+            for ck in state["companies"]:
+                rows += drv._call("GET", "/api/ai/exceptions?afterId=0&take=1000", drv.login(state["companies"][ck]["owner"]["email"], state["companies"][ck]["owner"]["password"]).token)["exceptions"]
+            card = scoring.score(ledger.incidents, rows, findings)
+            for i, o in zip(ledger.incidents, card.outcomes):
+                incidents_out.append({"id": i.id, "type": i.type, "branch": i.branch, "hour": i.hour, "detail": i.detail, "status": o.status})
+                timeline.append({"hour": i.hour, "text": f"Injected {i.type.replace('_', ' ').lower()} at {i.branch} ({o.status.replace('_', ' ')})"})
+            report["scorecard"] = card.summary()
     for e in plan.expansions:
         timeline.append({"hour": e["hour"], "text": f"{cmap[e['company']].name} opened branch {e['branch']}"})
     actions_path = run_dir / "ai_actions.jsonl"
@@ -106,12 +106,47 @@ def build(run: str, base_url: str) -> dict:
     return report
 
 
+def kind_of(run: str) -> str:
+    if run.startswith("proof-"):
+        arm = run.rsplit("-", 1)[1]
+        return {"none": "Proof arm: no markdown", "fixed": "Proof arm: fixed rule", "ai": "Proof arm: AI agent"}.get(arm, "Proof arm")
+    return "Incident day + AI trial world"
+
+
+def build_all(base_url: str) -> list:
+    index = []
+    for d in sorted(runner.RUNS.iterdir()):
+        if not (d / "world.json").exists():
+            continue
+        try:
+            rep = build(d.name, base_url)
+        except Exception as exc:                       # a world whose tenants were purged, etc.
+            index.append({"run": d.name, "error": str(exc)[:120]})
+            continue
+        (RESULTS / f"day-report-{d.name}.json").write_text(json.dumps(rep, indent=1, default=float), encoding="utf-8")
+        t, sc = rep["totals"], rep.get("scorecard")
+        index.append({"run": d.name, "kind": kind_of(d.name), "profile": rep["profile"], "seed": rep["seed"], "branches": t["branches"],
+                      "salesToday": t["salesToday"], "transactionsToday": t["transactionsToday"], "openExceptions": t["openExceptions"],
+                      "activeMarkdowns": t["activeMarkdowns"], "aiMarkdownsApplied": rep["ai_actions"]["applied"],
+                      "incidents": sc["injected"] if sc else 0, "coverage": sc["coverage"] if sc else None,
+                      "caught": sc["caught"] if sc else None, "aiFound": sc["ai_found"] if sc else None})
+    return index
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--run", required=True)
+    ap.add_argument("--run")
+    ap.add_argument("--all", action="store_true", help="every run folder, plus results/reports-index.json")
     ap.add_argument("--base-url", default=os.environ.get("PESOWEB_URL", "http://localhost:5071"))
     args = ap.parse_args(argv)
     RESULTS.mkdir(parents=True, exist_ok=True)
+    if args.all:
+        idx = build_all(args.base_url)
+        (RESULTS / "reports-index.json").write_text(json.dumps({"runs": idx}, indent=1, default=float), encoding="utf-8")
+        print(f"wrote {len([i for i in idx if 'error' not in i])} day reports and reports-index.json; errors: {[i['run'] for i in idx if 'error' in i]}")
+        return 0
+    if not args.run:
+        ap.error("--run or --all is required")
     out = RESULTS / f"day-report-{args.run}.json"
     out.write_text(json.dumps(build(args.run, args.base_url), indent=1, default=float), encoding="utf-8")
     print(f"wrote {out}")
