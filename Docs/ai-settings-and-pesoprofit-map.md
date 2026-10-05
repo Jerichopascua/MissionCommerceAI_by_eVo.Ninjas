@@ -83,7 +83,7 @@ The AI Control screen in PesoWeb (`/ai/control`) lists the six AI products with 
 
 ## 2c. PesoProfit run on the real catalog (2026-10-06)
 
-The full flow (AI Pricing run, Approval Center, simulated approver, markdown agent) ran on the real catalog, one day and then ten more days against a no-AI twin. On the real thin margins the AI was behind the no-AI world on all 10 days (net about -0.5k to -1.3k pesos a day, revenue down). Details, reasons and next steps: `Docs/showcase-results.md`. The generated-shop proof (-58% waste) is a separate result.
+The full flow (AI Pricing run, Approval Center, simulated approver, markdown agent) ran on the real catalog against a no-AI twin, one day and then ten more days. After the two worlds were made truly equal (an A/A check shows zero difference), the AI world was ahead on all 10 days: gross margin about +8%, units about flat, waste about 160 pesos a day lower with the markdown agent. A first comparison that said the opposite was wrong (the worlds had unequal stock) and is discarded. Details: `Docs/showcase-results.md`.
 
 ## 3. The PesoProfit one-pager against what is built
 
