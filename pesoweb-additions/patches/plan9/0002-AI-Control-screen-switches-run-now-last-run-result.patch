@@ -1,0 +1,263 @@
+From 75973fa1e75634f01ad2607962659ff3a8b94d00 Mon Sep 17 00:00:00 2001
+From: unknown <jericho.pascua@gmail.com>
+Date: Mon, 5 Oct 2026 23:18:34 +0800
+Subject: [PATCH 2/2] AI Control screen: switches, run now, last run result
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+---
+ .../app/ai/aicontrol/aicontrol.component.html | 77 ++++++++++++++++
+ .../app/ai/aicontrol/aicontrol.component.ts   | 87 +++++++++++++++++++
+ ClientApp/src/app/app.component.html          |  9 ++
+ ClientApp/src/app/app.module.ts               |  3 +
+ .../src/app/homemenu/homemenu.component.html  |  9 ++
+ 5 files changed, 185 insertions(+)
+ create mode 100644 ClientApp/src/app/ai/aicontrol/aicontrol.component.html
+ create mode 100644 ClientApp/src/app/ai/aicontrol/aicontrol.component.ts
+
+diff --git a/ClientApp/src/app/ai/aicontrol/aicontrol.component.html b/ClientApp/src/app/ai/aicontrol/aicontrol.component.html
+new file mode 100644
+index 0000000..f5e6cec
+--- /dev/null
++++ b/ClientApp/src/app/ai/aicontrol/aicontrol.component.html
+@@ -0,0 +1,77 @@
++<!-- Main Content -->
++<div class="main-content">
++	<div class="page-header">
++		<div class="page-block">
++			<div class="row align-items-center">
++				<div class="col-auto">
++					<div class="page-header-title">
++						<h4>{{app.Localize('AI Control')}}</h4>
++					</div>
++					<ul class="breadcrumb">
++						<li class="breadcrumb-item">
++							<a [routerLink]="['/']">
++								<i class="fa fa-home me-1"></i>
++								{{app.Localize('Home')}}
++							</a>
++						</li>
++						<li class="breadcrumb-item">{{app.Localize('AI Control')}}</li>
++					</ul>
++				</div>
++				<div class="col">
++					<div class="float-end">
++						<button type="button" class="btn btn-outline-secondary" (click)="load()" [disabled]="loading">
++							<i class="fa fa-rotate me-1"></i>{{app.Localize('Refresh')}}
++						</button>
++					</div>
++				</div>
++			</div>
++		</div>
++	</div>
++
++	<div class="alert alert-danger" *ngIf="error">{{error}}</div>
++	<div class="alert alert-success" *ngIf="message">{{message}}</div>
++
++	<p class="text-muted">
++		{{onCount}} of {{features.length}} AI features are on for your company. Switching one off takes effect at once: PesoWeb refuses what that AI proposes,
++		so it cannot change a price even if the agent keeps running. Your margin rules and the Approval Center still apply to everything that is on.
++	</p>
++
++	<div class="row g-3">
++		<div class="col-md-6 col-xl-4" *ngFor="let f of features">
++			<div class="card h-100" [class.border-success]="f.enabled && f.buildState !== 'NotBuilt'">
++				<div class="card-body d-flex flex-column">
++					<div class="d-flex justify-content-between align-items-start">
++						<h5 class="mb-1">{{f.name}}</h5>
++						<div class="form-check form-switch">
++							<input class="form-check-input" type="checkbox" role="switch" [id]="'sw-' + f.key" [checked]="f.enabled" [disabled]="busyKey === f.key" (change)="toggle(f)">
++							<label class="form-check-label small" [for]="'sw-' + f.key">{{f.enabled ? app.Localize('On') : app.Localize('Off')}}</label>
++						</div>
++					</div>
++					<div class="mb-2"><span class="badge" [ngClass]="stateClass(f)">{{stateLabel(f)}}</span></div>
++					<p class="small text-muted flex-grow-1">{{f.description}}</p>
++
++					<div class="small mb-2" *ngIf="f.openRun">
++						<i class="fa fa-spinner fa-spin me-1"></i>
++						<span *ngIf="f.openRun.status === 'Requested'">{{app.Localize('Run requested, waiting for the agent')}}</span>
++						<span *ngIf="f.openRun.status === 'Running'">{{app.Localize('The agent is running now')}}</span>
++						<div class="text-warning" *ngIf="waitingLong(f)">
++							The agent has not picked this up. Start the agent runner (python -m simpeso.agent_service) for this company.
++						</div>
++					</div>
++					<div class="small mb-2" *ngIf="!f.openRun && f.lastRun">
++						<span class="fw-bold" [class.text-success]="f.lastRun.status === 'Done'" [class.text-danger]="f.lastRun.status === 'Failed'" [class.text-muted]="f.lastRun.status === 'Cancelled'">Last run: {{f.lastRun.status}}</span>
++						<span *ngIf="f.lastRun.finishedAt"> · {{f.lastRun.finishedAt | date:'medium'}}</span>
++						<div class="text-muted">{{f.lastRun.summary}}</div>
++					</div>
++
++					<div>
++						<button type="button" class="btn btn-sm btn-primary" *ngIf="f.canRun" (click)="run(f)" [disabled]="!f.enabled || !!f.openRun || busyKey === f.key">
++							<i class="fa fa-play me-1"></i>{{app.Localize('Run now')}}
++						</button>
++						<span class="small text-muted" *ngIf="!f.canRun">{{app.Localize('Nothing to run yet')}}</span>
++					</div>
++				</div>
++			</div>
++		</div>
++	</div>
++</div>
+diff --git a/ClientApp/src/app/ai/aicontrol/aicontrol.component.ts b/ClientApp/src/app/ai/aicontrol/aicontrol.component.ts
+new file mode 100644
+index 0000000..862f98b
+--- /dev/null
++++ b/ClientApp/src/app/ai/aicontrol/aicontrol.component.ts
+@@ -0,0 +1,87 @@
++import { Component, Inject, OnDestroy, OnInit } from '@angular/core';
++import { HttpClient } from '@angular/common/http';
++import { AppService } from '../../services/app.service';
++
++// The owner's switchboard for the six AI features: switch each on or off, and ask the agent to run now.
++// The agent itself is a separate program; this screen only records what the owner wants and shows what the agent reported.
++@Component({
++  selector: 'app-aicontrol',
++  templateUrl: './aicontrol.component.html'
++})
++export class AiControlComponent implements OnInit, OnDestroy {
++  public features: any[] = [];
++  public loading = false;
++  public busyKey = '';
++  public error = '';
++  public message = '';
++  private timer: any = null;
++
++  constructor(
++    private http: HttpClient,
++    @Inject('BASE_URL') private baseUrl: string,
++    public app: AppService
++  ) { }
++
++  ngOnInit(): void {
++    this.load();
++    // While a run is waiting or running, look again every few seconds so the result appears by itself.
++    this.timer = setInterval(() => { if (this.features.some(f => f.openRun)) { this.load(true); } }, 4000);
++  }
++
++  ngOnDestroy(): void {
++    if (this.timer) { clearInterval(this.timer); }
++  }
++
++  public load(quiet = false): void {
++    if (!quiet) { this.loading = true; }
++    this.http.get<any[]>(this.baseUrl + 'api/ai/control').subscribe({
++      next: (r) => { this.features = r; this.loading = false; },
++      error: (e) => { this.error = this.messageOf(e, 'Could not load the AI features.'); this.loading = false; }
++    });
++  }
++
++  public get onCount(): number {
++    return this.features.filter(f => f.enabled).length;
++  }
++
++  public toggle(f: any): void {
++    if (this.busyKey) { return; }
++    const enabled = !f.enabled;
++    this.busyKey = f.key;
++    this.error = ''; this.message = '';
++    this.http.put<any[]>(this.baseUrl + 'api/ai/control/' + f.key, { enabled }).subscribe({
++      next: (r) => {
++        this.features = r; this.busyKey = '';
++        this.message = f.name + (enabled ? ' is on.' : ' is off. Its proposals are now refused and any waiting run was cancelled.');
++      },
++      error: (e) => { this.busyKey = ''; this.error = this.messageOf(e, 'Could not change the switch.'); this.load(); }
++    });
++  }
++
++  public run(f: any): void {
++    if (this.busyKey) { return; }
++    this.busyKey = f.key;
++    this.error = ''; this.message = '';
++    this.http.post<any>(this.baseUrl + 'api/ai/control/run/' + f.key, {}).subscribe({
++      next: () => { this.busyKey = ''; this.message = 'Run requested for ' + f.name + '. The agent picks it up when it next checks.'; this.load(); },
++      error: (e) => { this.busyKey = ''; this.error = this.messageOf(e, 'Could not request a run.'); this.load(); }
++    });
++  }
++
++  public stateLabel(f: any): string {
++    return f.buildState === 'Built' ? 'Built' : f.buildState === 'Partial' ? 'Partly built' : 'Not built yet';
++  }
++
++  public stateClass(f: any): string {
++    return f.buildState === 'Built' ? 'bg-success' : f.buildState === 'Partial' ? 'bg-warning text-dark' : 'bg-secondary';
++  }
++
++  public waitingLong(f: any): boolean {
++    if (!f.openRun || f.openRun.status !== 'Requested') { return false; }
++    return Date.now() - new Date(f.openRun.requestedAt).getTime() > 90 * 1000;
++  }
++
++  private messageOf(e: any, fallback: string): string {
++    return (e && e.error && (e.error.message || e.error.title)) || fallback;
++  }
++}
+diff --git a/ClientApp/src/app/app.component.html b/ClientApp/src/app/app.component.html
+index f33605b..1c2806e 100644
+--- a/ClientApp/src/app/app.component.html
++++ b/ClientApp/src/app/app.component.html
+@@ -485,6 +485,15 @@
+ 							</span>
+ 						</a>
+ 					</li>
++					<li *ngIf="app.HasPermission('AI.Control')">
++						<a [routerLinkActive]="'active'"
++							[routerLink]="['/ai/control']">
++							<i class="fa fa-robot"></i>
++							<span>
++								{{app.Localize('AI Control')}}
++							</span>
++						</a>
++					</li>
+ 					<li *ngIf="app.HasPermission('Inventory.StockTransferList')">
+ 						<a [routerLinkActive]="'active'"
+ 							[routerLink]="['/inventory/stocktransfers']">
+diff --git a/ClientApp/src/app/app.module.ts b/ClientApp/src/app/app.module.ts
+index 777bc1a..4401d18 100644
+--- a/ClientApp/src/app/app.module.ts
++++ b/ClientApp/src/app/app.module.ts
+@@ -58,6 +58,7 @@ import { CategoriesComponent } from './inventory/categories/categories.component
+ import { BrandsComponent } from './inventory/brands/brands.component';
+ import { UnitsComponent } from './inventory/units/units.component';
+ import { ApprovalCenterComponent } from './pricing/approvalcenter/approvalcenter.component';
++import { AiControlComponent } from './ai/aicontrol/aicontrol.component';
+ import { VariationsComponent } from './inventory/variations/variations.component';
+ import { ProductListComponent } from './inventory/products/productlist/productlist.component';
+ import { ProductAddComponent } from './inventory/products/productadd/productadd.component';
+@@ -201,6 +202,7 @@ const routes: Routes = [
+   { path: 'inventory/brands', component: BrandsComponent, canActivate: [AuthGuard], data: { permission: "Inventory.Brands" } },
+   { path: 'inventory/units', component: UnitsComponent, canActivate: [AuthGuard], data: { permission: "Inventory.Units" } },
+   { path: 'pricing/approvals', component: ApprovalCenterComponent, canActivate: [AuthGuard], data: { permission: "Pricing.View" } },
++  { path: 'ai/control', component: AiControlComponent, canActivate: [AuthGuard], data: { permission: "AI.Control" } },
+   { path: 'inventory/variations', component: VariationsComponent, canActivate: [AuthGuard], data: { permission: "Inventory.Variations" } },
+   { path: 'inventory/products', component: ProductListComponent, canActivate: [AuthGuard], data: { permission: "Inventory.ProductList" } },
+   { path: 'inventory/products/add', component: ProductAddComponent, canActivate: [AuthGuard], data: { permission: "Inventory.ProductAdd" } },
+@@ -314,6 +316,7 @@ const routes: Routes = [
+     BrandsComponent,
+     UnitsComponent,
+     ApprovalCenterComponent,
++    AiControlComponent,
+     VariationsComponent,
+     ProductListComponent,
+     ProductAddComponent,
+diff --git a/ClientApp/src/app/homemenu/homemenu.component.html b/ClientApp/src/app/homemenu/homemenu.component.html
+index 78b0fe0..9460456 100644
+--- a/ClientApp/src/app/homemenu/homemenu.component.html
++++ b/ClientApp/src/app/homemenu/homemenu.component.html
+@@ -320,6 +320,15 @@
+ 											</span>
+ 										</a>
+ 									</li>
++									<li *ngIf="app.HasPermission('AI.Control')">
++										<a [routerLinkActive]="'active'"
++											[routerLink]="['/ai/control']">
++											<i class="fa fa-robot"></i>
++											<span>
++												{{app.Localize('AI Control')}}
++											</span>
++										</a>
++									</li>
+ 									<li *ngIf="app.HasPermission('Inventory.StockTransferList')">
+ 										<a [routerLinkActive]="'active'"
+ 											[routerLink]="['/inventory/stocktransfers']">
+-- 
+2.46.0.windows.1
+

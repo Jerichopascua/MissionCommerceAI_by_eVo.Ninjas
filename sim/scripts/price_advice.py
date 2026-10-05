@@ -18,20 +18,7 @@ from missionai import price_advisor as pa    # noqa: E402
 from simpeso import runner                   # noqa: E402
 from simpeso.driver import PesoWebDriver     # noqa: E402
 
-PRIOR_BETA = -1.3
-MIN_OBSERVATIONS_TO_CALL_LEARNED = 3
-
-
-def browse(drv, acct, warehouse_id) -> list:
-    out, page = [], 1
-    while True:
-        r = drv._call("GET", f"/api/Inventory/Products?warehouse={warehouse_id}&page={page}&pageSize=250", acct.token)
-        rows = r.get("data", [])
-        out += [{"id": x["id"], "name": x["productName"], "category": x["categoryName"], "cost": float(x["cost"]), "price": float(x["price"]),
-                 "stock": float(x.get("quantity") or 0), "perishable": bool(x.get("monitorExpiry"))} for x in rows]
-        if len(out) >= r.get("recordsTotal", 0) or not rows:
-            return out
-        page += 1
+from simpeso.price_run import browse, suggestions_for, PRIOR_BETA   # noqa: E402
 
 
 def main(argv=None) -> int:
@@ -48,25 +35,7 @@ def main(argv=None) -> int:
     drv = PesoWebDriver(args.base_url, "price-advice")
     acct = drv.login(comp["owner"]["email"], comp["owner"]["password"])
     whs = [b["warehouse_id"] for b in comp["branches"].values() if "warehouse_id" in b]
-    products = browse(drv, acct, whs[0])
-    policy = drv.pricing_policy(acct)
-    rates = {}
-    for k, v in model["rates"].items():
-        wh, pid = (int(x) for x in k.split(":"))
-        if wh in whs:
-            rates[pid] = rates.get(pid, 0.0) + float(v)
-    from missionai.demand import DemandModel
-    dm = DemandModel(prior_beta=PRIOR_BETA)
-    for c, o in model.get("observations", {}).items():
-        dm._obs[c] = [tuple(x) for x in o]
-    for c, e in model.get("estimates", {}).items():
-        dm._estimates[c] = [tuple(x) for x in e]
-
-    def beta_for(cat):
-        learned = len(dm._obs.get(cat, [])) >= MIN_OBSERVATIONS_TO_CALL_LEARNED or bool(dm._estimates.get(cat))
-        return (dm.beta(cat), "learned") if learned else (PRIOR_BETA, "assumed")
-
-    sugg = pa.advise(products, rates, beta_for, policy, args.step)
+    products, sugg, policy = suggestions_for(drv, acct, whs, model, args.step)
     summary = pa.summarize(sugg)
     by_id = {p["id"]: p for p in products}
     acts = sorted([s for s in sugg if s.status in ("raise", "lower")], key=lambda s: -s.profit_gain_per_day)

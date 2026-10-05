@@ -323,11 +323,21 @@ class PesoWebDriver:
 
     # ---- list price changes (guarded, approved by a human) -----------------------------------------------
     def propose_list_price(self, acct: Account, warehouse_id: int, product_id: int, new_price: float, reason: str = "",
-                           prediction_ref: str = None, source: str = "Ai"):
-        """Returns (http status, outcome). 202 waits for approval, 422 is refused by a rule."""
+                           prediction_ref: str = None, source: str = "Ai", confidence: str = None, expected_gain_per_day: float = None,
+                           expected_gain_conservative_per_day: float = None, evidence: str = None):
+        """Returns (http status, outcome). 202 waits for approval, 422 is refused by a rule.
+        confidence ("learned" or "assumed"), the expected gains and the evidence text feed the Approval Center's routing and detail panel."""
         body = {"WarehouseId": warehouse_id, "ProductId": product_id, "NewPrice": new_price, "Reason": reason[:300], "Source": source}
         if prediction_ref:
             body["PredictionRef"] = prediction_ref
+        if confidence:
+            body["Confidence"] = confidence
+        if expected_gain_per_day is not None:
+            body["ExpectedGainPerDay"] = expected_gain_per_day
+        if expected_gain_conservative_per_day is not None:
+            body["ExpectedGainConservativePerDay"] = expected_gain_conservative_per_day
+        if evidence:
+            body["Evidence"] = evidence[:300]
         return self._call("POST", "/api/Pricing/ListPrice", acct.token, json_body=body, raw=True)
 
     def approve_list_price(self, acct: Account, price_change_id: int):

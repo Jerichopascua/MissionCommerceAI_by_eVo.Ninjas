@@ -77,6 +77,10 @@ Template sentence by default. A vLLM endpoint is used only if `VLLM_URL` is set;
 
 Not settings but worth knowing: shoppers' true price response is the simulator's own hidden assumption; the AI never sees it.
 
+## 2b. Where the owner switches the AI on and off (added 2026-10-05)
+
+The AI Control screen in PesoWeb (`/ai/control`) lists the six AI products with a switch each, their build state, and a Run now button for the ones that can run. With AI Pricing off, PesoWeb refuses what the AI proposes, so it cannot change a price even if the agent keeps running. This is separate from "Pricing autonomy" (Off, Approval, Autonomous) in the Approval Center settings, which says what happens to proposals that are accepted. A company with no saved switch has every feature on. The agent is a separate program (`python -m simpeso.agent_service`); Run now only works while it is running.
+
 ## 3. The PesoProfit one-pager against what is built
 
 | One-pager says | Built today? | Evidence or gap |

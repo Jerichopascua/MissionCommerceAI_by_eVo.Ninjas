@@ -75,6 +75,17 @@ Also verified live as the root `SuperAdmin` (user 1) on the restored database: `
 
 Simulation side: `sim/simpeso/approver.py` is a seeded virtual store manager that works the same queue through the normal endpoints (so the audit log, rules and undo apply). Its choices are an assumption about people, not a measurement.
 
+## Plan 9 addition (AI Control: on/off and run now)
+
+`patches/plan9` (2 patches, tag `plan9-complete`):
+- Tables `AiFeatureSettings` (one row per company and feature; no row means ON, so existing companies keep working) and `AiRunRequests`, migration `AddAiControl`, permission `AI.Control` (granted to SuperAdmin roles by `GrantAiControlPermission`; script `scripts/20261005_ai_control.sql`).
+- Owner endpoints (`AI.Control`): `GET /api/ai/control`, `PUT /api/ai/control/{feature}` (`{"enabled":false}`), `POST /api/ai/control/run/{feature}`. Agent endpoints (`AI.Read`): `GET /api/ai/settings`, `GET /api/ai/run-requests?status=Requested`, `POST /api/ai/run-requests/{id}/start`, `POST .../finish`.
+- Enforcement is in PesoWeb: with AI Pricing off, an AI list-price proposal or markdown is refused (422 `AI_FEATURE_OFF`); a person's own proposals are not affected. Switching a feature off cancels a run nobody started.
+- Angular screen at `/ai/control` (menu "AI Control"): six cards with the switch, build state, Run now, and the last run's result.
+- Only AI Pricing can be run now. The other five show their switch and build state; Monitoring and Insight are partly built, Replenish and Customer Mission are not built, Loss Prevention runs inside simulations only.
+
+Agent side: `sim/simpeso/agent_service.py` (`python -m simpeso.agent_service --run real2 --company c1 --once`, or `--interval 30` to keep polling) reads the switches, picks up run requests and runs the AI Pricing handler, which puts the best list-price changes into the Approval Center (skipping products that already have one waiting). Checked by 178 PesoWeb tests and `sim/scripts/ai_control_check.py` (16 live checks).
+
 ## Live verification environment (no admin rights needed)
 
 PesoWeb databases come from a backup plus SQL scripts, not from running every EF migration (an old migration has a foreign-key cycle, and the history is incomplete). To get a throwaway database on SQL Server LocalDB:
