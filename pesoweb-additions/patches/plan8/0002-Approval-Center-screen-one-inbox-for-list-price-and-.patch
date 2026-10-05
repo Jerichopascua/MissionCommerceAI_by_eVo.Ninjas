@@ -1,0 +1,550 @@
+From a0636aa318e0f19dd76e4d70da7e8abe0d2f5558 Mon Sep 17 00:00:00 2001
+From: unknown <jericho.pascua@gmail.com>
+Date: Mon, 5 Oct 2026 17:43:27 +0800
+Subject: [PATCH 2/2] Approval Center screen: one inbox for list-price and
+ markdown approvals with lanes, evidence, edit-on-approve, bulk, undo,
+ settings
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+---
+ ClientApp/src/app/app.component.html          |   9 +
+ ClientApp/src/app/app.module.ts               |   3 +
+ .../src/app/homemenu/homemenu.component.html  |   9 +
+ .../approvalcenter.component.html             | 242 ++++++++++++++++++
+ .../approvalcenter.component.ts               | 207 +++++++++++++++
+ 5 files changed, 470 insertions(+)
+ create mode 100644 ClientApp/src/app/pricing/approvalcenter/approvalcenter.component.html
+ create mode 100644 ClientApp/src/app/pricing/approvalcenter/approvalcenter.component.ts
+
+diff --git a/ClientApp/src/app/app.component.html b/ClientApp/src/app/app.component.html
+index 3f9e9c7..f33605b 100644
+--- a/ClientApp/src/app/app.component.html
++++ b/ClientApp/src/app/app.component.html
+@@ -476,6 +476,15 @@
+ 							</span>
+ 						</a>
+ 					</li>
++					<li *ngIf="app.HasPermission('Pricing.View')">
++						<a [routerLinkActive]="'active'"
++							[routerLink]="['/pricing/approvals']">
++							<i class="fa fa-check-double"></i>
++							<span>
++								{{app.Localize('Approval Center')}}
++							</span>
++						</a>
++					</li>
+ 					<li *ngIf="app.HasPermission('Inventory.StockTransferList')">
+ 						<a [routerLinkActive]="'active'"
+ 							[routerLink]="['/inventory/stocktransfers']">
+diff --git a/ClientApp/src/app/app.module.ts b/ClientApp/src/app/app.module.ts
+index 5f0ebe5..777bc1a 100644
+--- a/ClientApp/src/app/app.module.ts
++++ b/ClientApp/src/app/app.module.ts
+@@ -57,6 +57,7 @@ import { PurchaseReturnListComponent } from './purchases/purchasereturnlist/purc
+ import { CategoriesComponent } from './inventory/categories/categories.component';
+ import { BrandsComponent } from './inventory/brands/brands.component';
+ import { UnitsComponent } from './inventory/units/units.component';
++import { ApprovalCenterComponent } from './pricing/approvalcenter/approvalcenter.component';
+ import { VariationsComponent } from './inventory/variations/variations.component';
+ import { ProductListComponent } from './inventory/products/productlist/productlist.component';
+ import { ProductAddComponent } from './inventory/products/productadd/productadd.component';
+@@ -199,6 +200,7 @@ const routes: Routes = [
+   { path: 'inventory/categories', component: CategoriesComponent, canActivate: [AuthGuard], data: { permission: "Inventory.Categories" } },
+   { path: 'inventory/brands', component: BrandsComponent, canActivate: [AuthGuard], data: { permission: "Inventory.Brands" } },
+   { path: 'inventory/units', component: UnitsComponent, canActivate: [AuthGuard], data: { permission: "Inventory.Units" } },
++  { path: 'pricing/approvals', component: ApprovalCenterComponent, canActivate: [AuthGuard], data: { permission: "Pricing.View" } },
+   { path: 'inventory/variations', component: VariationsComponent, canActivate: [AuthGuard], data: { permission: "Inventory.Variations" } },
+   { path: 'inventory/products', component: ProductListComponent, canActivate: [AuthGuard], data: { permission: "Inventory.ProductList" } },
+   { path: 'inventory/products/add', component: ProductAddComponent, canActivate: [AuthGuard], data: { permission: "Inventory.ProductAdd" } },
+@@ -311,6 +313,7 @@ const routes: Routes = [
+     CategoriesComponent,
+     BrandsComponent,
+     UnitsComponent,
++    ApprovalCenterComponent,
+     VariationsComponent,
+     ProductListComponent,
+     ProductAddComponent,
+diff --git a/ClientApp/src/app/homemenu/homemenu.component.html b/ClientApp/src/app/homemenu/homemenu.component.html
+index e1d6412..78b0fe0 100644
+--- a/ClientApp/src/app/homemenu/homemenu.component.html
++++ b/ClientApp/src/app/homemenu/homemenu.component.html
+@@ -311,6 +311,15 @@
+ 											</span>
+ 										</a>
+ 									</li>
++									<li *ngIf="app.HasPermission('Pricing.View')">
++										<a [routerLinkActive]="'active'"
++											[routerLink]="['/pricing/approvals']">
++											<i class="fa fa-check-double"></i>
++											<span>
++												{{app.Localize('Approval Center')}}
++											</span>
++										</a>
++									</li>
+ 									<li *ngIf="app.HasPermission('Inventory.StockTransferList')">
+ 										<a [routerLinkActive]="'active'"
+ 											[routerLink]="['/inventory/stocktransfers']">
+diff --git a/ClientApp/src/app/pricing/approvalcenter/approvalcenter.component.html b/ClientApp/src/app/pricing/approvalcenter/approvalcenter.component.html
+new file mode 100644
+index 0000000..ea8e48a
+--- /dev/null
++++ b/ClientApp/src/app/pricing/approvalcenter/approvalcenter.component.html
+@@ -0,0 +1,242 @@
++<!-- Main Content -->
++<div class="main-content">
++	<div class="page-header">
++		<div class="page-block">
++			<div class="row align-items-center">
++				<div class="col-auto">
++					<div class="page-header-title">
++						<h4>{{app.Localize('Approval Center')}}</h4>
++					</div>
++					<ul class="breadcrumb">
++						<li class="breadcrumb-item">
++							<a [routerLink]="['/']">
++								<i class="fa fa-home me-1"></i>
++								{{app.Localize('Home')}}
++							</a>
++						</li>
++						<li class="breadcrumb-item">{{app.Localize('Approval Center')}}</li>
++					</ul>
++				</div>
++				<div class="col">
++					<div class="float-end">
++						<button type="button" class="btn btn-outline-secondary me-2" (click)="load()" [disabled]="loading">
++							<i class="fa fa-rotate me-1"></i>{{app.Localize('Refresh')}}
++						</button>
++						<button *ngIf="app.HasPermission('Pricing.Manage')" type="button" class="btn btn-outline-primary" (click)="showSettings = !showSettings">
++							<i class="fa fa-sliders me-1"></i>{{app.Localize('Settings')}}
++						</button>
++					</div>
++				</div>
++			</div>
++		</div>
++	</div>
++
++	<div class="alert alert-danger" *ngIf="error">{{error}}</div>
++	<div class="alert alert-success" *ngIf="message">{{message}}</div>
++
++	<!-- Counters -->
++	<div class="row g-3 mb-3">
++		<div class="col-6 col-md-3 col-xl">
++			<div class="card"><div class="card-body">
++				<div class="text-muted small text-uppercase fw-bold">{{app.Localize('Waiting')}}</div>
++				<div class="fs-3 fw-bold">{{summary.waiting}}</div>
++			</div></div>
++		</div>
++		<div class="col-6 col-md-3 col-xl">
++			<div class="card"><div class="card-body">
++				<div class="text-muted small text-uppercase fw-bold">{{app.Localize('Oldest waiting')}}</div>
++				<div class="fs-3 fw-bold">{{summary.oldestMinutes}} min</div>
++			</div></div>
++		</div>
++		<div class="col-6 col-md-3 col-xl">
++			<div class="card"><div class="card-body">
++				<div class="text-muted small text-uppercase fw-bold">{{app.Localize('Profit at stake (conservative)')}}</div>
++				<div class="fs-3 fw-bold">{{money(summary.profitAtStakeConservativePerDay)}}/day</div>
++			</div></div>
++		</div>
++		<div class="col-6 col-md-3 col-xl">
++			<div class="card"><div class="card-body">
++				<div class="text-muted small text-uppercase fw-bold">{{app.Localize('Approved today')}}</div>
++				<div class="fs-3 fw-bold">{{summary.approvedToday}}</div>
++			</div></div>
++		</div>
++		<div class="col-6 col-md-3 col-xl">
++			<div class="card"><div class="card-body">
++				<div class="text-muted small text-uppercase fw-bold">{{app.Localize('Auto-approved today')}}</div>
++				<div class="fs-3 fw-bold">{{summary.autoApprovedToday}}</div>
++			</div></div>
++		</div>
++	</div>
++
++	<!-- Settings -->
++	<div class="card mb-3" *ngIf="showSettings && policy">
++		<div class="card-body">
++			<h6 class="mb-3">{{app.Localize('Approval settings')}}</h6>
++			<div class="row g-3">
++				<div class="col-md-3">
++					<label class="form-label">{{app.Localize('Pricing autonomy')}}</label>
++					<select class="form-select" [(ngModel)]="policy.autonomyMode">
++						<option value="Autonomous">Autonomous</option>
++						<option value="Approval">Approval</option>
++						<option value="Off">Off</option>
++					</select>
++				</div>
++				<div class="col-md-3">
++					<label class="form-label">{{app.Localize('Store manager lane: moves up to (%)')}}</label>
++					<input type="number" class="form-control" [(ngModel)]="policy.storeLaneMaxPct">
++				</div>
++				<div class="col-md-3">
++					<label class="form-label">{{app.Localize('Owner lane: bigger than (%) on top sellers or below the soft floor')}}</label>
++					<input type="number" class="form-control" [(ngModel)]="policy.ownerLaneMinPct">
++				</div>
++				<div class="col-md-3">
++					<label class="form-label">{{app.Localize('Proposals expire after (hours)')}}</label>
++					<input type="number" class="form-control" [(ngModel)]="policy.proposalExpiryHours">
++				</div>
++				<div class="col-md-3">
++					<label class="form-label">{{app.Localize('Largest single price increase (%)')}}</label>
++					<input type="number" class="form-control" [(ngModel)]="policy.maxListPriceIncreasePct">
++				</div>
++				<div class="col-md-3">
++					<div class="form-check form-switch mt-4">
++						<input class="form-check-input" type="checkbox" id="autoApprove" [(ngModel)]="policy.listPriceAutoApprove">
++						<label class="form-check-label" for="autoApprove">{{app.Localize('Auto-approve small, learned changes')}}</label>
++					</div>
++				</div>
++				<div class="col-md-3" *ngIf="policy.listPriceAutoApprove">
++					<label class="form-label">{{app.Localize('Auto-approve up to (%)')}}</label>
++					<input type="number" class="form-control" [(ngModel)]="policy.autoApproveMaxPct">
++				</div>
++			</div>
++			<div class="mt-3">
++				<button type="button" class="btn btn-primary" (click)="saveSettings()">{{app.Localize('Save')}}</button>
++				<span class="text-success ms-2" *ngIf="settingsSaved">{{app.Localize('Saved')}}</span>
++				<div class="text-muted small mt-2">
++					Auto-approve is off by default. When on, only AI changes that are small, learned from sales, above the soft margin floor and in the store lane are applied without waiting; each is logged as auto-approved.
++				</div>
++			</div>
++		</div>
++	</div>
++
++	<div class="row g-3">
++		<!-- Queue -->
++		<div class="col-lg-7">
++			<div class="card">
++				<div class="card-body">
++					<div class="d-flex flex-wrap gap-2 align-items-center mb-3">
++						<div class="btn-group" role="group">
++							<button type="button" class="btn btn-sm" [class.btn-primary]="tab==='All'" [class.btn-outline-primary]="tab!=='All'" (click)="tab='All'">All ({{count('All')}})</button>
++							<button type="button" class="btn btn-sm" [class.btn-primary]="tab==='Price'" [class.btn-outline-primary]="tab!=='Price'" (click)="tab='Price'">{{app.Localize('Price')}} ({{count('Price')}})</button>
++							<button type="button" class="btn btn-sm" [class.btn-primary]="tab==='Markdown'" [class.btn-outline-primary]="tab!=='Markdown'" (click)="tab='Markdown'">{{app.Localize('Markdown')}} ({{count('Markdown')}})</button>
++						</div>
++						<select class="form-select form-select-sm w-auto" [(ngModel)]="lane">
++							<option value="">{{app.Localize('All lanes')}}</option>
++							<option *ngFor="let l of lanes" [value]="l">{{l}}</option>
++						</select>
++						<div class="ms-auto">
++							<button type="button" class="btn btn-sm btn-success" (click)="approveAllLowRisk()" [disabled]="busy || !lowRisk.length">
++								<i class="fa fa-check-double me-1"></i>{{app.Localize('Approve all low-risk')}} ({{lowRisk.length}})
++							</button>
++						</div>
++					</div>
++
++					<div *ngIf="!visible.length && !loading" class="text-center text-muted py-5">
++						{{app.Localize('Nothing waiting. All caught up.')}}
++					</div>
++
++					<ng-container *ngFor="let l of lanes">
++						<div *ngIf="byLane(l).length">
++							<div class="text-muted small text-uppercase fw-bold mt-3 mb-1">{{l}} ({{byLane(l).length}})</div>
++							<div *ngFor="let i of byLane(l)" class="border rounded p-2 mb-2 d-flex justify-content-between align-items-center"
++								[class.border-primary]="i.id===selectedId" [class.bg-light]="i.id===selectedId" style="cursor:pointer"
++								tabindex="0" (click)="select(i)" (keydown.enter)="select(i)">
++								<div>
++									<div class="fw-bold">{{i.name}}</div>
++									<div class="small text-muted">{{i.type}} · {{i.scope}} · {{app.Localize('waiting')}} {{i.ageMinutes}} min</div>
++									<div>
++										<span class="badge me-1" [class.bg-success]="i.confidence==='learned'" [class.bg-warning]="i.confidence!=='learned'" [class.text-dark]="i.confidence!=='learned'">{{i.confidence}}</span>
++										<span class="badge bg-warning text-dark me-1" *ngIf="i.topSeller">top seller</span>
++										<span class="badge bg-danger me-1" *ngIf="i.belowSoftFloor">below soft floor</span>
++										<span class="badge bg-success me-1" *ngIf="i.lowRisk">low risk</span>
++										<span class="badge bg-danger me-1" *ngIf="i.deadline">time limit</span>
++										<span class="badge bg-secondary me-1" *ngIf="!i.canApprove">needs another role</span>
++									</div>
++								</div>
++								<div class="text-end fw-bold">
++									{{i.from}} &rarr; {{i.to}}
++									<div class="small text-muted fw-normal">{{pctText(i)}}</div>
++								</div>
++							</div>
++						</div>
++					</ng-container>
++					<div class="text-muted small mt-2">Keys: j / k move, a approve, r reject. Bulk approve covers only low-risk changes (store lane, small, learned).</div>
++				</div>
++			</div>
++		</div>
++
++		<!-- Detail -->
++		<div class="col-lg-5">
++			<div class="card" *ngIf="selected as s; else pick">
++				<div class="card-body">
++					<h5 class="mb-0">{{s.name}}</h5>
++					<div class="text-muted small mb-2">{{s.type}} change · {{s.scope}} · proposed by {{s.source === 'Ai' ? 'the AI' : 'a person'}} · routed to <b>{{s.lane}}</b></div>
++					<div class="d-flex align-items-baseline gap-2 my-2">
++						<span class="fs-2 fw-bold">{{s.from}} &rarr; {{editPrice == null ? s.to : editPrice}}</span>
++						<span class="text-muted">{{editedPct(s) > 0 ? '+' : ''}}{{editedPct(s) | number:'1.0-1'}}%</span>
++					</div>
++					<p class="text-muted small">{{s.reason}}</p>
++					<dl class="row small mb-2">
++						<dt class="col-5 text-muted fw-normal">{{app.Localize('Cost')}}</dt><dd class="col-7">{{s.cost}}</dd>
++						<dt class="col-5 text-muted fw-normal">{{app.Localize('Margin now to after')}}</dt><dd class="col-7">{{s.marginNowPct}}% &rarr; {{s.marginAfterPct}}%</dd>
++						<dt class="col-5 text-muted fw-normal" *ngIf="s.evidence">{{app.Localize('Price sensitivity')}}</dt><dd class="col-7" *ngIf="s.evidence">{{s.evidence}}</dd>
++						<dt class="col-5 text-muted fw-normal" *ngIf="s.gainPerDay">{{app.Localize('Profit per day')}}</dt>
++						<dd class="col-7" *ngIf="s.gainPerDay">+{{money(s.gainPerDay)}} expected, +{{money(s.gainConservativePerDay)}} if customers are more price-sensitive</dd>
++						<dt class="col-5 text-muted fw-normal" *ngIf="s.deadline">{{app.Localize('Time limit')}}</dt><dd class="col-7" *ngIf="s.deadline">{{s.deadline}}</dd>
++					</dl>
++
++					<div class="text-muted small text-uppercase fw-bold mb-1">{{app.Localize('Rule checks')}}</div>
++					<div *ngFor="let c of s.checks" class="small d-flex gap-2">
++						<span [class.text-success]="c.ok" [class.text-warning]="!c.ok"><i class="fa" [class.fa-check]="c.ok" [class.fa-triangle-exclamation]="!c.ok"></i></span>
++						<span>{{c.text}}</span>
++					</div>
++					<div class="small text-muted mt-2" *ngIf="s.confidence !== 'learned' && s.type === 'Price'">
++						No competitor price feed yet: check what rivals charge before approving a raise on a thin-margin staple.
++					</div>
++
++					<div *ngIf="s.type === 'Price' && s.canApprove" class="mt-3">
++						<label class="form-label small text-muted text-uppercase fw-bold mb-0">{{app.Localize('Approve at a different price')}}</label>
++						<input type="range" class="form-range" [min]="sliderMin(s)" [max]="sliderMax(s)" step="0.5" [ngModel]="editPrice == null ? s.to : editPrice" (ngModelChange)="editPrice = $event">
++						<div class="small text-muted">Between the margin price ({{sliderMin(s)}}) and the largest allowed step ({{sliderMax(s)}}).</div>
++					</div>
++
++					<div class="mt-3" *ngIf="s.canApprove">
++						<div class="d-flex flex-wrap gap-2">
++							<button type="button" class="btn btn-success" (click)="approve(s)" [disabled]="busy"><i class="fa fa-check me-1"></i>{{app.Localize('Approve')}} (a)</button>
++							<button type="button" class="btn btn-outline-danger" (click)="reject(s)" [disabled]="busy"><i class="fa fa-xmark me-1"></i>{{app.Localize('Reject')}} (r)</button>
++						</div>
++						<div class="input-group input-group-sm mt-2">
++							<input type="text" class="form-control" [(ngModel)]="rejectReason" placeholder="Reason for rejecting (optional)">
++						</div>
++					</div>
++					<div class="alert alert-secondary mt-3 mb-0" *ngIf="!s.canApprove">
++						Your role cannot decide changes in the {{s.lane}} lane. Ask someone with that permission.
++					</div>
++				</div>
++			</div>
++			<ng-template #pick>
++				<div class="card"><div class="card-body text-center text-muted py-5">{{app.Localize('Select a change to see the evidence.')}}</div></div>
++			</ng-template>
++
++			<div class="card mt-3" *ngIf="recent.length">
++				<div class="card-body">
++					<div class="text-muted small text-uppercase fw-bold mb-2">{{app.Localize('Approved in this session')}}</div>
++					<div *ngFor="let r of recent" class="d-flex justify-content-between align-items-center small mb-1">
++						<span>{{r.name}}</span>
++						<button type="button" class="btn btn-sm btn-outline-secondary" (click)="undo(r)" [disabled]="busy">{{app.Localize('Undo')}}</button>
++					</div>
++					<div class="text-muted small">Undo restores the previous price through the same rules and is logged.</div>
++				</div>
++			</div>
++		</div>
++	</div>
++</div>
+diff --git a/ClientApp/src/app/pricing/approvalcenter/approvalcenter.component.ts b/ClientApp/src/app/pricing/approvalcenter/approvalcenter.component.ts
+new file mode 100644
+index 0000000..5634a9b
+--- /dev/null
++++ b/ClientApp/src/app/pricing/approvalcenter/approvalcenter.component.ts
+@@ -0,0 +1,207 @@
++import { Component, HostListener, Inject, OnInit } from '@angular/core';
++import { HttpClient } from '@angular/common/http';
++import { AppService } from '../../services/app.service';
++
++// One inbox for every pricing change that needs a person: list-price changes and markdowns that are waiting.
++// The AI proposes, PesoWeb checks the rules, a person decides here, and every decision is logged on the server.
++@Component({
++  selector: 'app-approvalcenter',
++  templateUrl: './approvalcenter.component.html'
++})
++export class ApprovalCenterComponent implements OnInit {
++  public loading = false;
++  public busy = false;
++  public error = '';
++  public message = '';
++
++  public summary: any = { waiting: 0, oldestMinutes: 0, profitAtStakeConservativePerDay: 0, approvedToday: 0, autoApprovedToday: 0, expiredJustNow: 0 };
++  public items: any[] = [];
++  public tab = 'All';
++  public lane = '';
++  public selectedId = 0;
++  public editPrice: number | null = null;
++  public rejectReason = '';
++  public lanes = ['Store manager', 'Pricing manager', 'Owner'];
++  public recent: any[] = [];                 // approved in this session: each can be undone
++
++  public policy: any = null;
++  public showSettings = false;
++  public settingsSaved = false;
++
++  constructor(
++    private http: HttpClient,
++    @Inject('BASE_URL') private baseUrl: string,
++    public app: AppService
++  ) { }
++
++  ngOnInit(): void {
++    this.load();
++    this.loadPolicy();
++  }
++
++  // ---- data -----------------------------------------------------------------------------------------------------------
++  public load(): void {
++    this.loading = true;
++    this.error = '';
++    this.http.get<any>(this.baseUrl + 'api/pricing/approvals').subscribe({
++      next: (q) => {
++        this.summary = q.summary;
++        this.items = q.items || [];
++        if (!this.items.some(i => i.id === this.selectedId)) {
++          this.selectedId = this.visible.length ? this.visible[0].id : 0;
++        }
++        this.editPrice = null;
++        this.loading = false;
++      },
++      error: (e) => { this.error = this.messageOf(e, 'Could not load the approval queue.'); this.loading = false; }
++    });
++  }
++
++  private loadPolicy(): void {
++    this.http.get<any>(this.baseUrl + 'api/pricing/policy').subscribe({ next: (p) => (this.policy = p), error: () => { } });
++  }
++
++  // ---- what is shown --------------------------------------------------------------------------------------------------
++  public get visible(): any[] {
++    return this.items.filter(i => (this.tab === 'All' || i.type === this.tab) && (!this.lane || i.lane === this.lane));
++  }
++
++  public byLane(lane: string): any[] {
++    return this.visible.filter(i => i.lane === lane);
++  }
++
++  public count(type: string): number {
++    return this.items.filter(i => type === 'All' || i.type === type).length;
++  }
++
++  public get selected(): any {
++    return this.items.find(i => i.id === this.selectedId) || null;
++  }
++
++  public get lowRisk(): any[] {
++    return this.items.filter(i => i.lowRisk && i.canApprove);
++  }
++
++  public select(item: any): void {
++    this.selectedId = item.id;
++    this.editPrice = null;
++    this.rejectReason = '';
++    this.message = '';
++  }
++
++  public pctText(item: any): string {
++    return (item.pct > 0 ? '+' : '') + Number(item.pct).toFixed(0) + '%';
++  }
++
++  public money(n: number): string {
++    return '₱' + Number(n || 0).toLocaleString(undefined, { maximumFractionDigits: 1 });
++  }
++
++  // The slider range for approving at a different price: the margin price up to the largest allowed step.
++  public sliderMin(item: any): number {
++    const hard = this.policy ? Number(this.policy.hardMarginFloorPct || this.policy.HardMarginFloorPct || 0) : 5;
++    return Math.ceil(item.cost * (1 + hard / 100));
++  }
++
++  public sliderMax(item: any): number {
++    const inc = this.policy ? Number(this.policy.maxListPriceIncreasePct || this.policy.MaxListPriceIncreasePct || 15) : 15;
++    return Math.max(this.sliderMin(item), Math.round(item.from * (1 + inc / 100)));
++  }
++
++  public editedPct(item: any): number {
++    const p = this.editPrice == null ? item.to : this.editPrice;
++    return (p - item.from) / item.from * 100;
++  }
++
++  // ---- actions --------------------------------------------------------------------------------------------------------
++  public approve(item: any): void {
++    if (!item || this.busy || !item.canApprove) { return; }
++    const isMarkdown = item.type === 'Markdown';
++    const url = this.baseUrl + (isMarkdown ? 'api/pricing/approve' : 'api/pricing/approvelistprice');
++    const body: any = { priceChangeId: item.id };
++    if (!isMarkdown && this.editPrice != null && this.editPrice !== item.to) { body.newPrice = this.editPrice; }
++    this.busy = true;
++    this.http.post<any>(url, body).subscribe({
++      next: (r) => {
++        this.busy = false;
++        this.message = item.name + ' approved' + (r && r.appliedPrice ? ' at ' + r.appliedPrice : '') + '.';
++        if (!isMarkdown) { this.recent.unshift({ id: item.id, name: item.name }); }
++        this.load();
++      },
++      error: (e) => { this.busy = false; this.error = this.messageOf(e, 'Could not approve.'); this.load(); }
++    });
++  }
++
++  public reject(item: any, reason?: string): void {
++    if (!item || this.busy || !item.canApprove) { return; }
++    const isMarkdown = item.type === 'Markdown';
++    const url = this.baseUrl + (isMarkdown ? 'api/pricing/reject' : 'api/pricing/rejectlistprice');
++    this.busy = true;
++    this.http.post<any>(url, { priceChangeId: item.id, reason: reason || this.rejectReason || 'Rejected by approver' }).subscribe({
++      next: () => { this.busy = false; this.message = item.name + ' rejected.'; this.rejectReason = ''; this.load(); },
++      error: (e) => { this.busy = false; this.error = this.messageOf(e, 'Could not reject.'); this.load(); }
++    });
++  }
++
++  public approveAllLowRisk(): void {
++    const ids = this.lowRisk.map(i => i.id);
++    if (!ids.length || this.busy) { return; }
++    this.busy = true;
++    this.http.post<any>(this.baseUrl + 'api/pricing/approvebulk', { priceChangeIds: ids }).subscribe({
++      next: (r) => {
++        this.busy = false;
++        this.message = r.approved + ' low-risk change(s) approved.';
++        (r.results || []).filter((x: any) => x.decision === 0).forEach((x: any) => {
++          const it = this.items.find(i => i.id === x.priceChangeId);
++          if (it) { this.recent.unshift({ id: it.id, name: it.name }); }
++        });
++        this.load();
++      },
++      error: (e) => { this.busy = false; this.error = this.messageOf(e, 'Could not approve in bulk.'); }
++    });
++  }
++
++  public undo(entry: any): void {
++    if (this.busy) { return; }
++    this.busy = true;
++    this.http.post<any>(this.baseUrl + 'api/pricing/undolistprice', { priceChangeId: entry.id }).subscribe({
++      next: () => { this.busy = false; this.message = entry.name + ' restored to its previous price.'; this.recent = this.recent.filter(r => r.id !== entry.id); this.load(); },
++      error: (e) => { this.busy = false; this.error = this.messageOf(e, 'Could not undo.'); }
++    });
++  }
++
++  // ---- settings (owner) -----------------------------------------------------------------------------------------------
++  public saveSettings(): void {
++    if (!this.policy) { return; }
++    const p = this.policy;
++    const body = {
++      autonomyMode: p.autonomyMode || p.AutonomyMode, hardMarginFloorPct: p.hardMarginFloorPct ?? p.HardMarginFloorPct,
++      softMarginFloorPct: p.softMarginFloorPct ?? p.SoftMarginFloorPct, maxDiscountPct: p.maxDiscountPct ?? p.MaxDiscountPct,
++      maxChangesPerSkuPerHour: p.maxChangesPerSkuPerHour ?? p.MaxChangesPerSkuPerHour,
++      listPriceAutoApprove: p.listPriceAutoApprove ?? p.ListPriceAutoApprove, autoApproveMaxPct: p.autoApproveMaxPct ?? p.AutoApproveMaxPct,
++      maxListPriceIncreasePct: p.maxListPriceIncreasePct ?? p.MaxListPriceIncreasePct, storeLaneMaxPct: p.storeLaneMaxPct ?? p.StoreLaneMaxPct,
++      ownerLaneMinPct: p.ownerLaneMinPct ?? p.OwnerLaneMinPct, proposalExpiryHours: p.proposalExpiryHours ?? p.ProposalExpiryHours
++    };
++    this.http.put<any>(this.baseUrl + 'api/pricing/policy', body).subscribe({
++      next: () => { this.settingsSaved = true; this.error = ''; this.loadPolicy(); this.load(); },
++      error: (e) => { this.error = this.messageOf(e, 'Could not save the settings.'); }
++    });
++  }
++
++  // ---- keyboard: j / k move, a approve, r reject ----------------------------------------------------------------------
++  @HostListener('document:keydown', ['$event'])
++  public onKey(e: KeyboardEvent): void {
++    const t = e.target as HTMLElement;
++    if (t && /INPUT|SELECT|TEXTAREA/.test(t.tagName)) { return; }
++    const list = this.visible;
++    const idx = list.findIndex(i => i.id === this.selectedId);
++    if (e.key === 'j' && list.length) { this.select(list[Math.min(list.length - 1, idx + 1)]); }
++    if (e.key === 'k' && list.length) { this.select(list[Math.max(0, idx - 1)]); }
++    if (e.key === 'a' && this.selected) { this.approve(this.selected); }
++    if (e.key === 'r' && this.selected) { this.reject(this.selected, 'Rejected from the keyboard'); }
++  }
++
++  private messageOf(e: any, fallback: string): string {
++    return (e && e.error && (e.error.message || e.error.title)) || fallback;
++  }
++}
+-- 
+2.46.0.windows.1
+

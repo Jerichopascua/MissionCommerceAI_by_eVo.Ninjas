@@ -10,6 +10,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
+from simpeso import approver               # noqa: E402
 from simpeso.driver import PesoWebDriver   # noqa: E402
 from simpeso.verticals import ProductSpec  # noqa: E402
 
@@ -89,6 +90,17 @@ def main() -> int:
     st, o = drv._call("PUT", "/api/Pricing/Policy", a.token, json_body={"AutonomyMode": "Autonomous", "HardMarginFloorPct": 5, "SoftMarginFloorPct": 10, "MaxDiscountPct": 50,
                                                                          "MaxChangesPerSkuPerHour": 10, "StoreLaneMaxPct": 9, "OwnerLaneMinPct": 4}, raw=True)
     check(st == 400, "an owner lane threshold below the store lane size is rejected")
+
+    print("8. The simulated approver works the same inbox through the normal endpoints")
+    drv._call("PUT", "/api/Pricing/Policy", a.token, json_body={"AutonomyMode": "Autonomous", "HardMarginFloorPct": 5, "SoftMarginFloorPct": 10, "MaxDiscountPct": 50,
+                                                                 "MaxChangesPerSkuPerHour": 10, "ListPriceAutoApprove": False})
+    st, o = drv._call("POST", "/api/Pricing/ListPrice", a.token, json_body=body(pids[1], 104, "learned"), raw=True)
+    waiting = drv._call("GET", "/api/Pricing/Approvals", a.token)["summary"]["waiting"]
+    out = approver.work_queue(drv, a, seed=11, style=approver.ApproverStyle(approve_rate_learned=1.0, approve_rate_assumed=1.0))
+    left = drv._call("GET", "/api/Pricing/Approvals", a.token)["summary"]["waiting"]
+    print("   ", [(d["id"], d["action"], d["status"], d["code"]) for d in out["decisions"]])
+    print(f"   waiting {waiting} -> decided {out['approved'] + out['edited'] + out['rejected']} -> left {left}")
+    check(waiting >= 1 and left == 0 and out["failed"] == 0 and out["stale"] == 1, "the queue is emptied; the old proposal for a product whose price moved is closed as stale")
 
     print(f"\nResult: {sum(checks)} of {len(checks)} checks passed.")
     return 0 if all(checks) else 1

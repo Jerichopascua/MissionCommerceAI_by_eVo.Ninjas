@@ -1,6 +1,6 @@
 # Approval Center: design
 
-Status: proposal with a clickable mock (`ui/prototype/approvals.html`, mock data only). Not built in PesoWeb yet. The back end it needs partly exists: guarded list-price proposals, approve and reject, and the ledger (see `price-advisor-and-price-test.md`, section 5).
+Status: built. PesoWeb back end and Angular screen are in `pesoweb-additions/patches/plan8`; the simulated approver is `sim/simpeso/approver.py`. The mock (`ui/prototype/approvals.html`) stays as the design reference. Not yet clicked through in a real browser; checked by tests, 17 live API checks and a template compile.
 
 ## 1. The idea
 
