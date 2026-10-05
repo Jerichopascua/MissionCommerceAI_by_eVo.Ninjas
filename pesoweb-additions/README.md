@@ -62,6 +62,10 @@ Also verified live as the root `SuperAdmin` (user 1) on the restored database: `
 - `GET /api/ai/movements?warehouseId=&type=SALE_OUT&afterId=&take=` inventory ledger rows (what moved, when, from which batch).
 - `GET /api/ai/batches?warehouseId=` every batch with stock on hand (the expiry feed lists only the alert window).
 
+## Plan 7 addition (guarded list-price changes)
+
+`patches/plan7` (tag `plan7-complete`): `POST /api/Pricing/ListPrice`, `ApproveListPrice`, `RejectListPrice` and `GET ListPriceChanges` with `ListPriceGuardrails` and `ListPriceService`; no new tables and no migration (the price ledger row with no batch is a list-price change). A list-price change always needs a human approval. Existing `MarkdownService` approval now ignores rows without a batch.
+
 ## Live verification environment (no admin rights needed)
 
 PesoWeb databases come from a backup plus SQL scripts, not from running every EF migration (an old migration has a foreign-key cycle, and the history is incomplete). To get a throwaway database on SQL Server LocalDB:

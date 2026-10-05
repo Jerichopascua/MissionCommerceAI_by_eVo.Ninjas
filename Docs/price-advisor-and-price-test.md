@@ -31,4 +31,20 @@ The first run fed 24 noisy product observations into the model as if each were a
 - The "true response" is the simulator's own hidden shopper behavior. The test shows it can recover an effect of that kind; it says nothing about real customers.
 - A real price test costs money while it runs (customers lost on raised days); this was not measured here.
 - Evidence is for the pooled grocery category, from 48 products; it does not give per-product sensitivities. Perishables keep their own learned slopes from the promo days.
-- There is still no competitor price feed, and raises are only suggested. Applying a list-price change with a guarded, logged approval step in PesoWeb has not been built.
+- There is still no competitor price feed, and raises are only suggested. 
+
+## 5. Approve and apply (built, PesoWeb change)
+
+PesoWeb now has a guarded approval step for **list-price changes** (company-wide), separate from per-batch markdowns:
+
+| Endpoint | Who | What |
+|---|---|---|
+| `POST /api/Pricing/ListPrice` | the AI or a person (permission `Pricing.Markdown`) | propose a new list price; rules are checked; a safe proposal waits for approval (202), an unsafe one is refused and recorded (422) |
+| `POST /api/Pricing/ApproveListPrice` | a person (`Pricing.Approve`) | re-checks the rules against today's cost and price, then applies the price, writes the ledger row and publishes a `PriceChanged` event |
+| `POST /api/Pricing/RejectListPrice` | a person (`Pricing.Approve`) | closes it; nothing changes |
+| `GET /api/Pricing/ListPriceChanges` | `Pricing.View` | the ledger of list-price changes |
+
+Rules (`Services/ListPriceGuardrails.cs`): a list-price change **always needs a human approval**, whatever the autonomy mode; never below cost + the hard floor (on the net price after the product discount); a decrease no deeper than the maximum discount; an increase of at most 15% in one step; no more than the policy's changes per product per hour; refused while the product has an active markdown; refused if the list price moved or the cost changed since the proposal; autonomy Off or no policy refuses everything. Hard limits cannot be waived by approving. The 15% increase cap is a constant in code, not yet a policy setting.
+
+Live check against the real-catalog world (`sim/scripts/apply_price_advice.py`): the AI proposed 6 changes (all wait, no price moves), a +40% jump and a below-cost price were refused with reasons, the owner approved 3 (prices changed in PesoWeb and a real sale was charged the new price), rejected 1 and left 2 pending, and the ledger held every attempt: **22 of 22 checks passed**. Afterwards the three prices were restored through the same approval step and the pending ones closed (0 products differ from the real catalog). PesoWeb unit tests: 144 pass (25 new).
+

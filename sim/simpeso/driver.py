@@ -317,3 +317,22 @@ class PesoWebDriver:
     def approve_count(self, acct: Account, count_id: int) -> dict:
         return self._call("POST", "/api/StockCounts/Approve", acct.token, json_body={"stockCountId": count_id})
 
+    # ---- list price changes (guarded, approved by a human) -----------------------------------------------
+    def propose_list_price(self, acct: Account, warehouse_id: int, product_id: int, new_price: float, reason: str = "",
+                           prediction_ref: str = None, source: str = "Ai"):
+        """Returns (http status, outcome). 202 waits for approval, 422 is refused by a rule."""
+        body = {"WarehouseId": warehouse_id, "ProductId": product_id, "NewPrice": new_price, "Reason": reason[:300], "Source": source}
+        if prediction_ref:
+            body["PredictionRef"] = prediction_ref
+        return self._call("POST", "/api/Pricing/ListPrice", acct.token, json_body=body, raw=True)
+
+    def approve_list_price(self, acct: Account, price_change_id: int):
+        return self._call("POST", "/api/Pricing/ApproveListPrice", acct.token, json_body={"PriceChangeId": price_change_id}, raw=True)
+
+    def reject_list_price(self, acct: Account, price_change_id: int, reason: str = ""):
+        return self._call("POST", "/api/Pricing/RejectListPrice", acct.token, json_body={"PriceChangeId": price_change_id, "Reason": reason}, raw=True)
+
+    def list_price_changes(self, acct: Account, status: str = None, product_id: int = None) -> list:
+        parts = [x for x in (f"status={status}" if status else "", f"productId={product_id}" if product_id else "") if x]
+        return self._call("GET", "/api/Pricing/ListPriceChanges" + ("?" + "&".join(parts) if parts else ""), acct.token) or []
+
