@@ -4,7 +4,7 @@ through the real PesoWeb API. Plan 5 can replace the rule-based business plan wi
 schema, because every number is validated against the tier limits here."""
 from dataclasses import dataclass, field, asdict
 
-from . import archetypes, rng, verticals as vt
+from . import archetypes, perishables as perishables_mod, rng, verticals as vt
 
 # SubscriptionTierLimits seed for Business (Subscription = 3); verified in pesoweb-additions/README.md.
 BUSINESS_TIER = {"subscription": 3, "branches": 5, "users": 10, "products": 50000, "sales_per_day": 50000}
@@ -107,9 +107,10 @@ def _password(rnd) -> str:
     return "Sim!" + "".join(rnd.choice("abcdefghjkmnpqrstuvwxyz23456789") for _ in range(8))
 
 
-def real_specs(items: list, size: int = None, seed: int = 0) -> list:
-    """A real product list (name, cost, price, barcode, popularity) as ProductSpecs. All real products are non-expiry here:
-    the source data has no expiry information. A smaller size keeps the best sellers and a seeded sample of the rest."""
+def real_specs(items: list, size: int = None, seed: int = 0, perishables: bool = False) -> list:
+    """A real product list (name, cost, price, barcode, popularity) as ProductSpecs. The source data has no expiry information, so
+    products are non-expiry unless perishables=True, which marks those matching the explicit name rules in perishables.py.
+    A smaller size keeps the best sellers and a seeded sample of the rest."""
     items = list(items)
     if size and size < len(items):
         ranked = sorted(items, key=lambda i: -i.get('sold_units', 0))
@@ -119,13 +120,23 @@ def real_specs(items: list, size: int = None, seed: int = 0) -> list:
         items = keep + rest[:size - len(keep)]
     def num(x):
         return int(x) if float(x).is_integer() else round(float(x), 2)
-    return [vt.ProductSpec(i['code'], i['name'], 'Grocery', num(i['cost']), num(i['price']), False, (), 0, float(i.get('popularity', 1.0))) for i in items]
+    specs = []
+    for i in items:
+        rule = perishables_mod.classify(i['name']) if perishables else None
+        pop = float(i.get('popularity', 1.0))
+        if rule:
+            specs.append(vt.ProductSpec(i['code'], i['name'], rule.category, num(i['cost']), num(i['price']), True, rule.shelf_life_days,
+                                        perishables_mod.alert_days(rule.shelf_life_days), max(pop, rule.popularity_floor)))
+        else:
+            specs.append(vt.ProductSpec(i['code'], i['name'], 'Grocery', num(i['cost']), num(i['price']), False, (), 0, pop))
+    return specs
 
 
-def plan_group(seed: int, profile: str = "starter", catalog: list = None, catalog_size: int = None) -> WorldPlan:
+def plan_group(seed: int, profile: str = "starter", catalog: list = None, catalog_size: int = None, perishables: bool = False) -> WorldPlan:
     """catalog: optional real product list (see real_specs); when given, EVERY company and branch sells it."""
     settings = dict(PROFILES[profile])
     settings['catalog_source'] = 'real' if catalog else 'generated'
+    settings['real_perishables'] = bool(catalog and perishables)
     verts = vt.load_all()
     owner_lib = {o.id: o for o in archetypes.owner_archetypes()}
     companies, decisions, expansions = [], [], []
@@ -167,7 +178,7 @@ def plan_group(seed: int, profile: str = "starter", catalog: list = None, catalo
             expansions.append({"company": c.key, "branch": nb.key, "day": 0, "hour": nb.opens_hour})
         _staff_and_catalog(c, verts[c.vertical], seed, settings, oa, decisions)
         if catalog:
-            c.catalog = real_specs(catalog, catalog_size, seed)
+            c.catalog = real_specs(catalog, catalog_size, seed, perishables)
         c.suppliers = [SupplierPlan(f"{c.name} Supplier {n + 1}", rng.derive(seed, "supplier", c.key, n).randint(1, 4))
                        for n in range(2)]
     return WorldPlan(seed, profile, "Evo Retail Holdings", companies, expansions, decisions, settings)

@@ -362,11 +362,13 @@ def _load(args) -> Context:
         if args.policy != "off":
             state["policy"] = {"mode": {"autonomous": "Autonomous", "approval": "Approval"}[args.policy], "hard": args.hard_floor, "soft": args.soft_floor,
                                "max_discount": args.max_discount, "max_changes": 6}
-    cat = state.get("catalog") or ({"path": args.catalog, "size": args.catalog_size} if getattr(args, "catalog", None) else None)
+    cat = state.get("catalog") or ({"path": args.catalog, "size": args.catalog_size, "perishables": bool(getattr(args, "perishables", False))}
+                                   if getattr(args, "catalog", None) else None)
     if cat and not state.get("catalog"):
         state["catalog"] = cat
     items = json.loads(Path(cat["path"]).read_text(encoding="utf-8"))["items"] if cat else None
-    plan = world.plan_group(state["seed"], state["profile"], catalog=items, catalog_size=cat["size"] if cat else None)
+    plan = world.plan_group(state["seed"], state["profile"], catalog=items, catalog_size=cat["size"] if cat else None,
+                            perishables=bool(cat and cat.get("perishables")))
     drv = PesoWebDriver(args.base_url, args.run)
     root = None
     if os.environ.get("PESOWEB_ROOT_PASSWORD"):
@@ -394,6 +396,7 @@ def main(argv=None) -> int:
     ap.add_argument("--max-discount", type=float, default=50)
     ap.add_argument("--catalog", default=None, help="path to a real catalog json (sim/runs/real_catalog.json): every company and branch sells it")
     ap.add_argument("--catalog-size", type=int, default=None, help="use only the N best sellers plus a seeded sample (default: all)")
+    ap.add_argument("--perishables", action="store_true", help="with --catalog real: mark products matching the explicit perishable name rules (simpeso/perishables.py) as expiry-tracked")
     ap.add_argument("--calibration", default=None, help="path to real-calibration.json: use the real hour profile and basket size")
     ap.add_argument("--calib-weight", type=float, default=0.5, help="weight on the real hour profile (the sample is small)")
     ap.add_argument("--policy", choices=["off", "autonomous", "approval"], default="off", help="pricing autonomy set at build")

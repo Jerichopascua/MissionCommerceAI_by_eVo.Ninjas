@@ -399,8 +399,10 @@ def main(argv=None) -> int:
     ap.add_argument("--agent", choices=["on", "off"], default="on")
     ap.add_argument("--k", type=int, default=4, help="stock-count budget per branch")
     ap.add_argument("--endpoint", default=os.environ.get("VLLM_URL"))
+    ap.add_argument("--calibration", default=None, help="real-calibration.json, same as the runner flag")
+    ap.add_argument("--calib-weight", type=float, default=0.5)
     args = ap.parse_args(argv)
-    ns = argparse.Namespace(run=args.run, base_url=args.base_url, seed=21, profile="smoke", policy="off")
+    ns = argparse.Namespace(run=args.run, base_url=args.base_url, seed=21, profile="smoke", policy="off", calibration=args.calibration, calib_weight=args.calib_weight)
     ctx = runner._load(ns)
     hooks = AiHooks(ctx, agent_on=args.agent == "on", endpoint=args.endpoint)
     if args.command == "history":
