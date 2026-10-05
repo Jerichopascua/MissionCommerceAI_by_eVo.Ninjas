@@ -2,6 +2,8 @@
 
 The demo is one PesoWeb feature (stock with expiry dates, sold first-expiry-first-out, plus **markdown pricing with guardrails**) and one very simple AI agent task: *"this milk expires tomorrow and there is too much of it, so what should we do?"* It needs only the local PesoWeb server. No GPU, no LLM, no simulator.
 
+Not clear what the data mean, how the AI thinks, or where it learns? Read `concept-demo-explained.md` (sample data before and after each feature, the AI's decision table, and an honest answer on learning).
+
 Files: `demo/concept_demo.py`, `demo/README.md`. Last recorded run: 9 of 9 checks passed.
 
 ---
