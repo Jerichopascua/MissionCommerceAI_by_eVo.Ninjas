@@ -81,6 +81,10 @@ Not settings but worth knowing: shoppers' true price response is the simulator's
 
 The AI Control screen in PesoWeb (`/ai/control`) lists the six AI products with a switch each, their build state, and a Run now button for the ones that can run. With AI Pricing off, PesoWeb refuses what the AI proposes, so it cannot change a price even if the agent keeps running. This is separate from "Pricing autonomy" (Off, Approval, Autonomous) in the Approval Center settings, which says what happens to proposals that are accepted. A company with no saved switch has every feature on. The agent is a separate program (`python -m simpeso.agent_service`); Run now only works while it is running.
 
+## 2c. PesoProfit run on the real catalog (2026-10-06)
+
+The full flow (AI Pricing run, Approval Center, simulated approver, markdown agent) ran on the real catalog, one day and then ten more days against a no-AI twin. On the real thin margins the AI was behind the no-AI world on all 10 days (net about -0.5k to -1.3k pesos a day, revenue down). Details, reasons and next steps: `Docs/showcase-results.md`. The generated-shop proof (-58% waste) is a separate result.
+
 ## 3. The PesoProfit one-pager against what is built
 
 | One-pager says | Built today? | Evidence or gap |
