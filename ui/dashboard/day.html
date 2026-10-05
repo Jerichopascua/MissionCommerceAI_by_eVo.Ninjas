@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sim.PesoWeb Day Report</title>
+<style>
+:root{--bg:#f4f6fb;--card:#fff;--ink:#0f1b2d;--mut:#66758c;--line:#e3e8f1;--pri:#1861ac;--soft:#e8f1fb;--ok:#1f9d55;--okbg:#e5f6ec;--bad:#d6334a;--badbg:#fdebee;--warn:#b7791f;--warnbg:#fff4de;color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#04100b;--card:#082016;--ink:#eafff3;--mut:#8fc3a8;--line:#1d4a34;--pri:#2fdc82;--soft:#0c2f20;--ok:#3dff8f;--okbg:#0c3a25;--bad:#ff6b81;--badbg:#3a1119;--warn:#f0b24a;--warnbg:#3a2a0c;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#04100b;--card:#082016;--ink:#eafff3;--mut:#8fc3a8;--line:#1d4a34;--pri:#2fdc82;--soft:#0c2f20;--ok:#3dff8f;--okbg:#0c3a25;--bad:#ff6b81;--badbg:#3a1119;--warn:#f0b24a;--warnbg:#3a2a0c;color-scheme:dark}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font:14px/1.45 "Segoe UI",Inter,system-ui,Arial,sans-serif;padding:20px 18px 40px}
+.wrap{max-width:1250px;margin:0 auto}
+header{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-bottom:16px}
+header h1{font-size:22px;font-weight:800}.sub{color:var(--mut);font-size:13px}.sp{flex:1}
+a.btn,button,select{border:1px solid var(--line);background:var(--card);color:var(--ink);padding:7px 12px;border-radius:10px;font-weight:600;cursor:pointer;font-size:13px;text-decoration:none}
+.grid{display:grid;gap:14px}.g5{grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}.g2{grid-template-columns:repeat(auto-fit,minmax(380px,1fr))}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-top:14px}
+.grid .card{margin-top:0}
+.card h2{font-size:14px;font-weight:700;margin-bottom:4px}.note{color:var(--mut);font-size:12px;margin-bottom:10px}
+.kpi .l{color:var(--mut);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}.kpi .v{font-size:24px;font-weight:800;font-variant-numeric:tabular-nums;margin-top:2px}
+table{width:100%;border-collapse:collapse}th{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--mut);text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}
+td{padding:7px 8px;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums;vertical-align:top}td.n,th.n{text-align:right}
+tr.co td{background:var(--soft);font-weight:700}
+.scroll{overflow-x:auto}
+.pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11.5px;font-weight:700;margin:1px 2px 1px 0}
+.pill.caught,.pill.applied{background:var(--okbg);color:var(--ok)}.pill.ai_found{background:var(--soft);color:var(--pri)}.pill.undetected,.pill.refused{background:var(--badbg);color:var(--bad)}.pill.new{background:var(--warnbg);color:var(--warn)}.pill.type{background:var(--soft);color:var(--mut);font-weight:600}
+.bad{color:var(--bad)}.good{color:var(--ok)}.empty{color:var(--mut);padding:18px;text-align:center}
+.tl{list-style:none}.tl li{display:flex;gap:12px;padding:6px 0;border-bottom:1px solid var(--line)}.tl b{min-width:48px;font-variant-numeric:tabular-nums}
+.expl{font-size:12.5px;color:var(--mut)}code{background:var(--soft);padding:1px 6px;border-radius:6px;font-size:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div><h1>Day report</h1><div class="sub">Group, company and branch: what happened in a simulated run, from PesoWeb's own numbers.</div></div>
+  <div class="sp"></div>
+  <select id="run" aria-label="Run"></select>
+  <a class="btn" href="index.html">Results dashboard</a>
+  <button id="theme" type="button">Theme</button>
+</header>
+<div id="app"><div class="empty">Loading...</div></div>
+</div>
+<script>
+(function(){
+  var RUNS=["fin3","live7"];
+  var root=document.documentElement;
+  try{var t=localStorage.getItem("theme");if(t)root.setAttribute("data-theme",t)}catch(e){}
+  document.getElementById("theme").onclick=function(){var dark=(root.getAttribute("data-theme")||(matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light"))==="dark";var n=dark?"light":"dark";root.setAttribute("data-theme",n);try{localStorage.setItem("theme",n)}catch(e){}};
+  var BASE=(location.pathname.replace(/\/ui\/dashboard\/.*$/,"/")||"/")+"results/";
+  var sel=document.getElementById("run"),app=document.getElementById("app");
+  var q=(location.search.match(/run=([\w-]+)/)||[])[1]||RUNS[0];
+  sel.innerHTML=RUNS.map(function(r){return "<option value=\""+r+"\""+(r===q?" selected":"")+">"+r+(r==="fin3"?" (12 branches)":" (17 branches)")+"</option>"}).join("");
+  sel.onchange=function(){location.search="?run="+sel.value};
+  function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]})}
+  function fmt(n,d){return n==null?"-":Number(n).toLocaleString(undefined,{maximumFractionDigits:d==null?0:d})}
+  function peso(n){return "₱"+fmt(n)}
+  function clock(h){var m=Math.round((h-Math.floor(h))*60);return String(Math.floor(h)).padStart(2,"0")+":"+String(m).padStart(2,"0")}
+  function kpi(l,v,cls){return "<div class=\"card kpi\"><div class=\"l\">"+esc(l)+"</div><div class=\"v "+(cls||"")+"\">"+v+"</div></div>"}
+  function typeChips(o){var k=Object.keys(o||{});return k.length?k.map(function(x){return "<span class=\"pill type\">"+esc(x.replace(/_/g," ").toLowerCase())+" "+o[x]+"</span>"}).join(""):"<span class=\"expl\">none</span>"}
+  function aiChips(o){var k=Object.keys(o||{});return k.length?k.map(function(x){return "<span class=\"pill "+esc(x)+"\">"+esc(x)+" "+o[x]+"</span>"}).join(""):"<span class=\"expl\">-</span>"}
+  function render(d){
+    var t=d.totals,sc=d.scorecard;
+    var h="<div class=\"grid g5\">"+kpi("Branches",fmt(t.branches))+kpi("Sales today",peso(t.salesToday))+kpi("Transactions",fmt(t.transactionsToday))
+      +kpi("Cash variance",peso(t.cashVarianceToday),t.cashVarianceToday<0?"bad":"")+kpi("Expiry money at risk",peso(t.expiryAtRiskPesos))
+      +kpi("Active markdowns",fmt(t.activeMarkdowns))+kpi("Open exceptions",fmt(t.openExceptions))
+      +(sc?kpi("Incident coverage",fmt(sc.coverage*100,0)+"%","good"):"")+"</div>";
+    h+="<div class=\"card\"><h2>By company and branch</h2><div class=\"note\">"+esc(d.note)+" Run "+esc(d.run)+", seed "+d.seed+", profile "+esc(d.profile)+".</div><div class=\"scroll\"><table><thead><tr><th>Company / branch</th><th class=\"n\">Sales</th><th class=\"n\">Txns</th><th class=\"n\">Cash variance</th><th class=\"n\">Expiry at risk</th><th class=\"n\">Markdowns on</th><th>AI markdowns</th><th class=\"n\">Open exceptions</th><th>Exceptions by type</th></tr></thead><tbody>";
+    d.companies.forEach(function(c){
+      var x=c.totals;
+      h+="<tr class=\"co\"><td>"+esc(c.name)+" <span class=\"expl\">("+esc(c.vertical.replace(/_/g," "))+", tenant "+c.tenant_id+")</span></td><td class=\"n\">"+peso(x.salesToday)+"</td><td class=\"n\">"+fmt(x.transactionsToday)+"</td><td class=\"n\">"+peso(x.cashVarianceToday)+"</td><td class=\"n\">"+peso(x.expiryAtRiskPesos)+"</td><td class=\"n\">"+fmt(x.activeMarkdowns)+"</td><td></td><td class=\"n\">"+fmt(x.openExceptions)+"</td><td></td></tr>";
+      c.branches.forEach(function(b){
+        h+="<tr><td>&nbsp;&nbsp;"+esc(b.key)+(b.opened_midrun?" <span class=\"pill new\">opened "+esc(b.opened_midrun)+"</span>":"")+"</td><td class=\"n\">"+peso(b.salesToday)+"</td><td class=\"n\">"+fmt(b.transactionsToday)+"</td><td class=\"n "+(b.cashVarianceToday<0?"bad":"")+"\">"+peso(b.cashVarianceToday)+"</td><td class=\"n\">"+peso(b.expiryAtRiskPesos)+"</td><td class=\"n\">"+fmt(b.activeMarkdowns)+"</td><td>"+aiChips(b.ai_markdowns)+"</td><td class=\"n\">"+fmt(b.openExceptions)+"</td><td>"+typeChips(b.exceptions_by_type)+"</td></tr>";
+      });
+    });
+    h+="</tbody></table></div></div>";
+    h+="<div class=\"grid g2\" style=\"margin-top:14px\">";
+    h+="<div class=\"card\"><h2>Timeline of the simulated run</h2><div class=\"note\">Times are the simulated business clock.</div><ul class=\"tl\">"+d.timeline.map(function(e){return "<li><b>"+clock(e.hour)+"</b><span>"+esc(e.text)+"</span></li>"}).join("")+"</ul></div>";
+    h+="<div class=\"card\"><h2>What went wrong, and who noticed</h2><div class=\"note\">Every incident was injected on purpose, so each has a known answer. PesoWeb alone raises cash and expiry exceptions; the AI finds the rest by counting stock.</div><table><thead><tr><th>Incident</th><th>Branch</th><th>Outcome</th></tr></thead><tbody>"
+      +d.incidents.map(function(i){return "<tr><td>"+esc(i.type.replace(/_/g," ").toLowerCase())+"</td><td>"+esc(i.branch)+"</td><td><span class=\"pill "+esc(i.status)+"\">"+esc(i.status.replace("_"," "))+"</span></td></tr>"}).join("")+"</tbody></table></div></div>";
+    var a=d.ai_actions;
+    h+="<div class=\"card\"><h2>What the AI did with prices</h2><div class=\"note\">"+fmt(a.total)+" markdown requests: <b>"+fmt(a.applied)+" applied</b>, "+fmt(a.refused)+" refused by PesoWeb guardrails. Examples:</div><table><tbody>"
+      +a.examples.map(function(e){return "<tr><td><span class=\"pill "+esc(e.status)+"\">"+esc(e.status)+"</span></td><td class=\"n\">"+fmt(e.discount_pct)+"%</td><td class=\"expl\">"+esc(e.explanation)+"</td></tr>"}).join("")+"</tbody></table></div>";
+    app.innerHTML=h;
+  }
+  fetch(BASE+"day-report-"+q+".json").then(function(r){if(!r.ok)throw new Error("missing");return r.json()}).then(render).catch(function(){app.innerHTML="<div class=\"card empty\">No day report for run "+esc(q)+" yet. Run <code>python scripts/day_report.py --run "+esc(q)+"</code> in the sim folder.</div>"});
+})();
+</script>
+</body>
+</html>
