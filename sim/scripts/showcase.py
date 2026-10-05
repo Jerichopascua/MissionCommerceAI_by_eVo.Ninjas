@@ -20,7 +20,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-from simpeso import agent_service, ai_hook, approver, price_run, proof, runner   # noqa: E402
+from simpeso import agent_service, ai_hook, approver, equalize, price_run, proof, runner   # noqa: E402
 
 
 def load_ctx(run: str, base_url: str):
@@ -130,7 +130,11 @@ def main(argv=None) -> int:
             hooks_ai.price_over[key] = r
     print(f"   {len(changes)} list prices changed in PesoWeb; {sum(1 for c in changes if c['perishable'])} are perishables")
 
-    print("3. Trial day: short-dated lots and the day's shoppers")
+    print("3. Trial day: short-dated lots and the day's shoppers (stock and lot sizes equalised in both worlds first)")
+    equalize.align_rates(hooks_base, hooks_ai)
+    for c, h in ((ctx_ai, hooks_ai), (ctx_base, hooks_base)):
+        equalize.clear_leftover_lots(c, h)
+        equalize.top_up_stock(c, h, tag=f"top{args.day}")
     hooks_ai.agent_on = True
     stats_ai = hooks_ai.run_trial(args.day)
     hooks_base.agent_on = False
@@ -144,7 +148,7 @@ def main(argv=None) -> int:
 
     pct = lambda a, b: (a - b) / b * 100 if b else 0.0
     L = [f"# PesoProfit showcase: {args.ai_run} (AI) against {args.base_run} (no AI), trial day {args.day}", "",
-         f"Margin floors {args.hard:g}% hard / {args.soft:g}% soft. Real catalog, 5 companies x 2 branches. Same shoppers and same short-dated lots in both worlds.", "",
+         f"Margin floors {args.hard:g}% hard / {args.soft:g}% soft. Real catalog, 5 companies x 2 branches. Same shoppers, same shelf stock and same short-dated lots in both worlds (checked by an A/A run with no AI: zero difference).", "",
          f"**AI Pricing flow:** {flow['waiting']} proposals reached the Approval Center ({flow['margin_fixes']} margin fixes, the rest profit-based); the simulated approver approved {flow['approved']}, approved half the step on {flow['edited']}, rejected {flow['rejected']} ({flow['stale']} went stale, {flow['failed']} failed). "
          f"{len(changes)} list prices changed in PesoWeb, {sum(1 for c in changes if c['perishable'])} of them perishables.", "",
          "| | No AI | With AI | Difference |", "|---|---|---|---|"]

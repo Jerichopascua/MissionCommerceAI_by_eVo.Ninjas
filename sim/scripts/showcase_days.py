@@ -19,7 +19,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from showcase import load_ctx, price_snapshot                      # noqa: E402
-from simpeso import ai_hook, proof, runner                          # noqa: E402
+from simpeso import ai_hook, equalize, proof, runner                # noqa: E402
 
 KEYS = ("revenue", "margin", "waste_pesos", "net", "units")
 
@@ -76,8 +76,12 @@ def main(argv=None) -> int:
     print(f"AI world holds {changed} changed list prices; base world is at the original prices")
 
     base_rows, on_rows, off_rows, log = [], [], [], []
+    equalize.align_rates(hooks_base, hooks_ai)
     for day in days_on + days_off:
         agent_on = day in days_on
+        for c, h in ((ctx_ai, hooks_ai), (ctx_base, hooks_base)):
+            equalize.clear_leftover_lots(c, h)
+            equalize.top_up_stock(c, h, tag=f"top{day}")
         hooks_base.agent_on = False
         mb = proof.metrics_from(hooks_base.run_trial(day))
         hooks_ai.agent_on = agent_on
