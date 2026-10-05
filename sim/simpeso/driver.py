@@ -266,9 +266,13 @@ class PesoWebDriver:
     def pricing_policy(self, acct: Account) -> dict:
         return self._call("GET", "/api/Pricing/Policy", acct.token)
 
-    def set_pricing_policy(self, acct: Account, mode: str, hard_floor: float, soft_floor: float, max_discount: float, max_changes_per_hour: int) -> dict:
+    def set_pricing_policy(self, acct: Account, mode: str, hard_floor: float, soft_floor: float, max_discount: float, max_changes_per_hour: int,
+                           list_price_auto_approve: bool = None, **approval_settings) -> dict:
         body = {"AutonomyMode": mode, "HardMarginFloorPct": hard_floor, "SoftMarginFloorPct": soft_floor,
                 "MaxDiscountPct": max_discount, "MaxChangesPerSkuPerHour": max_changes_per_hour}
+        if list_price_auto_approve is not None:
+            body["ListPriceAutoApprove"] = list_price_auto_approve
+        body.update(approval_settings)               # e.g. StoreLaneMaxPct, OwnerLaneMinPct, ProposalExpiryHours
         return self._call("PUT", "/api/Pricing/Policy", acct.token, json_body=body)
 
     def markdown(self, acct: Account, warehouse_id: int, product_id: int, batch_id: int, new_price: float,
