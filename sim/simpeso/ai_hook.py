@@ -64,6 +64,7 @@ class AiHooks:
         self.cursor = {}                # warehouse -> last ledger movement id read
         self.hour_units = {}
         self.promo_today = {}
+        self.price_over = {}            # (company, product code) -> new list price / reference price
         self.day = 0
         self._catalog = {}
         for comp in ctx.plan.companies:
@@ -106,7 +107,8 @@ class AiHooks:
 
     # ---- hooks the runner calls ----------------------------------------------------------------------------
     def ratio(self, bkey, code) -> float:
-        return self.ratios.get((bkey, code), 1.0)
+        over = self.price_over.get((bkey.split("-")[0], code), 1.0)          # an owner's list-price change, as a ratio to the reference price
+        return self.ratios.get((bkey, code), 1.0) * over
 
     def start_day(self, ctx, day):
         self.day = day
@@ -254,6 +256,7 @@ class AiHooks:
             "betas": learned, "prior_beta": self.model.prior_beta,
             "rates": {f"{wh}:{pid}": r for (wh, pid), r in self.rates.items()},
             "hour_units": self.hour_units, "cursor": self.cursor,
+            "estimates": {c: list(map(list, v)) for c, v in self.model._estimates.items()},
             "observations": {c: list(map(list, v)) for c, v in self.model._obs.items()}}, indent=1), encoding="utf-8")
 
     def load_model(self):
@@ -264,6 +267,8 @@ class AiHooks:
         self.cursor = {int(k): v for k, v in d["cursor"].items()}
         for c, obs in d["observations"].items():
             self.model._obs[c] = [tuple(o) for o in obs]
+        for c, est in d.get("estimates", {}).items():
+            self.model._estimates[c] = [tuple(e) for e in est]
         self.model.fit_hours(self.hour_units)
 
     # ---- trial ------------------------------------------------------------------------------------------------

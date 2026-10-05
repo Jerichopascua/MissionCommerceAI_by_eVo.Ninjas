@@ -82,6 +82,21 @@ class DemandTests(unittest.TestCase):
         self.assertGreater(loose.share_left(21), 0.05)
         self.assertGreater(loose.share_left(21), 10 * tight.share_left(21))
 
+    def test_a_precise_price_test_moves_the_slope_and_a_noisy_one_barely_does(self):
+        precise, noisy, none = DemandModel(prior_beta=-1.3), DemandModel(prior_beta=-1.3), DemandModel(prior_beta=-1.3)
+        precise.add_estimate("x", -2.5, 0.1)
+        noisy.add_estimate("x", -3.9, 2.25)
+        self.assertAlmostEqual(precise.beta("x"), -2.5, delta=0.05)
+        self.assertGreater(noisy.beta("x"), -1.8)                 # pulled only a little toward the noisy number
+        self.assertLess(noisy.beta("x"), -1.3)
+        self.assertEqual(none.beta("x"), -1.3)
+
+    def test_estimates_are_per_category_and_stay_inside_the_bounds(self):
+        m = DemandModel()
+        m.add_estimate("a", -50.0, 0.01)
+        self.assertEqual(m.beta("a"), -6.0)
+        self.assertEqual(m.beta("b"), m.prior_beta)
+
     def test_more_days_left_means_more_expected_units(self):
         m = DemandModel()
         self.assertGreater(m.expected_units("x", 5.0, 1.0, 3, 6)[0], m.expected_units("x", 5.0, 1.0, 1, 6)[0] * 2.5)

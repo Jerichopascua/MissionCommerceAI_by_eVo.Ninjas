@@ -55,13 +55,16 @@ def main(argv=None) -> int:
         wh, pid = (int(x) for x in k.split(":"))
         if wh in whs:
             rates[pid] = rates.get(pid, 0.0) + float(v)
-    obs = model.get("observations", {})
+    from missionai.demand import DemandModel
+    dm = DemandModel(prior_beta=PRIOR_BETA)
+    for c, o in model.get("observations", {}).items():
+        dm._obs[c] = [tuple(x) for x in o]
+    for c, e in model.get("estimates", {}).items():
+        dm._estimates[c] = [tuple(x) for x in e]
 
     def beta_for(cat):
-        n = len(obs.get(cat, []))
-        if n >= MIN_OBSERVATIONS_TO_CALL_LEARNED and cat in model["betas"]:
-            return float(model["betas"][cat]), "learned"
-        return PRIOR_BETA, "assumed"
+        learned = len(dm._obs.get(cat, [])) >= MIN_OBSERVATIONS_TO_CALL_LEARNED or bool(dm._estimates.get(cat))
+        return (dm.beta(cat), "learned") if learned else (PRIOR_BETA, "assumed")
 
     sugg = pa.advise(products, rates, beta_for, policy, args.step)
     summary = pa.summarize(sugg)

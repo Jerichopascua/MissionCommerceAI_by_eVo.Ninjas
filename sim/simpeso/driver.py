@@ -178,14 +178,21 @@ class PesoWebDriver:
                 "address": "1 Supply St", "city": "Manila", "state": "NCR", "postalCode": "1000", "country": "PH"}
         return int(self._call("POST", "/api/People/AddSupplier", acct.token, json_body=body)["id"])
 
-    def add_product(self, acct: Account, spec, category_id: int, basics: dict) -> int:
+    def _product_form(self, spec, category_id: int, basics: dict, price=None) -> dict:
         form = {"CategoryId": category_id, "BrandId": basics["brand"], "UnitId": basics["unit"], "SaleUnitId": basics["unit"],
                 "PurchaseUnitId": basics["unit"], "TaxId": basics["tax"], "TaxMethod": 1, "ProductCode": spec.code,
-                "BarcodeType": "CODE128", "ProductName": spec.name, "Cost": spec.cost, "Price": spec.price, "Discount": 0,
+                "BarcodeType": "CODE128", "ProductName": spec.name, "Cost": spec.cost, "Price": spec.price if price is None else price, "Discount": 0,
                 "StockAlert": 5, "HasVariants": False}
         if spec.expiry:
             form.update({"MonitorExpiry": True, "BatchTracking": True, "ExpiryAlertDays": spec.alert_days})
-        return int(self._call("POST", "/api/Inventory/AddProduct", acct.token, form=form)["id"])
+        return form
+
+    def add_product(self, acct: Account, spec, category_id: int, basics: dict) -> int:
+        return int(self._call("POST", "/api/Inventory/AddProduct", acct.token, form=self._product_form(spec, category_id, basics))["id"])
+
+    def set_product_price(self, acct: Account, product_id: int, spec, category_id: int, basics: dict, new_price: float) -> None:
+        """The owner changes a product's list price through PesoWeb's own update endpoint (a tenant-wide price)."""
+        self._call("PUT", f"/api/Inventory/UpdateProduct/{product_id}", acct.token, form=self._product_form(spec, category_id, basics, new_price), expect_json=False)
 
     def receive_stock(self, acct: Account, warehouse_id: int, supplier_id: int, lines: list, date: str) -> int:
         """lines: dicts with product_id, unit_cost, quantity and optional batch_no, expiry_date, manufacturing_date."""

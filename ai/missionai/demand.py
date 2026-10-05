@@ -9,6 +9,7 @@ from collections import defaultdict
 
 OPEN_HOUR, CLOSE_HOUR = 6, 24
 BETA_MIN, BETA_MAX = -6.0, 0.5
+PRIOR_SE = 1.0           # how unsure we are about the starting guess, in slope units
 
 
 class DemandModel:
@@ -16,6 +17,7 @@ class DemandModel:
         self.prior_beta = prior_beta
         self.prior_weight = prior_weight
         self._obs = defaultdict(list)            # category -> [(x, base, units)]
+        self._estimates = defaultdict(list)      # category -> [(beta_hat, standard_error)] from controlled price tests
         self._hours = {h: 1.0 for h in range(OPEN_HOUR, CLOSE_HOUR)}
 
     def observe(self, category: str, base_rate: float, ratio: float, units: float) -> None:
@@ -26,7 +28,18 @@ class DemandModel:
     def count(self, category: str) -> int:
         return len(self._obs[category])
 
+    def add_estimate(self, category: str, beta: float, se: float) -> None:
+        """A measured slope from a controlled price test, with its standard error. A noisy test moves the model little."""
+        if se and se > 0:
+            self._estimates[category].append((float(beta), float(se)))
+
     def beta(self, category: str) -> float:
+        b = self._ridge_beta(category)
+        pieces = [(b, PRIOR_SE)] + self._estimates[category]       # the ridge/prior result counts as one piece of evidence
+        w = sum(1.0 / se ** 2 for _, se in pieces)
+        return min(BETA_MAX, max(BETA_MIN, sum(bb / se ** 2 for bb, se in pieces) / w))
+
+    def _ridge_beta(self, category: str) -> float:
         b = self.prior_beta
         data = [o for o in self._obs[category] if abs(o[0]) > 1e-9]
         if not data:
