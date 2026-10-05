@@ -1,0 +1,37 @@
+Local PesoWeb: http://localhost:5071
+
+1. A shop signs up and stocks milk (the shop owner uses the real PesoWeb API)
+   40 units expire tomorrow, 40 expire in 20 days. Cost 60, price 100. Normal sales: about 12/day.
+
+2. The shop owner sets the rules PesoWeb will enforce (the agent cannot change them)
+   autonomy=Autonomous, never below cost + 5.0%, max discount 50.0%
+
+3. Before the agent: what does a customer pay for the batch that expires tomorrow?
+   POS price: 100.00   (FEFO sells tomorrow's batch first)
+   [PASS] price is the list price (100)
+
+4. The agent task: 'decide what to do with stock that is about to expire'
+   agent: 30% off Fresh Milk 1L (batch 4577, 39 units, 1 day(s) left): 30% off lifts expected sales from 12.0 to 20.5 units and cuts expected waste from 1620 to 1111 pesos. Prediction: 20 units (15 to 26), about 1111 pesos wasted.
+   PesoWeb answered HTTP 200 -> applied
+   [PASS] PesoWeb accepted the agent's markdown
+   [PASS] the new price is lower, but not below cost + 5%
+
+5. After the agent: what does a customer pay now?
+   POS price: 70.00   (was 100.00)
+   [PASS] the real POS now charges the marked-down price
+
+6. The guardrail: someone (or something) asks for 80% off, far below cost
+   PesoWeb answered HTTP 422: EXCEEDS_MAX_DISCOUNT - Discount exceeds the maximum of 50.00%.
+   [PASS] PesoWeb refused it, with a reason
+   [PASS] the refused price never reached the shelf
+
+7. The audit trail inside PesoWeb
+   price change #6865: 100.0 -> 20.0 (Rejected, EXCEEDS_MAX_DISCOUNT), prediction None
+   price change #6864: 100.0 -> 70.0 (Applied, OK), prediction p-1
+   [PASS] the applied markdown is in PesoWeb's price-change ledger as an AI change
+   [PASS] the refused attempt is in the ledger too
+   recorded before acting: expected 20 units sold (range 15 to 26), about 1111 pesos wasted; without markdown 1620
+   [PASS] the agent predicted less waste than doing nothing, and wrote it down first
+
+Result: 9 of 9 checks passed.
+Limits: the sales rate and price response are assumptions here (no sales history); the demo proves the mechanism and the guardrails, not a real-store lift.

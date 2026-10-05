@@ -121,6 +121,23 @@ code{background:var(--soft);padding:1px 6px;border-radius:6px;font-size:12px}
       +kpi('Anomaly alerts',fmt(m.flagged)+' vs '+fmt(n.flagged),'found '+m.found+' and '+n.found+' of '+q.anomalies.planted+' planted (model vs naive)')+'</div></div>';
   }
 
+
+  function storySection(st){
+    if(!st)return '<div class="card" style="margin-top:14px"><h2>Customer story</h2><div class="empty">No <code>story.json</code> yet. Run <code>python -m simpeso.story --compare --days 14 --seeds 1-5 --out ../results/story.json</code>.</div></div>';
+    var a=st.summary,arms=[['none','No clearance','var(--none)'],['naive','Clearance, customers never change','var(--fixed)'],['learning','Clearance, customers learn','var(--ai)']];
+    var maxw=Math.max.apply(null,arms.map(function(x){return a[x[0]].waste_pesos}))||1;
+    var bars=arms.map(function(x){return '<div class="bar"><span>'+esc(x[1].split(',')[0]==='Clearance'?x[1].replace('Clearance, ',''):x[1])+'</span><span class="track"><span class="fill" style="display:block;width:'+(a[x[0]].waste_pesos/maxw*100)+'%;background:'+x[2]+'"></span></span><span class="n">'+peso(a[x[0]].waste_pesos)+'</span></div>'}).join('');
+    var rows=arms.map(function(x){var r=a[x[0]];return '<tr><td>'+esc(x[1])+'</td><td class="n">'+peso(r.waste_pesos)+'</td><td class="n">'+peso(r.revenue)+'</td><td class="n"><b>'+peso(r.net)+'</b></td><td class="n">'+fmt(r.full_price_units,1)+'</td><td class="n">'+fmt(r.discount_units,1)+'</td></tr>'}).join('');
+    var seeds=Object.keys(st.runs),verdicts=seeds.map(function(sd){var sh=st.runs[sd].learning.shift;return '<tr><td>'+esc(sd)+'</td><td class="expl">'+esc(sh?sh.verdict:'-')+'</td></tr>'}).join('');
+    var diary=(st.runs[seeds[0]].learning.marco||[]).filter(function(r){return r[0]>=3&&r[0]<=5}).slice(0,16).map(function(r){return '<tr><td>day '+r[0]+' '+esc(r[1])+'</td><td class="expl">'+esc(r[2])+'</td></tr>'}).join('');
+    return '<div class="card" style="margin-top:14px"><h2>Customer story: shoppers who think and learn</h2><div class="note">A neighbourhood of 40 customers with their own money pressure, memory and friends buys cooked chickens that must go tonight. The shop is the real PesoWeb; the AI may cut prices from 20:30 inside the owner rules. '+st.seeds.length+' seeds, '+st.days+' evenings, mean per evening after '+st.baseline_days+' baseline days.</div>'
+      +'<div class="grid g2"><div><div class="bars">'+bars+'</div><div class="legend"><span>chickens thrown away per evening (pesos), lower is better</span></div></div>'
+      +'<div class="scroll"><table><thead><tr><th></th><th class="n">Waste</th><th class="n">Revenue</th><th class="n">Net</th><th class="n">Full-price</th><th class="n">Clearance</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>'
+      +'<div class="grid g2" style="margin-top:14px"><div class="card"><h2>What the system saw</h2><div class="note">The behavior detector reads only purchase records, per seed (learning customers).</div><div class="scroll"><table><thead><tr><th>Seed</th><th>Finding</th></tr></thead><tbody>'+verdicts+'</tbody></table></div></div>'
+      +'<div class="card"><h2>Diary of Marco</h2><div class="note">One customer who lost his job and is saving money (days 3 to 5, first seed).</div><div class="scroll"><table><tbody>'+diary+'</tbody></table></div></div></div>'
+      +'<div class="note" style="margin-top:10px">Customer judgement here is a rule-based model, an assumption of the simulator; the gap between the last two arms depends on it.</div></div>';
+  }
+
   function limits(p){
     return '<div class="card limits" style="margin-top:14px"><h2>What this does and does not show</h2><ul>'
       +'<li>Shoppers\' price response is the simulator\'s own assumption. The AI never sees it and learns it from sales. The proof shows the mechanism, the guardrails and the prediction accuracy under that assumption, not a real-market lift.</li>'
@@ -129,8 +146,8 @@ code{background:var(--soft);padding:1px 6px;border-radius:6px;font-size:12px}
       +'<li>The agent\'s predictions are optimistic when realized waste exceeds predicted waste; that gap is reported, not hidden.</li></ul></div>';
   }
 
-  Promise.all([get('proof-smoke.json'),get('incident-demo.json'),get('quicksim.json'),get('ai-actions-sample.json')]).then(function(r){
-    $('app').innerHTML=proofSection(r[0])+actionsSection(r[3])+incidentSection(r[1])+quickSection(r[2])+limits(r[0]);
+  Promise.all([get('proof-smoke.json'),get('incident-demo.json'),get('quicksim.json'),get('ai-actions-sample.json'),get('story.json')]).then(function(r){
+    $('app').innerHTML=storySection(r[4])+proofSection(r[0])+actionsSection(r[3])+incidentSection(r[1])+quickSection(r[2])+limits(r[0]);
   });
 })();
 </script>
