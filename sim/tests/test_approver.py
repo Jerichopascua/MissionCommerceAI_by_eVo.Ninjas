@@ -30,9 +30,13 @@ class ApproverTests(unittest.TestCase):
         for s in range(20):
             self.assertEqual(ap.decide(item(lowRisk=True), ap.ApproverStyle(), rng.derive(s, "x"))["action"], "approve")
 
-    def test_below_soft_floor_always_rejected(self):
+    def test_a_cut_below_the_soft_floor_is_always_rejected(self):
         for s in range(20):
-            self.assertEqual(ap.decide(item(belowSoftFloor=True), ap.ApproverStyle(), rng.derive(s, "x"))["action"], "reject")
+            self.assertEqual(ap.decide(item(belowSoftFloor=True, pct=-5.0, to=95.0), ap.ApproverStyle(), rng.derive(s, "x"))["action"], "reject")
+
+    def test_a_raise_that_is_still_inside_the_soft_band_is_not_rejected_for_that(self):
+        d = ap.decide(item(belowSoftFloor=True, confidence="rule", pct=10.0, to=110.0), ap.ApproverStyle(approve_rate_rule=1.0), rng.derive(1, "x"))
+        self.assertEqual(d["action"], "approve")
 
     def test_assumed_evidence_is_approved_less_often_than_learned(self):
         st = ap.ApproverStyle()
@@ -53,7 +57,7 @@ class ApproverTests(unittest.TestCase):
 
     def test_work_queue_posts_to_the_right_endpoints_and_skips_other_lanes(self):
         drv = FakeDriver([item(id=1, lowRisk=True), item(id=2, type="Markdown", lowRisk=True), item(id=3, canApprove=False),
-                          item(id=4, belowSoftFloor=True)])
+                          item(id=4, belowSoftFloor=True, pct=-5.0, to=95.0)])
         out = ap.work_queue(drv, Acct(), seed=1)
         paths = [p for p, _ in drv.posts]
         self.assertEqual(paths, ["/api/Pricing/ApproveListPrice", "/api/Pricing/Approve", "/api/Pricing/RejectListPrice"])
@@ -66,6 +70,12 @@ class ApproverTests(unittest.TestCase):
     def test_a_proposal_gone_stale_is_counted_as_stale_not_failed(self):
         out = ap.work_queue(FakeDriver([item(lowRisk=True)], status=422, body={"code": "PRICE_CHANGED_SINCE"}), Acct(), seed=1)
         self.assertEqual((out["stale"], out["failed"]), (1, 0))
+
+    def test_margin_fixes_are_nearly_always_approved_and_never_trimmed(self):
+        st = ap.ApproverStyle()
+        ds = [ap.decide(item(confidence="rule", pct=20.0, to=120.0, lane="Pricing manager"), st, rng.derive(s, "r")) for s in range(300)]
+        self.assertGreater(sum(d["action"] == "approve" for d in ds), 280)
+        self.assertEqual(sum(d["action"] == "edit" for d in ds), 0)
 
 
 if __name__ == "__main__":

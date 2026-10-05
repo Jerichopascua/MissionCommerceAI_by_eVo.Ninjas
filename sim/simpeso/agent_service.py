@@ -64,18 +64,19 @@ class AgentRunner:
             time.sleep(interval)
 
 
-def pricing_handler(drv, acct, warehouse_ids: list, model: dict, limit: int = 8):
+def pricing_handler(drv, acct, warehouse_ids: list, model: dict, limit: int = 8, fix_limit: int = 25):
     """AI Pricing run: look at every product's cost, sales rate and learned price sensitivity, then put the best list-price changes
     into the Approval Center. Nothing is applied here; a person (or the tenant's own auto-approve limits) decides."""
     from . import price_run
 
     def run() -> str:
         _, sugg, _ = price_run.suggestions_for(drv, acct, warehouse_ids, model)
-        sent = price_run.propose_top(drv, acct, warehouse_ids[0], sugg, limit)
+        sent = price_run.propose_top(drv, acct, warehouse_ids[0], sugg, limit, fix_limit)
         waiting = sum(1 for r in sent if r["status"] == 202)
         applied = sum(1 for r in sent if r["status"] == 200)
         refused = sum(1 for r in sent if r["status"] == 422)
-        return f"proposed {len(sent)} price changes: {waiting} waiting in the Approval Center, {applied} auto-approved, {refused} refused by a rule"
+        fixes = sum(1 for r in sent if r["kind"] == "margin fix")
+        return f"proposed {len(sent)} price changes ({fixes} margin fixes): {waiting} waiting in the Approval Center, {applied} auto-approved, {refused} refused by a rule"
 
     return run
 

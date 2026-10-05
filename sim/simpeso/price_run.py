@@ -54,16 +54,24 @@ def suggestions_for(drv, acct, warehouse_ids: list, model: dict, step_pct: int =
     return products, pa.advise(products, rates, beta_for, policy, step_pct), policy
 
 
-def propose_top(drv, acct, warehouse_id: int, suggestions: list, limit: int) -> list:
-    """Send the largest-gain raise/lower suggestions as list-price proposals. Returns one row per attempt with PesoWeb's answer."""
+def propose_top(drv, acct, warehouse_id: int, suggestions: list, limit: int, fix_limit: int = 0) -> list:
+    """Send list-price proposals. First the margin fixes (products priced below the margin price, raised to it: a rule, not a demand
+    guess), up to fix_limit; then the largest-gain raise/lower suggestions, up to limit. Returns one row per attempt with PesoWeb's answer."""
     # Skip products that already have a proposal waiting, so repeated runs do not pile up duplicates in the Approval Center.
     waiting = {r["productId"] for r in drv.list_price_changes(acct, status="PendingApproval")}
+    fixes = sorted([s for s in suggestions if s.status == "margin_alert" and s.suggested_price > s.price and s.product_id not in waiting],
+                   key=lambda s: -(s.suggested_price - s.price) / s.price)[:fix_limit]
     acts = sorted([s for s in suggestions if s.status in ("raise", "lower") and s.product_id not in waiting], key=lambda s: -s.profit_gain_per_day)[:limit]
     out = []
+    for s in fixes:
+        status, body = drv.propose_list_price(
+            acct, warehouse_id, s.product_id, s.suggested_price, reason=s.reason, prediction_ref=f"margin-{s.product_id}-{s.suggested_price:g}",
+            confidence="rule", evidence=f"priced below the margin price {s.floor_price:g} (cost {s.cost:g})")
+        out.append({"kind": "margin fix", "product": s.name, "from": s.price, "to": s.suggested_price, "status": status, "code": (body or {}).get("code")})
     for s in acts:
         status, body = drv.propose_list_price(
             acct, warehouse_id, s.product_id, s.suggested_price, reason=s.reason, prediction_ref=f"advice-{s.product_id}-{s.suggested_price:g}",
             confidence=s.beta_source, expected_gain_per_day=round(s.profit_gain_per_day, 2),
             expected_gain_conservative_per_day=round(max(0.0, s.profit_gain_if_more_sensitive), 2), evidence=f"price sensitivity {s.beta:.2f} ({s.beta_source})")
-        out.append({"product": s.name, "from": s.price, "to": s.suggested_price, "status": status, "code": (body or {}).get("code")})
+        out.append({"kind": "profit", "product": s.name, "from": s.price, "to": s.suggested_price, "status": status, "code": (body or {}).get("code")})
     return out

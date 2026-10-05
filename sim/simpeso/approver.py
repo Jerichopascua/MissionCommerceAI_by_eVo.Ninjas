@@ -14,6 +14,7 @@ from . import rng
 class ApproverStyle:
     approve_rate_learned: float = 0.9     # chance to approve a change backed by learned evidence
     approve_rate_assumed: float = 0.4     # chance to approve a change that only rests on an assumption
+    approve_rate_rule: float = 0.97       # a margin fix (price raised to the margin price) is a rule, not a guess: nearly always approved
     owner_lane_rate: float = 0.7          # extra caution for owner-lane changes
     trim_big_moves: bool = True           # approve a big raise at a smaller step instead of rejecting it
     max_delay_minutes: int = 120          # the longest a change waits before someone looks (virtual minutes)
@@ -22,10 +23,14 @@ class ApproverStyle:
 def decide(item: dict, style: ApproverStyle, rand) -> dict:
     """item is one entry of GET /api/Pricing/Approvals. Returns {action, new_price, reason, delay_minutes}."""
     delay = int(rand.random() * style.max_delay_minutes)
-    if item.get("belowSoftFloor"):
+    if item.get("belowSoftFloor") and float(item.get("pct") or 0) <= 0:       # a cut into the soft band is refused; a raise toward the floor is not
         return {"action": "reject", "reason": "below the soft margin floor", "delay_minutes": delay}
     if item.get("lowRisk"):
         return {"action": "approve", "reason": "low risk", "delay_minutes": delay}
+    if item.get("confidence") == "rule":
+        if rand.random() < style.approve_rate_rule:
+            return {"action": "approve", "reason": "fixes a price below the margin price", "delay_minutes": delay}   # never trimmed: half a fix is still below the floor
+        return {"action": "reject", "reason": "left for later", "delay_minutes": delay}
     learned = item.get("confidence") == "learned"
     rate = style.approve_rate_learned if learned else style.approve_rate_assumed
     if item.get("lane") == "Owner":
