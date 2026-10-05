@@ -44,11 +44,14 @@ class DemandModel:
                 break
         return b
 
-    def fit_hours(self, hour_units: dict) -> None:
+    def fit_hours(self, hour_units: dict, prior_share: float = 0.02) -> None:
+        """Hour-of-day profile from observed sales. Sales at list price only show when people buy at list price, not when
+        they would buy at a lower one, so late-evening demand is under-seen. prior_share mixes a flat profile back in
+        (the share of total weight spread evenly over the open hours) so the model never rules a cheaper hour out."""
         total = sum(hour_units.values())
         if total <= 0:
             return
-        smoothed = {h: hour_units.get(h, 0.0) + 0.02 * total / (CLOSE_HOUR - OPEN_HOUR) for h in range(OPEN_HOUR, CLOSE_HOUR)}
+        smoothed = {h: hour_units.get(h, 0.0) + prior_share * total / (CLOSE_HOUR - OPEN_HOUR) for h in range(OPEN_HOUR, CLOSE_HOUR)}
         self._hours = smoothed
 
     def share_left(self, hour: float) -> float:

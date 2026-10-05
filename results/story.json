@@ -1,0 +1,5965 @@
+{
+ "days": 14,
+ "seeds": [
+  1,
+  2,
+  3,
+  4,
+  5
+ ],
+ "baseline_days": 3,
+ "summary": {
+  "none": {
+   "waste_pesos": 926.0,
+   "revenue": 895.4545454545455,
+   "margin": 501.45454545454544,
+   "net": -424.54545454545456,
+   "full_price_units": 3.5818181818181816,
+   "discount_units": 0.0
+  },
+  "naive": {
+   "waste_pesos": 424.0,
+   "revenue": 1447.7272727272727,
+   "margin": 551.7272727272727,
+   "net": 127.72727272727273,
+   "full_price_units": 3.4363636363636365,
+   "discount_units": 4.709090909090909
+  },
+  "learning": {
+   "waste_pesos": 46.0,
+   "revenue": 1822.7272727272727,
+   "margin": 548.7272727272727,
+   "net": 502.72727272727275,
+   "full_price_units": 3.0,
+   "discount_units": 8.581818181818182
+  }
+ },
+ "runs": {
+  "1": {
+   "none": {
+    "arm": "none",
+    "seed": 1,
+    "days": [
+     {
+      "day": 0,
+      "sold": 2.0,
+      "left": 10.0,
+      "waste_pesos": 1100.0,
+      "revenue": 500.0,
+      "margin": 280.0,
+      "net": -820.0,
+      "full_price_units": 2,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 1,
+      "sold": 2.0,
+      "left": 10.0,
+      "waste_pesos": 1100.0,
+      "revenue": 500.0,
+      "margin": 280.0,
+      "net": -820.0,
+      "full_price_units": 2,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 2,
+      "sold": 2.0,
+      "left": 10.0,
+      "waste_pesos": 1100.0,
+      "revenue": 500.0,
+      "margin": 280.0,
+      "net": -820.0,
+      "full_price_units": 2,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 3,
+      "sold": 1.0,
+      "left": 11.0,
+      "waste_pesos": 1210.0,
+      "revenue": 250.0,
+      "margin": 140.0,
+      "net": -1070.0,
+      "full_price_units": 1,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 4,
+      "sold": 3.0,
+      "left": 9.0,
+      "waste_pesos": 990.0,
+      "revenue": 750.0,
+      "margin": 420.0,
+      "net": -570.0,
+      "full_price_units": 3,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 5,
+      "sold": 0.0,
+      "left": 12.0,
+      "waste_pesos": 1320.0,
+      "revenue": 0,
+      "margin": 0.0,
+      "net": -1320.0,
+      "full_price_units": 0,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 6,
+      "sold": 2.0,
+      "left": 10.0,
+      "waste_pesos": 1100.0,
+      "revenue": 500.0,
+      "margin": 280.0,
+      "net": -820.0,
+      "full_price_units": 2,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 7,
+      "sold": 4.0,
+      "left": 8.0,
+      "waste_pesos": 880.0,
+      "revenue": 1000.0,
+      "margin": 560.0,
+      "net": -320.0,
+      "full_price_units": 4,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 8,
+      "sold": 3.0,
+      "left": 9.0,
+      "waste_pesos": 990.0,
+      "revenue": 750.0,
+      "margin": 420.0,
+      "net": -570.0,
+      "full_price_units": 3,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 9,
+      "sold": 3.0,
+      "left": 9.0,
+      "waste_pesos": 990.0,
+      "revenue": 750.0,
+      "margin": 420.0,
+      "net": -570.0,
+      "full_price_units": 3,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 10,
+      "sold": 2.0,
+      "left": 10.0,
+      "waste_pesos": 1100.0,
+      "revenue": 500.0,
+      "margin": 280.0,
+      "net": -820.0,
+      "full_price_units": 2,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 11,
+      "sold": 2.0,
+      "left": 10.0,
+      "waste_pesos": 1100.0,
+      "revenue": 500.0,
+      "margin": 280.0,
+      "net": -820.0,
+      "full_price_units": 2,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 12,
+      "sold": 3.0,
+      "left": 9.0,
+      "waste_pesos": 990.0,
+      "revenue": 750.0,
+      "margin": 420.0,
+      "net": -570.0,
+      "full_price_units": 3,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 13,
+      "sold": 1.0,
+      "left": 11.0,
+      "waste_pesos": 1210.0,
+      "revenue": 250.0,
+      "margin": 140.0,
+      "net": -1070.0,
+      "full_price_units": 1,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     }
+    ],
+    "shift": null,
+    "calibration": {
+     "resolved": 0
+    },
+    "marco": [
+     [
+      0,
+      "21:15",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      0,
+      "21:15",
+      "left without buying (price 250 was above what I can pay)"
+     ],
+     [
+      1,
+      "20:45",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      1,
+      "20:45",
+      "left without buying (price 250 was above what I can pay)"
+     ],
+     [
+      3,
+      "20:30",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      3,
+      "20:30",
+      "left without buying (price 250 was above what I can pay)"
+     ],
+     [
+      4,
+      "21:15",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      4,
+      "21:15",
+      "left without buying (price 250 was above what I can pay)"
+     ],
+     [
+      5,
+      "21:00",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      5,
+      "21:00",
+      "left without buying (price 250 was above what I can pay)"
+     ],
+     [
+      6,
+      "20:45",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      6,
+      "20:45",
+      "left without buying (price 250 was above what I can pay)"
+     ],
+     [
+      7,
+      "21:00",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      7,
+      "21:00",
+      "left without buying (price 250 was above what I can pay)"
+     ],
+     [
+      9,
+      "20:30",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      9,
+      "20:30",
+      "left without buying (price 250 was above what I can pay)"
+     ],
+     [
+      10,
+      "20:30",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      10,
+      "20:30",
+      "left without buying (price 250 was above what I can pay)"
+     ],
+     [
+      11,
+      "21:30",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      11,
+      "21:30",
+      "left without buying (price 250 was above what I can pay)"
+     ],
+     [
+      13,
+      "20:45",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      13,
+      "20:45",
+      "left without buying (price 250 was above what I can pay)"
+     ]
+    ],
+    "waste_pesos": 1080.0,
+    "revenue": 545.4545454545455,
+    "margin": 305.45454545454544,
+    "net": -774.5454545454545,
+    "full_price_units": 2.1818181818181817,
+    "discount_units": 0.0
+   },
+   "naive": {
+    "arm": "naive",
+    "seed": 1,
+    "days": [
+     {
+      "day": 0,
+      "sold": 2.0,
+      "left": 10.0,
+      "waste_pesos": 1100.0,
+      "revenue": 500.0,
+      "margin": 280.0,
+      "net": -820.0,
+      "full_price_units": 2,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 1,
+      "sold": 2.0,
+      "left": 10.0,
+      "waste_pesos": 1100.0,
+      "revenue": 500.0,
+      "margin": 280.0,
+      "net": -820.0,
+      "full_price_units": 2,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 2,
+      "sold": 2.0,
+      "left": 10.0,
+      "waste_pesos": 1100.0,
+      "revenue": 500.0,
+      "margin": 280.0,
+      "net": -820.0,
+      "full_price_units": 2,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 3,
+      "sold": 7.0,
+      "left": 5.0,
+      "waste_pesos": 550.0,
+      "revenue": 1000.0,
+      "margin": 230.0,
+      "net": -320.0,
+      "full_price_units": 1,
+      "discount_units": 6.0,
+      "cut_hour": 20.5,
+      "waited": 0,
+      "tips": 7
+     },
+     {
+      "day": 4,
+      "sold": 6.0,
+      "left": 6.0,
+      "waste_pesos": 660.0,
+      "revenue": 1125.0,
+      "margin": 465.0,
+      "net": -195.0,
+      "full_price_units": 3,
+      "discount_units": 3.0,
+      "cut_hour": 20.5,
+      "waited": 0,
+      "tips": 4
+     },
+     {
+      "day": 5,
+      "sold": 3.0,
+      "left": 9.0,
+      "waste_pesos": 990.0,
+      "revenue": 375.0,
+      "margin": 45.0,
+      "net": -945.0,
+      "full_price_units": 0,
+      "discount_units": 3.0,
+      "cut_hour": 20.5,
+      "waited": 0,
+      "tips": 4
+     },
+     {
+      "day": 6,
+      "sold": 8.0,
+      "left": 4.0,
+      "waste_pesos": 440.0,
+      "revenue": 1250.0,
+      "margin": 370.0,
+      "net": -70.0,
+      "full_price_units": 2,
+      "discount_units": 6.0,
+      "cut_hour": 20.5,
+      "waited": 0,
+      "tips": 7
+     },
+     {
+      "day": 7,
+      "sold": 7.0,
+      "left": 5.0,
+      "waste_pesos": 550.0,
+      "revenue": 1375.0,
+      "margin": 605.0,
+      "net": 55.0,
+      "full_price_units": 4,
+      "discount_units": 3.0,
+      "cut_hour": 20.5,
+      "waited": 0,
+      "tips": 4
+     },
+     {
+      "day": 8,
+      "sold": 8.0,
+      "left": 4.0,
+      "waste_pesos": 440.0,
+      "revenue": 1250.0,
+      "margin": 370.0,
+      "net": -70.0,
+      "full_price_units": 2,
+      "discount_units": 6.0,
+      "cut_hour": 20.5,
+      "waited": 0,
+      "tips": 3
+     },
+     {
+      "day": 9,
+      "sold": 6.0,
+      "left": 6.0,
+      "waste_pesos": 660.0,
+      "revenue": 1000.0,
+      "margin": 340.0,
+      "net": -320.0,
+      "full_price_units": 2,
+      "discount_units": 4.0,
+      "cut_hour": 20.5,
+      "waited": 0,
+      "tips": 4
+     },
+     {
+      "day": 10,
+      "sold": 10.0,
+      "left": 2.0,
+      "waste_pesos": 220.0,
+      "revenue": 1500.0,
+      "margin": 400.0,
+      "net": 180.0,
+      "full_price_units": 2,
+      "discount_units": 8.0,
+      "cut_hour": 20.5,
+      "waited": 0,
+      "tips": 4
+     },
+     {
+      "day": 11,
+      "sold": 11.0,
+      "left": 1.0,
+      "waste_pesos": 110.0,
+      "revenue": 1625.0,
+      "margin": 415.0,
+      "net": 305.0,
+      "full_price_units": 2,
+      "discount_units": 9.0,
+      "cut_hour": 20.5,
+      "waited": 0,
+      "tips": 7
+     },
+     {
+      "day": 12,
+      "sold": 5.0,
+      "left": 7.0,
+      "waste_pesos": 770.0,
+      "revenue": 1000.0,
+      "margin": 450.0,
+      "net": -320.0,
+      "full_price_units": 3,
+      "discount_units": 2.0,
+      "cut_hour": 20.5,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 13,
+      "sold": 9.0,
+      "left": 3.0,
+      "waste_pesos": 330.0,
+      "revenue": 1250.0,
+      "margin": 260.0,
+      "net": -70.0,
+      "full_price_units": 1,
+      "discount_units": 8.0,
+      "cut_hour": 20.5,
+      "waited": 0,
+      "tips": 4
+     }
+    ],
+    "shift": {
+     "before": {
+      "days": 3,
+      "units_per_day": 2.0,
+      "full_price_units_per_day": 2.0,
+      "discount_units_per_day": 0.0,
+      "discount_share": 0.0,
+      "median_hour": 19.625,
+      "mean_hour": 19.208333333333332,
+      "revenue_per_day": 500.0
+     },
+     "after": {
+      "days": 5,
+      "units_per_day": 8.2,
+      "full_price_units_per_day": 2.0,
+      "discount_units_per_day": 6.2,
+      "discount_share": 0.7560975609756098,
+      "median_hour": 20.5,
+      "mean_hour": 20.432926829268293,
+      "revenue_per_day": 1275.0
+     },
+     "mean_hour_shift": 1.2245934959349611,
+     "p_value": 0.0074962518740629685,
+     "shifted": true,
+     "full_price_change_per_day": 0.0,
+     "discount_share_change": 0.7560975609756098,
+     "verdict": "Customers now buy 1.2 h later (median 19:38 -> 20:30); clearance-priced units went from 0% to 76% of sales, and full-price units from 2.0 to 2.0 per day."
+    },
+    "calibration": {
+     "resolved": 11,
+     "units_mae": 6.166485367806729,
+     "naive_units_mae": 6.822843822843822,
+     "units_skill": 0.09620012887287777,
+     "waste_mae_pesos": 678.3133904587402,
+     "naive_waste_mae_pesos": 750.5128205128204,
+     "margin_mae_pesos": 92.49728051710093,
+     "interval_coverage": 0.0,
+     "predicted_waste_pesos": 10871.447295046142,
+     "realized_waste_pesos": 3410.0
+    },
+    "marco": [
+     [
+      0,
+      "21:15",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      0,
+      "21:15",
+      "left without buying (price 250 was above what I can pay)"
+     ],
+     [
+      1,
+      "20:45",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      1,
+      "20:45",
+      "left without buying (price 250 was above what I can pay)"
+     ],
+     [
+      3,
+      "20:30",
+      "arrived at the shop, chicken is 125"
+     ],
+     [
+      3,
+      "20:30",
+      "saw the price drop (already cut when I got there) at about 20:30"
+     ],
+     [
+      3,
+      "20:30",
+      "bought 3 at 125 each (a bargain, so I took extra)"
+     ],
+     [
+      3,
+      "20:30",
+      "told 4 friends about it"
+     ],
+     [
+      3,
+      "20:30",
+      "a friend says the price usually drops around 20:30"
+     ],
+     [
+      4,
+      "21:15",
+      "arrived at the shop, chicken is 125"
+     ],
+     [
+      4,
+      "21:15",
+      "saw the price drop (already cut when I got there) at about 21:15"
+     ],
+     [
+      4,
+      "21:15",
+      "bought 3 at 125 each (a bargain, so I took extra)"
+     ],
+     [
+      4,
+      "21:15",
+      "told 4 friends about it"
+     ],
+     [
+      5,
+      "21:00",
+      "arrived at the shop, chicken is 125"
+     ],
+     [
+      5,
+      "21:00",
+      "saw the price drop (already cut when I got there) at about 21:00"
+     ],
+     [
+      5,
+      "21:00",
+      "bought 3 at 125 each (a bargain, so I took extra)"
+     ],
+     [
+      5,
+      "21:00",
+      "told 4 friends about it"
+     ],
+     [
+      6,
+      "20:45",
+      "arrived at the shop, chicken is 125"
+     ],
+     [
+      6,
+      "20:45",
+      "saw the price drop (already cut when I got there) at about 20:45"
+     ],
+     [
+      6,
+      "20:45",
+      "bought 3 at 125 each (a bargain, so I took extra)"
+     ],
+     [
+      6,
+      "20:45",
+      "told 4 friends about it"
+     ],
+     [
+      7,
+      "21:00",
+      "arrived at the shop, chicken is 125"
+     ],
+     [
+      7,
+      "21:00",
+      "saw the price drop (already cut when I got there) at about 21:00"
+     ],
+     [
+      7,
+      "21:00",
+      "bought 3 at 125 each (a bargain, so I took extra)"
+     ],
+     [
+      7,
+      "21:00",
+      "told 4 friends about it"
+     ],
+     [
+      9,
+      "20:30",
+      "arrived at the shop, chicken is 125"
+     ],
+     [
+      9,
+      "20:30",
+      "saw the price drop (already cut when I got there) at about 20:30"
+     ],
+     [
+      9,
+      "20:30",
+      "bought 3 at 125 each (a bargain, so I took extra)"
+     ],
+     [
+      9,
+      "20:30",
+      "told 4 friends about it"
+     ],
+     [
+      10,
+      "20:30",
+      "arrived at the shop, chicken is 125"
+     ],
+     [
+      10,
+      "20:30",
+      "saw the price drop (already cut when I got there) at about 20:30"
+     ],
+     [
+      10,
+      "20:30",
+      "bought 3 at 125 each (a bargain, so I took extra)"
+     ],
+     [
+      10,
+      "20:30",
+      "told 4 friends about it"
+     ],
+     [
+      11,
+      "21:30",
+      "arrived at the shop, chicken is 125"
+     ],
+     [
+      11,
+      "21:30",
+      "saw the price drop (already cut when I got there) at about 21:30"
+     ],
+     [
+      11,
+      "21:30",
+      "bought 3 at 125 each (a bargain, so I took extra)"
+     ],
+     [
+      11,
+      "21:30",
+      "told 4 friends about it"
+     ],
+     [
+      13,
+      "20:45",
+      "arrived at the shop, chicken is 125"
+     ],
+     [
+      13,
+      "20:45",
+      "saw the price drop (already cut when I got there) at about 20:45"
+     ],
+     [
+      13,
+      "20:45",
+      "bought 3 at 125 each (a bargain, so I took extra)"
+     ],
+     [
+      13,
+      "20:45",
+      "told 4 friends about it"
+     ]
+    ],
+    "waste_pesos": 520.0,
+    "revenue": 1159.090909090909,
+    "margin": 359.09090909090907,
+    "net": -160.9090909090909,
+    "full_price_units": 2,
+    "discount_units": 5.2727272727272725
+   },
+   "learning": {
+    "arm": "learning",
+    "seed": 1,
+    "days": [
+     {
+      "day": 0,
+      "sold": 2.0,
+      "left": 10.0,
+      "waste_pesos": 1100.0,
+      "revenue": 500.0,
+      "margin": 280.0,
+      "net": -820.0,
+      "full_price_units": 2,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 1,
+      "sold": 2.0,
+      "left": 10.0,
+      "waste_pesos": 1100.0,
+      "revenue": 500.0,
+      "margin": 280.0,
+      "net": -820.0,
+      "full_price_units": 2,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 2,
+      "sold": 2.0,
+      "left": 10.0,
+      "waste_pesos": 1100.0,
+      "revenue": 500.0,
+      "margin": 280.0,
+      "net": -820.0,
+      "full_price_units": 2,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 3,
+      "sold": 8.0,
+      "left": 4.0,
+      "waste_pesos": 440.0,
+      "revenue": 1125.0,
+      "margin": 245.0,
+      "net": -195.0,
+      "full_price_units": 1,
+      "discount_units": 7.0,
+      "cut_hour": 20.5,
+      "waited": 0,
+      "tips": 7
+     },
+     {
+      "day": 4,
+      "sold": 12.0,
+      "left": 0.0,
+      "waste_pesos": 0.0,
+      "revenue": 1875.0,
+      "margin": 555.0,
+      "net": 555.0,
+      "full_price_units": 3,
+      "discount_units": 9.0,
+      "cut_hour": 20.5,
+      "waited": 5,
+      "tips": 10
+     },
+     {
+      "day": 5,
+      "sold": 12.0,
+      "left": 0.0,
+      "waste_pesos": 0.0,
+      "revenue": 1500.0,
+      "margin": 180.0,
+      "net": 180.0,
+      "full_price_units": 0,
+      "discount_units": 12.0,
+      "cut_hour": 20.5,
+      "waited": 7,
+      "tips": 10
+     },
+     {
+      "day": 6,
+      "sold": 9.0,
+      "left": 3.0,
+      "waste_pesos": 330.0,
+      "revenue": 1375.0,
+      "margin": 385.0,
+      "net": 55.0,
+      "full_price_units": 2,
+      "discount_units": 7.0,
+      "cut_hour": 20.5,
+      "waited": 3,
+      "tips": 10
+     },
+     {
+      "day": 7,
+      "sold": 12.0,
+      "left": 0.0,
+      "waste_pesos": 0.0,
+      "revenue": 2000.0,
+      "margin": 680.0,
+      "net": 680.0,
+      "full_price_units": 4,
+      "discount_units": 8.0,
+      "cut_hour": 20.5,
+      "waited": 8,
+      "tips": 10
+     },
+     {
+      "day": 8,
+      "sold": 12.0,
+      "left": 0.0,
+      "waste_pesos": 0.0,
+      "revenue": 1750.0,
+      "margin": 430.0,
+      "net": 430.0,
+      "full_price_units": 2,
+      "discount_units": 10.0,
+      "cut_hour": 20.5,
+      "waited": 7,
+      "tips": 6
+     },
+     {
+      "day": 9,
+      "sold": 12.0,
+      "left": 0.0,
+      "waste_pesos": 0.0,
+      "revenue": 1875.0,
+      "margin": 555.0,
+      "net": 555.0,
+      "full_price_units": 3,
+      "discount_units": 9.0,
+      "cut_hour": 20.5,
+      "waited": 7,
+      "tips": 13
+     },
+     {
+      "day": 10,
+      "sold": 12.0,
+      "left": 0.0,
+      "waste_pesos": 0.0,
+      "revenue": 1750.0,
+      "margin": 430.0,
+      "net": 430.0,
+      "full_price_units": 2,
+      "discount_units": 10.0,
+      "cut_hour": 20.5,
+      "waited": 7,
+      "tips": 10
+     },
+     {
+      "day": 11,
+      "sold": 12.0,
+      "left": 0.0,
+      "waste_pesos": 0.0,
+      "revenue": 1750.0,
+      "margin": 430.0,
+      "net": 430.0,
+      "full_price_units": 2,
+      "discount_units": 10.0,
+      "cut_hour": 20.5,
+      "waited": 8,
+      "tips": 6
+     },
+     {
+      "day": 12,
+      "sold": 12.0,
+      "left": 0.0,
+      "waste_pesos": 0.0,
+      "revenue": 1875.0,
+      "margin": 555.0,
+      "net": 555.0,
+      "full_price_units": 3,
+      "discount_units": 9.0,
+      "cut_hour": 20.5,
+      "waited": 4,
+      "tips": 6
+     },
+     {
+      "day": 13,
+      "sold": 12.0,
+      "left": 0.0,
+      "waste_pesos": 0.0,
+      "revenue": 1625.0,
+      "margin": 305.0,
+      "net": 305.0,
+      "full_price_units": 1,
+      "discount_units": 11.0,
+      "cut_hour": 20.5,
+      "waited": 11,
+      "tips": 10
+     }
+    ],
+    "shift": {
+     "before": {
+      "days": 3,
+      "units_per_day": 2.0,
+      "full_price_units_per_day": 2.0,
+      "discount_units_per_day": 0.0,
+      "discount_share": 0.0,
+      "median_hour": 19.625,
+      "mean_hour": 19.208333333333332,
+      "revenue_per_day": 500.0
+     },
+     "after": {
+      "days": 5,
+      "units_per_day": 12.0,
+      "full_price_units_per_day": 2.2,
+      "discount_units_per_day": 9.8,
+      "discount_share": 0.8166666666666667,
+      "median_hour": 20.5,
+      "mean_hour": 20.266666666666666,
+      "revenue_per_day": 1775.0
+     },
+     "mean_hour_shift": 1.0583333333333336,
+     "p_value": 0.005997001499250375,
+     "shifted": true,
+     "full_price_change_per_day": 0.20000000000000018,
+     "discount_share_change": 0.8166666666666667,
+     "verdict": "Customers now buy 1.1 h later (median 19:38 -> 20:30); clearance-priced units went from 0% to 82% of sales, and full-price units from 2.0 to 2.2 per day."
+    },
+    "calibration": {
+     "resolved": 11,
+     "units_mae": 8.530121731443092,
+     "naive_units_mae": 9.186480186480185,
+     "units_skill": 0.07144830682844783,
+     "waste_mae_pesos": 938.3133904587402,
+     "naive_waste_mae_pesos": 1010.5128205128204,
+     "margin_mae_pesos": 127.95182597164639,
+     "interval_coverage": 0.0,
+     "predicted_waste_pesos": 10761.447295046142,
+     "realized_waste_pesos": 440.0
+    },
+    "marco": [
+     [
+      0,
+      "21:15",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      0,
+      "21:15",
+      "cashier: it depends, no fixed time"
+     ],
+     [
+      0,
+      "21:30",
+      "left without buying (price 250 was above what I can pay)"
+     ],
+     [
+      1,
+      "20:45",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      1,
+      "20:45",
+      "cashier: it depends, no fixed time"
+     ],
+     [
+      1,
+      "21:00",
+      "left without buying (price 250 was above what I can pay)"
+     ],
+     [
+      3,
+      "20:30",
+      "arrived at the shop, chicken is 125"
+     ],
+     [
+      3,
+      "20:30",
+      "saw the price drop (already cut when I got there) at about 20:30"
+     ],
+     [
+      3,
+      "20:30",
+      "bought 3 at 125 each (a bargain, so I took extra)"
+     ],
+     [
+      3,
+      "20:30",
+      "told 4 friends about it"
+     ],
+     [
+      3,
+      "20:30",
+      "a friend says the price usually drops around 20:30"
+     ],
+     [
+      4,
+      "19:00",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      4,
+      "19:00",
+      "cashier says the price usually drops around 20:30"
+     ],
+     [
+      4,
+      "19:15",
+      "chicken is 250, too much; I will wait"
+     ],
+     [
+      4,
+      "20:30",
+      "saw the price drop right when it happened at about 20:30"
+     ],
+     [
+      4,
+      "20:30",
+      "bought 3 at 125 each (a bargain, so I took extra)"
+     ],
+     [
+      4,
+      "20:30",
+      "told 4 friends about it"
+     ],
+     [
+      4,
+      "20:30",
+      "a friend says the price usually drops around 20:30"
+     ],
+     [
+      5,
+      "19:45",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      5,
+      "19:45",
+      "chicken is 250, too much; I will wait"
+     ],
+     [
+      5,
+      "20:30",
+      "saw the price drop right when it happened at about 20:30"
+     ],
+     [
+      5,
+      "20:30",
+      "bought 3 at 125 each (a bargain, so I took extra)"
+     ],
+     [
+      5,
+      "20:30",
+      "told 4 friends about it"
+     ],
+     [
+      6,
+      "20:00",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      6,
+      "20:00",
+      "chicken is 250, too much; I will wait"
+     ],
+     [
+      6,
+      "20:30",
+      "saw the price drop right when it happened at about 20:30"
+     ],
+     [
+      6,
+      "20:30",
+      "bought 3 at 125 each (a bargain, so I took extra)"
+     ],
+     [
+      6,
+      "20:30",
+      "told 4 friends about it"
+     ],
+     [
+      7,
+      "20:00",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      7,
+      "20:00",
+      "chicken is 250, too much; I will wait"
+     ],
+     [
+      7,
+      "20:30",
+      "saw the price drop right when it happened at about 20:30"
+     ],
+     [
+      7,
+      "20:30",
+      "bought 3 at 125 each (a bargain, so I took extra)"
+     ],
+     [
+      7,
+      "20:30",
+      "told 4 friends about it"
+     ],
+     [
+      8,
+      "20:30",
+      "a friend says the price usually drops around 20:30"
+     ],
+     [
+      9,
+      "20:00",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      9,
+      "20:00",
+      "chicken is 250, too much; I will wait"
+     ],
+     [
+      9,
+      "20:30",
+      "saw the price drop right when it happened at about 20:30"
+     ],
+     [
+      9,
+      "20:30",
+      "bought 3 at 125 each (a bargain, so I took extra)"
+     ],
+     [
+      9,
+      "20:30",
+      "told 4 friends about it"
+     ],
+     [
+      9,
+      "20:30",
+      "a friend says the price usually drops around 20:30"
+     ],
+     [
+      10,
+      "20:00",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      10,
+      "20:00",
+      "chicken is 250, too much; I will wait"
+     ],
+     [
+      10,
+      "20:30",
+      "saw the price drop right when it happened at about 20:30"
+     ],
+     [
+      10,
+      "20:30",
+      "bought 3 at 125 each (a bargain, so I took extra)"
+     ],
+     [
+      10,
+      "20:30",
+      "told 4 friends about it"
+     ],
+     [
+      11,
+      "20:00",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      11,
+      "20:00",
+      "chicken is 250, too much; I will wait"
+     ],
+     [
+      11,
+      "20:30",
+      "saw the price drop right when it happened at about 20:30"
+     ],
+     [
+      11,
+      "20:30",
+      "bought 3 at 125 each (a bargain, so I took extra)"
+     ],
+     [
+      13,
+      "20:00",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      13,
+      "20:00",
+      "chicken is 250, too much; I will wait"
+     ],
+     [
+      13,
+      "20:30",
+      "saw the price drop right when it happened at about 20:30"
+     ],
+     [
+      13,
+      "20:30",
+      "bought 3 at 125 each (a bargain, so I took extra)"
+     ],
+     [
+      13,
+      "20:30",
+      "told 4 friends about it"
+     ]
+    ],
+    "waste_pesos": 70.0,
+    "revenue": 1681.8181818181818,
+    "margin": 431.8181818181818,
+    "net": 361.8181818181818,
+    "full_price_units": 2.090909090909091,
+    "discount_units": 9.272727272727273
+   }
+  },
+  "2": {
+   "none": {
+    "arm": "none",
+    "seed": 2,
+    "days": [
+     {
+      "day": 0,
+      "sold": 4.0,
+      "left": 8.0,
+      "waste_pesos": 880.0,
+      "revenue": 1000.0,
+      "margin": 560.0,
+      "net": -320.0,
+      "full_price_units": 4,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 1,
+      "sold": 1.0,
+      "left": 11.0,
+      "waste_pesos": 1210.0,
+      "revenue": 250.0,
+      "margin": 140.0,
+      "net": -1070.0,
+      "full_price_units": 1,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 2,
+      "sold": 6.0,
+      "left": 6.0,
+      "waste_pesos": 660.0,
+      "revenue": 1500.0,
+      "margin": 840.0,
+      "net": 180.0,
+      "full_price_units": 6,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 3,
+      "sold": 3.0,
+      "left": 9.0,
+      "waste_pesos": 990.0,
+      "revenue": 750.0,
+      "margin": 420.0,
+      "net": -570.0,
+      "full_price_units": 3,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 4,
+      "sold": 4.0,
+      "left": 8.0,
+      "waste_pesos": 880.0,
+      "revenue": 1000.0,
+      "margin": 560.0,
+      "net": -320.0,
+      "full_price_units": 4,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 5,
+      "sold": 6.0,
+      "left": 6.0,
+      "waste_pesos": 660.0,
+      "revenue": 1500.0,
+      "margin": 840.0,
+      "net": 180.0,
+      "full_price_units": 6,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 6,
+      "sold": 6.0,
+      "left": 6.0,
+      "waste_pesos": 660.0,
+      "revenue": 1500.0,
+      "margin": 840.0,
+      "net": 180.0,
+      "full_price_units": 6,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 7,
+      "sold": 4.0,
+      "left": 8.0,
+      "waste_pesos": 880.0,
+      "revenue": 1000.0,
+      "margin": 560.0,
+      "net": -320.0,
+      "full_price_units": 4,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 8,
+      "sold": 6.0,
+      "left": 6.0,
+      "waste_pesos": 660.0,
+      "revenue": 1500.0,
+      "margin": 840.0,
+      "net": 180.0,
+      "full_price_units": 6,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 9,
+      "sold": 5.0,
+      "left": 7.0,
+      "waste_pesos": 770.0,
+      "revenue": 1250.0,
+      "margin": 700.0,
+      "net": -70.0,
+      "full_price_units": 5,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 10,
+      "sold": 3.0,
+      "left": 9.0,
+      "waste_pesos": 990.0,
+      "revenue": 750.0,
+      "margin": 420.0,
+      "net": -570.0,
+      "full_price_units": 3,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 11,
+      "sold": 3.0,
+      "left": 9.0,
+      "waste_pesos": 990.0,
+      "revenue": 750.0,
+      "margin": 420.0,
+      "net": -570.0,
+      "full_price_units": 3,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 12,
+      "sold": 4.0,
+      "left": 8.0,
+      "waste_pesos": 880.0,
+      "revenue": 1000.0,
+      "margin": 560.0,
+      "net": -320.0,
+      "full_price_units": 4,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 13,
+      "sold": 2.0,
+      "left": 10.0,
+      "waste_pesos": 1100.0,
+      "revenue": 500.0,
+      "margin": 280.0,
+      "net": -820.0,
+      "full_price_units": 2,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     }
+    ],
+    "shift": null,
+    "calibration": {
+     "resolved": 0
+    },
+    "marco": [
+     [
+      0,
+      "20:45",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      0,
+      "20:45",
+      "left without buying (price 250 was above what I can pay)"
+     ],
+     [
+      1,
+      "20:30",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      1,
+      "20:30",
+      "left without buying (price 250 was above what I can pay)"
+     ],
+     [
+      2,
+      "21:00",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      2,
+      "21:00",
+      "left without buying (price 250 was above what I can pay)"
+     ],
+     [
+      12,
+      "20:30",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      12,
+      "20:30",
+      "left without buying (price 250 was above what I can pay)"
+     ],
+     [
+      13,
+      "21:00",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      13,
+      "21:00",
+      "left without buying (price 250 was above what I can pay)"
+     ]
+    ],
+    "waste_pesos": 860.0,
+    "revenue": 1045.4545454545455,
+    "margin": 585.4545454545455,
+    "net": -274.54545454545456,
+    "full_price_units": 4.181818181818182,
+    "discount_units": 0.0
+   },
+   "naive": {
+    "arm": "naive",
+    "seed": 2,
+    "days": [
+     {
+      "day": 0,
+      "sold": 4.0,
+      "left": 8.0,
+      "waste_pesos": 880.0,
+      "revenue": 1000.0,
+      "margin": 560.0,
+      "net": -320.0,
+      "full_price_units": 4,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 1,
+      "sold": 1.0,
+      "left": 11.0,
+      "waste_pesos": 1210.0,
+      "revenue": 250.0,
+      "margin": 140.0,
+      "net": -1070.0,
+      "full_price_units": 1,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 2,
+      "sold": 6.0,
+      "left": 6.0,
+      "waste_pesos": 660.0,
+      "revenue": 1500.0,
+      "margin": 840.0,
+      "net": 180.0,
+      "full_price_units": 6,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 3,
+      "sold": 4.0,
+      "left": 8.0,
+      "waste_pesos": 880.0,
+      "revenue": 875.0,
+      "margin": 435.0,
+      "net": -445.0,
+      "full_price_units": 3,
+      "discount_units": 1.0,
+      "cut_hour": 20.5,
+      "waited": 0,
+      "tips": 3
+     },
+     {
+      "day": 4,
+      "sold": 5.0,
+      "left": 7.0,
+      "waste_pesos": 770.0,
+      "revenue": 1125.0,
+      "margin": 575.0,
+      "net": -195.0,
+      "full_price_units": 4,
+      "discount_units": 1.0,
+      "cut_hour": 20.5,
+      "waited": 0,
+      "tips": 3
+     },
+     {
+      "day": 5,
+      "sold": 12.0,
+      "left": 0.0,
+      "waste_pesos": 0.0,
+      "revenue": 2125.0,
+      "margin": 805.0,
+      "net": 805.0,
+      "full_price_units": 5,
+      "discount_units": 7.0,
+      "cut_hour": 20.5,
+      "waited": 0,
+      "tips": 3
+     },
+     {
+      "day": 6,
+      "sold": 6.0,
+      "left": 6.0,
+      "waste_pesos": 660.0,
+      "revenue": 1500.0,
+      "margin": 840.0,
+      "net": 180.0,
+      "full_price_units": 6,
+      "discount_units": 0.0,
+      "cut_hour": 20.5,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 7,
+      "sold": 7.0,
+      "left": 5.0,
+      "waste_pesos": 550.0,
+      "revenue": 1375.0,
+      "margin": 605.0,
+      "net": 55.0,
+      "full_price_units": 4,
+      "discount_units": 3.0,
+      "cut_hour": 20.5,
+      "waited": 0,
+      "tips": 3
+     },
+     {
+      "day": 8,
+      "sold": 7.0,
+      "left": 5.0,
+      "waste_pesos": 550.0,
+      "revenue": 1625.0,
+      "margin": 855.0,
+      "net": 305.0,
+      "full_price_units": 6,
+      "discount_units": 1.0,
+      "cut_hour": 20.5,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 9,
+      "sold": 5.0,
+      "left": 7.0,
+      "waste_pesos": 770.0,
+      "revenue": 1250.0,
+      "margin": 700.0,
+      "net": -70.0,
+      "full_price_units": 5,
+      "discount_units": 0.0,
+      "cut_hour": 20.5,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 10,
+      "sold": 3.0,
+      "left": 9.0,
+      "waste_pesos": 990.0,
+      "revenue": 750.0,
+      "margin": 420.0,
+      "net": -570.0,
+      "full_price_units": 3,
+      "discount_units": 0.0,
+      "cut_hour": 20.5,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 11,
+      "sold": 3.0,
+      "left": 9.0,
+      "waste_pesos": 990.0,
+      "revenue": 750.0,
+      "margin": 420.0,
+      "net": -570.0,
+      "full_price_units": 3,
+      "discount_units": 0.0,
+      "cut_hour": 20.5,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 12,
+      "sold": 7.0,
+      "left": 5.0,
+      "waste_pesos": 550.0,
+      "revenue": 1375.0,
+      "margin": 605.0,
+      "net": 55.0,
+      "full_price_units": 4,
+      "discount_units": 3.0,
+      "cut_hour": 20.5,
+      "waited": 0,
+      "tips": 4
+     },
+     {
+      "day": 13,
+      "sold": 5.0,
+      "left": 7.0,
+      "waste_pesos": 770.0,
+      "revenue": 875.0,
+      "margin": 325.0,
+      "net": -445.0,
+      "full_price_units": 2,
+      "discount_units": 3.0,
+      "cut_hour": 20.5,
+      "waited": 0,
+      "tips": 4
+     }
+    ],
+    "shift": {
+     "before": {
+      "days": 3,
+      "units_per_day": 3.6666666666666665,
+      "full_price_units_per_day": 3.6666666666666665,
+      "discount_units_per_day": 0.0,
+      "discount_share": 0.0,
+      "median_hour": 18.75,
+      "mean_hour": 18.90909090909091,
+      "revenue_per_day": 916.6666666666666
+     },
+     "after": {
+      "days": 5,
+      "units_per_day": 4.6,
+      "full_price_units_per_day": 3.4,
+      "discount_units_per_day": 1.2,
+      "discount_share": 0.2608695652173913,
+      "median_hour": 19.0,
+      "mean_hour": 19.195652173913043,
+      "revenue_per_day": 1000.0
+     },
+     "mean_hour_shift": 0.28656126482213296,
+     "p_value": 0.4267866066966517,
+     "shifted": false,
+     "full_price_change_per_day": -0.2666666666666666,
+     "discount_share_change": 0.2608695652173913,
+     "verdict": "No reliable change in when customers buy."
+    },
+    "calibration": {
+     "resolved": 11,
+     "units_mae": 4.74088627491175,
+     "naive_units_mae": 5.084693084693085,
+     "units_skill": 0.0676160397598683,
+     "waste_mae_pesos": 521.4974902402926,
+     "naive_waste_mae_pesos": 559.3162393162394,
+     "margin_mae_pesos": 71.11329412367625,
+     "interval_coverage": 0.0,
+     "predicted_waste_pesos": 8926.472392643218,
+     "realized_waste_pesos": 3190.0
+    },
+    "marco": [
+     [
+      0,
+      "20:45",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      0,
+      "20:45",
+      "left without buying (price 250 was above what I can pay)"
+     ],
+     [
+      1,
+      "20:30",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      1,
+      "20:30",
+      "left without buying (price 250 was above what I can pay)"
+     ],
+     [
+      2,
+      "21:00",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      2,
+      "21:00",
+      "left without buying (price 250 was above what I can pay)"
+     ],
+     [
+      12,
+      "20:30",
+      "arrived at the shop, chicken is 125"
+     ],
+     [
+      12,
+      "20:30",
+      "saw the price drop (already cut when I got there) at about 20:30"
+     ],
+     [
+      12,
+      "20:30",
+      "bought 3 at 125 each (a bargain, so I took extra)"
+     ],
+     [
+      12,
+      "20:30",
+      "told 4 friends about it"
+     ],
+     [
+      13,
+      "21:00",
+      "arrived at the shop, chicken is 125"
+     ],
+     [
+      13,
+      "21:00",
+      "saw the price drop (already cut when I got there) at about 21:00"
+     ],
+     [
+      13,
+      "21:00",
+      "bought 3 at 125 each (a bargain, so I took extra)"
+     ],
+     [
+      13,
+      "21:00",
+      "told 4 friends about it"
+     ]
+    ],
+    "waste_pesos": 680.0,
+    "revenue": 1238.6363636363637,
+    "margin": 598.6363636363636,
+    "net": -81.36363636363636,
+    "full_price_units": 4.090909090909091,
+    "discount_units": 1.7272727272727273
+   },
+   "learning": {
+    "arm": "learning",
+    "seed": 2,
+    "days": [
+     {
+      "day": 0,
+      "sold": 4.0,
+      "left": 8.0,
+      "waste_pesos": 880.0,
+      "revenue": 1000.0,
+      "margin": 560.0,
+      "net": -320.0,
+      "full_price_units": 4,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 1,
+      "sold": 1.0,
+      "left": 11.0,
+      "waste_pesos": 1210.0,
+      "revenue": 250.0,
+      "margin": 140.0,
+      "net": -1070.0,
+      "full_price_units": 1,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 2,
+      "sold": 6.0,
+      "left": 6.0,
+      "waste_pesos": 660.0,
+      "revenue": 1500.0,
+      "margin": 840.0,
+      "net": 180.0,
+      "full_price_units": 6,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 3,
+      "sold": 5.0,
+      "left": 7.0,
+      "waste_pesos": 770.0,
+      "revenue": 1000.0,
+      "margin": 450.0,
+      "net": -320.0,
+      "full_price_units": 3,
+      "discount_units": 2.0,
+      "cut_hour": 20.5,
+      "waited": 0,
+      "tips": 3
+     },
+     {
+      "day": 4,
+      "sold": 12.0,
+      "left": 0.0,
+      "waste_pesos": 0.0,
+      "revenue": 2000.0,
+      "margin": 680.0,
+      "net": 680.0,
+      "full_price_units": 4,
+      "discount_units": 8.0,
+      "cut_hour": 20.5,
+      "waited": 9,
+      "tips": 12
+     },
+     {
+      "day": 5,
+      "sold": 12.0,
+      "left": 0.0,
+      "waste_pesos": 0.0,
+      "revenue": 2125.0,
+      "margin": 805.0,
+      "net": 805.0,
+      "full_price_units": 5,
+      "discount_units": 7.0,
+      "cut_hour": 20.5,
+      "waited": 12,
+      "tips": 6
+     },
+     {
+      "day": 6,
+      "sold": 12.0,
+      "left": 0.0,
+      "waste_pesos": 0.0,
+      "revenue": 2250.0,
+      "margin": 930.0,
+      "net": 930.0,
+      "full_price_units": 6,
+      "discount_units": 6.0,
+      "cut_hour": 20.5,
+      "waited": 7,
+      "tips": 9
+     },
+     {
+      "day": 7,
+      "sold": 12.0,
+      "left": 0.0,
+      "waste_pesos": 0.0,
+      "revenue": 2000.0,
+      "margin": 680.0,
+      "net": 680.0,
+      "full_price_units": 4,
+      "discount_units": 8.0,
+      "cut_hour": 20.5,
+      "waited": 11,
+      "tips": 12
+     },
+     {
+      "day": 8,
+      "sold": 12.0,
+      "left": 0.0,
+      "waste_pesos": 0.0,
+      "revenue": 2125.0,
+      "margin": 805.0,
+      "net": 805.0,
+      "full_price_units": 5,
+      "discount_units": 7.0,
+      "cut_hour": 20.5,
+      "waited": 7,
+      "tips": 3
+     },
+     {
+      "day": 9,
+      "sold": 12.0,
+      "left": 0.0,
+      "waste_pesos": 0.0,
+      "revenue": 2000.0,
+      "margin": 680.0,
+      "net": 680.0,
+      "full_price_units": 4,
+      "discount_units": 8.0,
+      "cut_hour": 20.5,
+      "waited": 10,
+      "tips": 6
+     },
+     {
+      "day": 10,
+      "sold": 11.0,
+      "left": 1.0,
+      "waste_pesos": 110.0,
+      "revenue": 1750.0,
+      "margin": 540.0,
+      "net": 430.0,
+      "full_price_units": 3,
+      "discount_units": 8.0,
+      "cut_hour": 20.5,
+      "waited": 5,
+      "tips": 12
+     },
+     {
+      "day": 11,
+      "sold": 12.0,
+      "left": 0.0,
+      "waste_pesos": 0.0,
+      "revenue": 1750.0,
+      "margin": 430.0,
+      "net": 430.0,
+      "full_price_units": 2,
+      "discount_units": 10.0,
+      "cut_hour": 20.5,
+      "waited": 9,
+      "tips": 6
+     },
+     {
+      "day": 12,
+      "sold": 12.0,
+      "left": 0.0,
+      "waste_pesos": 0.0,
+      "revenue": 1750.0,
+      "margin": 430.0,
+      "net": 430.0,
+      "full_price_units": 2,
+      "discount_units": 10.0,
+      "cut_hour": 20.5,
+      "waited": 7,
+      "tips": 13
+     },
+     {
+      "day": 13,
+      "sold": 12.0,
+      "left": 0.0,
+      "waste_pesos": 0.0,
+      "revenue": 1750.0,
+      "margin": 430.0,
+      "net": 430.0,
+      "full_price_units": 2,
+      "discount_units": 10.0,
+      "cut_hour": 20.5,
+      "waited": 6,
+      "tips": 13
+     }
+    ],
+    "shift": {
+     "before": {
+      "days": 3,
+      "units_per_day": 3.6666666666666665,
+      "full_price_units_per_day": 3.6666666666666665,
+      "discount_units_per_day": 0.0,
+      "discount_share": 0.0,
+      "median_hour": 18.75,
+      "mean_hour": 18.90909090909091,
+      "revenue_per_day": 916.6666666666666
+     },
+     "after": {
+      "days": 5,
+      "units_per_day": 11.8,
+      "full_price_units_per_day": 2.6,
+      "discount_units_per_day": 9.2,
+      "discount_share": 0.7796610169491526,
+      "median_hour": 20.5,
+      "mean_hour": 20.050847457627118,
+      "revenue_per_day": 1800.0
+     },
+     "mean_hour_shift": 1.1417565485362076,
+     "p_value": 0.0004997501249375312,
+     "shifted": true,
+     "full_price_change_per_day": -1.0666666666666664,
+     "discount_share_change": 0.7796610169491526,
+     "verdict": "Customers now buy 1.1 h later (median 18:45 -> 20:30); clearance-priced units went from 0% to 78% of sales, and full-price units from 3.7 to 2.6 per day."
+    },
+    "calibration": {
+     "resolved": 11,
+     "units_mae": 7.4681590021844775,
+     "naive_units_mae": 7.811965811965812,
+     "units_skill": 0.044010280901987,
+     "waste_mae_pesos": 821.4974902402926,
+     "naive_waste_mae_pesos": 859.3162393162394,
+     "margin_mae_pesos": 112.02238503276716,
+     "interval_coverage": 0.0,
+     "predicted_waste_pesos": 9476.472392643218,
+     "realized_waste_pesos": 440.0
+    },
+    "marco": [
+     [
+      0,
+      "20:45",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      0,
+      "20:45",
+      "cashier: it depends, no fixed time"
+     ],
+     [
+      0,
+      "21:00",
+      "left without buying (price 250 was above what I can pay)"
+     ],
+     [
+      1,
+      "20:30",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      1,
+      "20:30",
+      "cashier: it depends, no fixed time"
+     ],
+     [
+      1,
+      "20:45",
+      "left without buying (price 250 was above what I can pay)"
+     ],
+     [
+      2,
+      "21:00",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      2,
+      "21:00",
+      "cashier: it depends, no fixed time"
+     ],
+     [
+      2,
+      "21:15",
+      "left without buying (price 250 was above what I can pay)"
+     ],
+     [
+      4,
+      "20:30",
+      "a friend says the price usually drops around 20:30"
+     ],
+     [
+      8,
+      "20:30",
+      "a friend says the price usually drops around 20:30"
+     ],
+     [
+      9,
+      "20:30",
+      "a friend says the price usually drops around 20:30"
+     ],
+     [
+      11,
+      "20:30",
+      "a friend says the price usually drops around 20:30"
+     ],
+     [
+      12,
+      "19:00",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      12,
+      "19:00",
+      "cashier says the price usually drops around 20:30"
+     ],
+     [
+      12,
+      "19:15",
+      "chicken is 250, too much; I will wait"
+     ],
+     [
+      12,
+      "20:30",
+      "saw the price drop right when it happened at about 20:30"
+     ],
+     [
+      12,
+      "20:30",
+      "bought 3 at 125 each (a bargain, so I took extra)"
+     ],
+     [
+      12,
+      "20:30",
+      "told 4 friends about it"
+     ],
+     [
+      12,
+      "20:30",
+      "a friend says the price usually drops around 20:30"
+     ],
+     [
+      13,
+      "19:45",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      13,
+      "19:45",
+      "chicken is 250, too much; I will wait"
+     ],
+     [
+      13,
+      "20:30",
+      "saw the price drop right when it happened at about 20:30"
+     ],
+     [
+      13,
+      "20:30",
+      "bought 3 at 125 each (a bargain, so I took extra)"
+     ],
+     [
+      13,
+      "20:30",
+      "told 4 friends about it"
+     ],
+     [
+      13,
+      "20:30",
+      "a friend says the price usually drops around 20:30"
+     ]
+    ],
+    "waste_pesos": 80.0,
+    "revenue": 1863.6363636363637,
+    "margin": 623.6363636363636,
+    "net": 543.6363636363636,
+    "full_price_units": 3.6363636363636362,
+    "discount_units": 7.636363636363637
+   }
+  },
+  "3": {
+   "none": {
+    "arm": "none",
+    "seed": 3,
+    "days": [
+     {
+      "day": 0,
+      "sold": 2.0,
+      "left": 10.0,
+      "waste_pesos": 1100.0,
+      "revenue": 500.0,
+      "margin": 280.0,
+      "net": -820.0,
+      "full_price_units": 2,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 1,
+      "sold": 3.0,
+      "left": 9.0,
+      "waste_pesos": 990.0,
+      "revenue": 750.0,
+      "margin": 420.0,
+      "net": -570.0,
+      "full_price_units": 3,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 2,
+      "sold": 1.0,
+      "left": 11.0,
+      "waste_pesos": 1210.0,
+      "revenue": 250.0,
+      "margin": 140.0,
+      "net": -1070.0,
+      "full_price_units": 1,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 3,
+      "sold": 4.0,
+      "left": 8.0,
+      "waste_pesos": 880.0,
+      "revenue": 1000.0,
+      "margin": 560.0,
+      "net": -320.0,
+      "full_price_units": 4,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 4,
+      "sold": 2.0,
+      "left": 10.0,
+      "waste_pesos": 1100.0,
+      "revenue": 500.0,
+      "margin": 280.0,
+      "net": -820.0,
+      "full_price_units": 2,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 5,
+      "sold": 1.0,
+      "left": 11.0,
+      "waste_pesos": 1210.0,
+      "revenue": 250.0,
+      "margin": 140.0,
+      "net": -1070.0,
+      "full_price_units": 1,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 6,
+      "sold": 3.0,
+      "left": 9.0,
+      "waste_pesos": 990.0,
+      "revenue": 750.0,
+      "margin": 420.0,
+      "net": -570.0,
+      "full_price_units": 3,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 7,
+      "sold": 0.0,
+      "left": 12.0,
+      "waste_pesos": 1320.0,
+      "revenue": 0,
+      "margin": 0.0,
+      "net": -1320.0,
+      "full_price_units": 0,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 8,
+      "sold": 3.0,
+      "left": 9.0,
+      "waste_pesos": 990.0,
+      "revenue": 750.0,
+      "margin": 420.0,
+      "net": -570.0,
+      "full_price_units": 3,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 9,
+      "sold": 3.0,
+      "left": 9.0,
+      "waste_pesos": 990.0,
+      "revenue": 750.0,
+      "margin": 420.0,
+      "net": -570.0,
+      "full_price_units": 3,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 10,
+      "sold": 2.0,
+      "left": 10.0,
+      "waste_pesos": 1100.0,
+      "revenue": 500.0,
+      "margin": 280.0,
+      "net": -820.0,
+      "full_price_units": 2,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 11,
+      "sold": 5.0,
+      "left": 7.0,
+      "waste_pesos": 770.0,
+      "revenue": 1250.0,
+      "margin": 700.0,
+      "net": -70.0,
+      "full_price_units": 5,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 12,
+      "sold": 3.0,
+      "left": 9.0,
+      "waste_pesos": 990.0,
+      "revenue": 750.0,
+      "margin": 420.0,
+      "net": -570.0,
+      "full_price_units": 3,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 13,
+      "sold": 5.0,
+      "left": 7.0,
+      "waste_pesos": 770.0,
+      "revenue": 1250.0,
+      "margin": 700.0,
+      "net": -70.0,
+      "full_price_units": 5,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     }
+    ],
+    "shift": null,
+    "calibration": {
+     "resolved": 0
+    },
+    "marco": [
+     [
+      1,
+      "20:45",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      1,
+      "20:45",
+      "left without buying (price 250 was above what I can pay)"
+     ],
+     [
+      2,
+      "21:15",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      2,
+      "21:15",
+      "left without buying (price 250 was above what I can pay)"
+     ],
+     [
+      4,
+      "20:45",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      4,
+      "20:45",
+      "left without buying (price 250 was above what I can pay)"
+     ],
+     [
+      5,
+      "21:00",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      5,
+      "21:00",
+      "left without buying (price 250 was above what I can pay)"
+     ],
+     [
+      6,
+      "20:45",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      6,
+      "20:45",
+      "left without buying (price 250 was above what I can pay)"
+     ],
+     [
+      7,
+      "21:30",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      7,
+      "21:30",
+      "left without buying (price 250 was above what I can pay)"
+     ],
+     [
+      9,
+      "20:45",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      9,
+      "20:45",
+      "left without buying (price 250 was above what I can pay)"
+     ],
+     [
+      10,
+      "20:45",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      10,
+      "20:45",
+      "left without buying (price 250 was above what I can pay)"
+     ],
+     [
+      12,
+      "21:00",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      12,
+      "21:00",
+      "left without buying (price 250 was above what I can pay)"
+     ],
+     [
+      13,
+      "20:30",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      13,
+      "20:30",
+      "left without buying (price 250 was above what I can pay)"
+     ]
+    ],
+    "waste_pesos": 1010.0,
+    "revenue": 704.5454545454545,
+    "margin": 394.54545454545456,
+    "net": -615.4545454545455,
+    "full_price_units": 2.8181818181818183,
+    "discount_units": 0.0
+   },
+   "naive": {
+    "arm": "naive",
+    "seed": 3,
+    "days": [
+     {
+      "day": 0,
+      "sold": 2.0,
+      "left": 10.0,
+      "waste_pesos": 1100.0,
+      "revenue": 500.0,
+      "margin": 280.0,
+      "net": -820.0,
+      "full_price_units": 2,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 1,
+      "sold": 3.0,
+      "left": 9.0,
+      "waste_pesos": 990.0,
+      "revenue": 750.0,
+      "margin": 420.0,
+      "net": -570.0,
+      "full_price_units": 3,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 2,
+      "sold": 1.0,
+      "left": 11.0,
+      "waste_pesos": 1210.0,
+      "revenue": 250.0,
+      "margin": 140.0,
+      "net": -1070.0,
+      "full_price_units": 1,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 3,
+      "sold": 12.0,
+      "left": 0.0,
+      "waste_pesos": 0.0,
+      "revenue": 2000.0,
+      "margin": 680.0,
+      "net": 680.0,
+      "full_price_units": 4,
+      "discount_units": 8.0,
+      "cut_hour": 20.5,
+      "waited": 0,
+      "tips": 9
+     },
+     {
+      "day": 4,
+      "sold": 11.0,
+      "left": 1.0,
+      "waste_pesos": 110.0,
+      "revenue": 1625.0,
+      "margin": 415.0,
+      "net": 305.0,
+      "full_price_units": 2,
+      "discount_units": 9.0,
+      "cut_hour": 20.5,
+      "waited": 0,
+      "tips": 10
+     },
+     {
+      "day": 5,
+      "sold": 12.0,
+      "left": 0.0,
+      "waste_pesos": 0.0,
+      "revenue": 1625.0,
+      "margin": 305.0,
+      "net": 305.0,
+      "full_price_units": 1,
+      "discount_units": 11.0,
+      "cut_hour": 20.5,
+      "waited": 0,
+      "tips": 13
+     },
+     {
+      "day": 6,
+      "sold": 9.0,
+      "left": 3.0,
+      "waste_pesos": 330.0,
+      "revenue": 1500.0,
+      "margin": 510.0,
+      "net": 180.0,
+      "full_price_units": 3,
+      "discount_units": 6.0,
+      "cut_hour": 20.5,
+      "waited": 0,
+      "tips": 7
+     },
+     {
+      "day": 7,
+      "sold": 6.0,
+      "left": 6.0,
+      "waste_pesos": 660.0,
+      "revenue": 750.0,
+      "margin": 90.0,
+      "net": -570.0,
+      "full_price_units": 0,
+      "discount_units": 6.0,
+      "cut_hour": 20.5,
+      "waited": 0,
+      "tips": 7
+     },
+     {
+      "day": 8,
+      "sold": 8.0,
+      "left": 4.0,
+      "waste_pesos": 440.0,
+      "revenue": 1375.0,
+      "margin": 495.0,
+      "net": 55.0,
+      "full_price_units": 3,
+      "discount_units": 5.0,
+      "cut_hour": 20.5,
+      "waited": 0,
+      "tips": 6
+     },
+     {
+      "day": 9,
+      "sold": 11.0,
+      "left": 1.0,
+      "waste_pesos": 110.0,
+      "revenue": 1750.0,
+      "margin": 540.0,
+      "net": 430.0,
+      "full_price_units": 3,
+      "discount_units": 8.0,
+      "cut_hour": 20.5,
+      "waited": 0,
+      "tips": 6
+     },
+     {
+      "day": 10,
+      "sold": 10.0,
+      "left": 2.0,
+      "waste_pesos": 220.0,
+      "revenue": 1500.0,
+      "margin": 400.0,
+      "net": 180.0,
+      "full_price_units": 2,
+      "discount_units": 8.0,
+      "cut_hour": 20.5,
+      "waited": 0,
+      "tips": 10
+     },
+     {
+      "day": 11,
+      "sold": 5.0,
+      "left": 7.0,
+      "waste_pesos": 770.0,
+      "revenue": 1250.0,
+      "margin": 700.0,
+      "net": -70.0,
+      "full_price_units": 5,
+      "discount_units": 0.0,
+      "cut_hour": 20.5,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 12,
+      "sold": 11.0,
+      "left": 1.0,
+      "waste_pesos": 110.0,
+      "revenue": 1750.0,
+      "margin": 540.0,
+      "net": 430.0,
+      "full_price_units": 3,
+      "discount_units": 8.0,
+      "cut_hour": 20.5,
+      "waited": 0,
+      "tips": 10
+     },
+     {
+      "day": 13,
+      "sold": 12.0,
+      "left": 0.0,
+      "waste_pesos": 0.0,
+      "revenue": 2000.0,
+      "margin": 680.0,
+      "net": 680.0,
+      "full_price_units": 4,
+      "discount_units": 8.0,
+      "cut_hour": 20.5,
+      "waited": 0,
+      "tips": 10
+     }
+    ],
+    "shift": {
+     "before": {
+      "days": 3,
+      "units_per_day": 2.0,
+      "full_price_units_per_day": 2.0,
+      "discount_units_per_day": 0.0,
+      "discount_share": 0.0,
+      "median_hour": 19.625,
+      "mean_hour": 19.458333333333332,
+      "revenue_per_day": 500.0
+     },
+     "after": {
+      "days": 5,
+      "units_per_day": 9.8,
+      "full_price_units_per_day": 3.4,
+      "discount_units_per_day": 6.4,
+      "discount_share": 0.6530612244897959,
+      "median_hour": 20.75,
+      "mean_hour": 20.346938775510203,
+      "revenue_per_day": 1650.0
+     },
+     "mean_hour_shift": 0.8886054421768712,
+     "p_value": 0.019490254872563718,
+     "shifted": false,
+     "full_price_change_per_day": 1.4,
+     "discount_share_change": 0.6530612244897959,
+     "verdict": "No reliable change in when customers buy."
+    },
+    "calibration": {
+     "resolved": 11,
+     "units_mae": 7.439212640534001,
+     "naive_units_mae": 8.095571095571096,
+     "units_skill": 0.08107623875926095,
+     "waste_mae_pesos": 818.3133904587402,
+     "naive_waste_mae_pesos": 890.5128205128204,
+     "margin_mae_pesos": 111.58818960801001,
+     "interval_coverage": 0.0,
+     "predicted_waste_pesos": 9991.447295046142,
+     "realized_waste_pesos": 990.0
+    },
+    "marco": [
+     [
+      1,
+      "20:45",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      1,
+      "20:45",
+      "left without buying (price 250 was above what I can pay)"
+     ],
+     [
+      2,
+      "21:15",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      2,
+      "21:15",
+      "left without buying (price 250 was above what I can pay)"
+     ],
+     [
+      3,
+      "20:30",
+      "a friend says the price usually drops around 20:30"
+     ],
+     [
+      4,
+      "20:45",
+      "arrived at the shop, chicken is 125"
+     ],
+     [
+      4,
+      "20:45",
+      "saw the price drop (already cut when I got there) at about 20:45"
+     ],
+     [
+      4,
+      "20:45",
+      "bought 3 at 125 each (a bargain, so I took extra)"
+     ],
+     [
+      4,
+      "20:45",
+      "told 4 friends about it"
+     ],
+     [
+      5,
+      "21:00",
+      "arrived at the shop, chicken is 125"
+     ],
+     [
+      5,
+      "21:00",
+      "saw the price drop (already cut when I got there) at about 21:00"
+     ],
+     [
+      5,
+      "21:00",
+      "bought 3 at 125 each (a bargain, so I took extra)"
+     ],
+     [
+      5,
+      "21:00",
+      "told 4 friends about it"
+     ],
+     [
+      5,
+      "21:15",
+      "a friend says the price usually drops around 20:30"
+     ],
+     [
+      6,
+      "20:45",
+      "arrived at the shop, chicken is 125"
+     ],
+     [
+      6,
+      "20:45",
+      "saw the price drop (already cut when I got there) at about 20:45"
+     ],
+     [
+      6,
+      "20:45",
+      "bought 3 at 125 each (a bargain, so I took extra)"
+     ],
+     [
+      6,
+      "20:45",
+      "told 4 friends about it"
+     ],
+     [
+      7,
+      "21:30",
+      "arrived at the shop, chicken is 125"
+     ],
+     [
+      7,
+      "21:30",
+      "saw the price drop (already cut when I got there) at about 21:30"
+     ],
+     [
+      7,
+      "21:30",
+      "bought 3 at 125 each (a bargain, so I took extra)"
+     ],
+     [
+      7,
+      "21:30",
+      "told 4 friends about it"
+     ],
+     [
+      9,
+      "20:45",
+      "arrived at the shop, chicken is 125"
+     ],
+     [
+      9,
+      "20:45",
+      "saw the price drop (already cut when I got there) at about 20:45"
+     ],
+     [
+      9,
+      "20:45",
+      "bought 3 at 125 each (a bargain, so I took extra)"
+     ],
+     [
+      10,
+      "20:45",
+      "arrived at the shop, chicken is 125"
+     ],
+     [
+      10,
+      "20:45",
+      "saw the price drop (already cut when I got there) at about 20:45"
+     ],
+     [
+      10,
+      "20:45",
+      "bought 3 at 125 each (a bargain, so I took extra)"
+     ],
+     [
+      10,
+      "20:45",
+      "told 4 friends about it"
+     ],
+     [
+      12,
+      "21:00",
+      "arrived at the shop, chicken is 125"
+     ],
+     [
+      12,
+      "21:00",
+      "saw the price drop (already cut when I got there) at about 21:00"
+     ],
+     [
+      12,
+      "21:00",
+      "bought 3 at 125 each (a bargain, so I took extra)"
+     ],
+     [
+      12,
+      "21:00",
+      "told 4 friends about it"
+     ],
+     [
+      13,
+      "20:30",
+      "arrived at the shop, chicken is 125"
+     ],
+     [
+      13,
+      "20:30",
+      "saw the price drop (already cut when I got there) at about 20:30"
+     ],
+     [
+      13,
+      "20:30",
+      "bought 3 at 125 each (a bargain, so I took extra)"
+     ],
+     [
+      13,
+      "20:30",
+      "told 4 friends about it"
+     ],
+     [
+      13,
+      "21:00",
+      "a friend says the price usually drops around 20:30"
+     ]
+    ],
+    "waste_pesos": 250.0,
+    "revenue": 1556.8181818181818,
+    "margin": 486.8181818181818,
+    "net": 236.8181818181818,
+    "full_price_units": 2.727272727272727,
+    "discount_units": 7.0
+   },
+   "learning": {
+    "arm": "learning",
+    "seed": 3,
+    "days": [
+     {
+      "day": 0,
+      "sold": 2.0,
+      "left": 10.0,
+      "waste_pesos": 1100.0,
+      "revenue": 500.0,
+      "margin": 280.0,
+      "net": -820.0,
+      "full_price_units": 2,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 1,
+      "sold": 3.0,
+      "left": 9.0,
+      "waste_pesos": 990.0,
+      "revenue": 750.0,
+      "margin": 420.0,
+      "net": -570.0,
+      "full_price_units": 3,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 2,
+      "sold": 1.0,
+      "left": 11.0,
+      "waste_pesos": 1210.0,
+      "revenue": 250.0,
+      "margin": 140.0,
+      "net": -1070.0,
+      "full_price_units": 1,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 3,
+      "sold": 12.0,
+      "left": 0.0,
+      "waste_pesos": 0.0,
+      "revenue": 2000.0,
+      "margin": 680.0,
+      "net": 680.0,
+      "full_price_units": 4,
+      "discount_units": 8.0,
+      "cut_hour": 20.5,
+      "waited": 0,
+      "tips": 9
+     },
+     {
+      "day": 4,
+      "sold": 12.0,
+      "left": 0.0,
+      "waste_pesos": 0.0,
+      "revenue": 1750.0,
+      "margin": 430.0,
+      "net": 430.0,
+      "full_price_units": 2,
+      "discount_units": 10.0,
+      "cut_hour": 20.5,
+      "waited": 7,
+      "tips": 10
+     },
+     {
+      "day": 5,
+      "sold": 12.0,
+      "left": 0.0,
+      "waste_pesos": 0.0,
+      "revenue": 1625.0,
+      "margin": 305.0,
+      "net": 305.0,
+      "full_price_units": 1,
+      "discount_units": 11.0,
+      "cut_hour": 20.5,
+      "waited": 11,
+      "tips": 13
+     },
+     {
+      "day": 6,
+      "sold": 12.0,
+      "left": 0.0,
+      "waste_pesos": 0.0,
+      "revenue": 1875.0,
+      "margin": 555.0,
+      "net": 555.0,
+      "full_price_units": 3,
+      "discount_units": 9.0,
+      "cut_hour": 20.5,
+      "waited": 10,
+      "tips": 3
+     },
+     {
+      "day": 7,
+      "sold": 12.0,
+      "left": 0.0,
+      "waste_pesos": 0.0,
+      "revenue": 1500.0,
+      "margin": 180.0,
+      "net": 180.0,
+      "full_price_units": 0,
+      "discount_units": 12.0,
+      "cut_hour": 20.5,
+      "waited": 8,
+      "tips": 16
+     },
+     {
+      "day": 8,
+      "sold": 12.0,
+      "left": 0.0,
+      "waste_pesos": 0.0,
+      "revenue": 1875.0,
+      "margin": 555.0,
+      "net": 555.0,
+      "full_price_units": 3,
+      "discount_units": 9.0,
+      "cut_hour": 20.5,
+      "waited": 8,
+      "tips": 12
+     },
+     {
+      "day": 9,
+      "sold": 12.0,
+      "left": 0.0,
+      "waste_pesos": 0.0,
+      "revenue": 1875.0,
+      "margin": 555.0,
+      "net": 555.0,
+      "full_price_units": 3,
+      "discount_units": 9.0,
+      "cut_hour": 20.5,
+      "waited": 13,
+      "tips": 10
+     },
+     {
+      "day": 10,
+      "sold": 12.0,
+      "left": 0.0,
+      "waste_pesos": 0.0,
+      "revenue": 1750.0,
+      "margin": 430.0,
+      "net": 430.0,
+      "full_price_units": 2,
+      "discount_units": 10.0,
+      "cut_hour": 20.5,
+      "waited": 12,
+      "tips": 10
+     },
+     {
+      "day": 11,
+      "sold": 12.0,
+      "left": 0.0,
+      "waste_pesos": 0.0,
+      "revenue": 2000.0,
+      "margin": 680.0,
+      "net": 680.0,
+      "full_price_units": 4,
+      "discount_units": 8.0,
+      "cut_hour": 20.5,
+      "waited": 9,
+      "tips": 3
+     },
+     {
+      "day": 12,
+      "sold": 12.0,
+      "left": 0.0,
+      "waste_pesos": 0.0,
+      "revenue": 1875.0,
+      "margin": 555.0,
+      "net": 555.0,
+      "full_price_units": 3,
+      "discount_units": 9.0,
+      "cut_hour": 20.5,
+      "waited": 10,
+      "tips": 7
+     },
+     {
+      "day": 13,
+      "sold": 12.0,
+      "left": 0.0,
+      "waste_pesos": 0.0,
+      "revenue": 1750.0,
+      "margin": 430.0,
+      "net": 430.0,
+      "full_price_units": 2,
+      "discount_units": 10.0,
+      "cut_hour": 20.5,
+      "waited": 13,
+      "tips": 16
+     }
+    ],
+    "shift": {
+     "before": {
+      "days": 3,
+      "units_per_day": 2.0,
+      "full_price_units_per_day": 2.0,
+      "discount_units_per_day": 0.0,
+      "discount_share": 0.0,
+      "median_hour": 19.625,
+      "mean_hour": 19.458333333333332,
+      "revenue_per_day": 500.0
+     },
+     "after": {
+      "days": 5,
+      "units_per_day": 12.0,
+      "full_price_units_per_day": 2.8,
+      "discount_units_per_day": 9.2,
+      "discount_share": 0.7666666666666667,
+      "median_hour": 20.5,
+      "mean_hour": 20.216666666666665,
+      "revenue_per_day": 1850.0
+     },
+     "mean_hour_shift": 0.7583333333333329,
+     "p_value": 0.015992003998001,
+     "shifted": false,
+     "full_price_change_per_day": 0.7999999999999998,
+     "discount_share_change": 0.7666666666666667,
+     "verdict": "No reliable change in when customers buy."
+    },
+    "calibration": {
+     "resolved": 11,
+     "units_mae": 8.530121731443092,
+     "naive_units_mae": 9.186480186480185,
+     "units_skill": 0.07144830682844783,
+     "waste_mae_pesos": 938.3133904587402,
+     "naive_waste_mae_pesos": 1010.5128205128204,
+     "margin_mae_pesos": 127.95182597164639,
+     "interval_coverage": 0.0,
+     "predicted_waste_pesos": 10321.447295046142,
+     "realized_waste_pesos": 0.0
+    },
+    "marco": [
+     [
+      1,
+      "20:45",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      1,
+      "20:45",
+      "cashier: it depends, no fixed time"
+     ],
+     [
+      1,
+      "21:00",
+      "left without buying (price 250 was above what I can pay)"
+     ],
+     [
+      2,
+      "21:15",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      2,
+      "21:15",
+      "cashier: it depends, no fixed time"
+     ],
+     [
+      2,
+      "21:30",
+      "left without buying (price 250 was above what I can pay)"
+     ],
+     [
+      3,
+      "20:30",
+      "a friend says the price usually drops around 20:30"
+     ],
+     [
+      4,
+      "19:00",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      4,
+      "19:00",
+      "cashier says the price usually drops around 20:30"
+     ],
+     [
+      4,
+      "19:15",
+      "chicken is 250, too much; I will wait"
+     ],
+     [
+      4,
+      "20:30",
+      "saw the price drop right when it happened at about 20:30"
+     ],
+     [
+      4,
+      "20:30",
+      "bought 3 at 125 each (a bargain, so I took extra)"
+     ],
+     [
+      4,
+      "20:30",
+      "told 4 friends about it"
+     ],
+     [
+      4,
+      "20:30",
+      "a friend says the price usually drops around 20:30"
+     ],
+     [
+      5,
+      "19:45",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      5,
+      "19:45",
+      "chicken is 250, too much; I will wait"
+     ],
+     [
+      5,
+      "20:30",
+      "saw the price drop right when it happened at about 20:30"
+     ],
+     [
+      5,
+      "20:30",
+      "bought 3 at 125 each (a bargain, so I took extra)"
+     ],
+     [
+      5,
+      "20:30",
+      "told 4 friends about it"
+     ],
+     [
+      5,
+      "20:30",
+      "a friend says the price usually drops around 20:30"
+     ],
+     [
+      6,
+      "20:00",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      6,
+      "20:00",
+      "chicken is 250, too much; I will wait"
+     ],
+     [
+      6,
+      "20:30",
+      "saw the price drop right when it happened at about 20:30"
+     ],
+     [
+      6,
+      "20:30",
+      "bought 3 at 125 each (a bargain, so I took extra)"
+     ],
+     [
+      7,
+      "20:00",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      7,
+      "20:00",
+      "chicken is 250, too much; I will wait"
+     ],
+     [
+      7,
+      "20:30",
+      "saw the price drop right when it happened at about 20:30"
+     ],
+     [
+      7,
+      "20:30",
+      "bought 3 at 125 each (a bargain, so I took extra)"
+     ],
+     [
+      7,
+      "20:30",
+      "told 4 friends about it"
+     ],
+     [
+      7,
+      "20:30",
+      "a friend says the price usually drops around 20:30"
+     ],
+     [
+      9,
+      "20:00",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      9,
+      "20:00",
+      "chicken is 250, too much; I will wait"
+     ],
+     [
+      9,
+      "20:30",
+      "saw the price drop right when it happened at about 20:30"
+     ],
+     [
+      9,
+      "20:30",
+      "bought 3 at 125 each (a bargain, so I took extra)"
+     ],
+     [
+      9,
+      "20:30",
+      "told 4 friends about it"
+     ],
+     [
+      10,
+      "20:00",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      10,
+      "20:00",
+      "chicken is 250, too much; I will wait"
+     ],
+     [
+      10,
+      "20:30",
+      "saw the price drop right when it happened at about 20:30"
+     ],
+     [
+      10,
+      "20:30",
+      "bought 3 at 125 each (a bargain, so I took extra)"
+     ],
+     [
+      10,
+      "20:30",
+      "told 4 friends about it"
+     ],
+     [
+      10,
+      "20:30",
+      "a friend says the price usually drops around 20:30"
+     ],
+     [
+      12,
+      "20:00",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      12,
+      "20:00",
+      "chicken is 250, too much; I will wait"
+     ],
+     [
+      12,
+      "20:30",
+      "saw the price drop right when it happened at about 20:30"
+     ],
+     [
+      12,
+      "20:30",
+      "bought 3 at 125 each (a bargain, so I took extra)"
+     ],
+     [
+      12,
+      "20:30",
+      "told 4 friends about it"
+     ],
+     [
+      13,
+      "20:00",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      13,
+      "20:00",
+      "chicken is 250, too much; I will wait"
+     ],
+     [
+      13,
+      "20:30",
+      "saw the price drop right when it happened at about 20:30"
+     ],
+     [
+      13,
+      "20:30",
+      "bought 3 at 125 each (a bargain, so I took extra)"
+     ],
+     [
+      13,
+      "20:30",
+      "told 4 friends about it"
+     ],
+     [
+      13,
+      "20:30",
+      "a friend says the price usually drops around 20:30"
+     ]
+    ],
+    "waste_pesos": 0.0,
+    "revenue": 1806.8181818181818,
+    "margin": 486.8181818181818,
+    "net": 486.8181818181818,
+    "full_price_units": 2.4545454545454546,
+    "discount_units": 9.545454545454545
+   }
+  },
+  "4": {
+   "none": {
+    "arm": "none",
+    "seed": 4,
+    "days": [
+     {
+      "day": 0,
+      "sold": 3.0,
+      "left": 9.0,
+      "waste_pesos": 990.0,
+      "revenue": 750.0,
+      "margin": 420.0,
+      "net": -570.0,
+      "full_price_units": 3,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 1,
+      "sold": 5.0,
+      "left": 7.0,
+      "waste_pesos": 770.0,
+      "revenue": 1250.0,
+      "margin": 700.0,
+      "net": -70.0,
+      "full_price_units": 5,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 2,
+      "sold": 3.0,
+      "left": 9.0,
+      "waste_pesos": 990.0,
+      "revenue": 750.0,
+      "margin": 420.0,
+      "net": -570.0,
+      "full_price_units": 3,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 3,
+      "sold": 4.0,
+      "left": 8.0,
+      "waste_pesos": 880.0,
+      "revenue": 1000.0,
+      "margin": 560.0,
+      "net": -320.0,
+      "full_price_units": 4,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 4,
+      "sold": 2.0,
+      "left": 10.0,
+      "waste_pesos": 1100.0,
+      "revenue": 500.0,
+      "margin": 280.0,
+      "net": -820.0,
+      "full_price_units": 2,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 5,
+      "sold": 3.0,
+      "left": 9.0,
+      "waste_pesos": 990.0,
+      "revenue": 750.0,
+      "margin": 420.0,
+      "net": -570.0,
+      "full_price_units": 3,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 6,
+      "sold": 3.0,
+      "left": 9.0,
+      "waste_pesos": 990.0,
+      "revenue": 750.0,
+      "margin": 420.0,
+      "net": -570.0,
+      "full_price_units": 3,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 7,
+      "sold": 3.0,
+      "left": 9.0,
+      "waste_pesos": 990.0,
+      "revenue": 750.0,
+      "margin": 420.0,
+      "net": -570.0,
+      "full_price_units": 3,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 8,
+      "sold": 5.0,
+      "left": 7.0,
+      "waste_pesos": 770.0,
+      "revenue": 1250.0,
+      "margin": 700.0,
+      "net": -70.0,
+      "full_price_units": 5,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 9,
+      "sold": 3.0,
+      "left": 9.0,
+      "waste_pesos": 990.0,
+      "revenue": 750.0,
+      "margin": 420.0,
+      "net": -570.0,
+      "full_price_units": 3,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 10,
+      "sold": 3.0,
+      "left": 9.0,
+      "waste_pesos": 990.0,
+      "revenue": 750.0,
+      "margin": 420.0,
+      "net": -570.0,
+      "full_price_units": 3,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 11,
+      "sold": 2.0,
+      "left": 10.0,
+      "waste_pesos": 1100.0,
+      "revenue": 500.0,
+      "margin": 280.0,
+      "net": -820.0,
+      "full_price_units": 2,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 12,
+      "sold": 5.0,
+      "left": 7.0,
+      "waste_pesos": 770.0,
+      "revenue": 1250.0,
+      "margin": 700.0,
+      "net": -70.0,
+      "full_price_units": 5,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 13,
+      "sold": 5.0,
+      "left": 7.0,
+      "waste_pesos": 770.0,
+      "revenue": 1250.0,
+      "margin": 700.0,
+      "net": -70.0,
+      "full_price_units": 5,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     }
+    ],
+    "shift": null,
+    "calibration": {
+     "resolved": 0
+    },
+    "marco": [
+     [
+      1,
+      "21:00",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      1,
+      "21:00",
+      "left without buying (price 250 was above what I can pay)"
+     ],
+     [
+      2,
+      "21:15",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      2,
+      "21:15",
+      "left without buying (price 250 was above what I can pay)"
+     ],
+     [
+      5,
+      "21:00",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      5,
+      "21:00",
+      "left without buying (price 250 was above what I can pay)"
+     ],
+     [
+      7,
+      "20:45",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      7,
+      "20:45",
+      "left without buying (price 250 was above what I can pay)"
+     ],
+     [
+      9,
+      "21:30",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      9,
+      "21:30",
+      "left without buying (price 250 was above what I can pay)"
+     ],
+     [
+      10,
+      "20:45",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      10,
+      "20:45",
+      "left without buying (price 250 was above what I can pay)"
+     ],
+     [
+      11,
+      "21:00",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      11,
+      "21:00",
+      "left without buying (price 250 was above what I can pay)"
+     ]
+    ],
+    "waste_pesos": 940.0,
+    "revenue": 863.6363636363636,
+    "margin": 483.6363636363636,
+    "net": -456.3636363636364,
+    "full_price_units": 3.4545454545454546,
+    "discount_units": 0.0
+   },
+   "naive": {
+    "arm": "naive",
+    "seed": 4,
+    "days": [
+     {
+      "day": 0,
+      "sold": 3.0,
+      "left": 9.0,
+      "waste_pesos": 990.0,
+      "revenue": 750.0,
+      "margin": 420.0,
+      "net": -570.0,
+      "full_price_units": 3,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 1,
+      "sold": 5.0,
+      "left": 7.0,
+      "waste_pesos": 770.0,
+      "revenue": 1250.0,
+      "margin": 700.0,
+      "net": -70.0,
+      "full_price_units": 5,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 2,
+      "sold": 3.0,
+      "left": 9.0,
+      "waste_pesos": 990.0,
+      "revenue": 750.0,
+      "margin": 420.0,
+      "net": -570.0,
+      "full_price_units": 3,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 3,
+      "sold": 4.0,
+      "left": 8.0,
+      "waste_pesos": 880.0,
+      "revenue": 1000.0,
+      "margin": 560.0,
+      "net": -320.0,
+      "full_price_units": 4,
+      "discount_units": 0.0,
+      "cut_hour": 20.5,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 4,
+      "sold": 9.0,
+      "left": 3.0,
+      "waste_pesos": 330.0,
+      "revenue": 1375.0,
+      "margin": 385.0,
+      "net": 55.0,
+      "full_price_units": 2,
+      "discount_units": 7.0,
+      "cut_hour": 20.5,
+      "waited": 0,
+      "tips": 9
+     },
+     {
+      "day": 5,
+      "sold": 7.0,
+      "left": 5.0,
+      "waste_pesos": 550.0,
+      "revenue": 1250.0,
+      "margin": 480.0,
+      "net": -70.0,
+      "full_price_units": 3,
+      "discount_units": 4.0,
+      "cut_hour": 20.5,
+      "waited": 0,
+      "tips": 7
+     },
+     {
+      "day": 6,
+      "sold": 9.0,
+      "left": 3.0,
+      "waste_pesos": 330.0,
+      "revenue": 1500.0,
+      "margin": 510.0,
+      "net": 180.0,
+      "full_price_units": 3,
+      "discount_units": 6.0,
+      "cut_hour": 20.5,
+      "waited": 0,
+      "tips": 9
+     },
+     {
+      "day": 7,
+      "sold": 8.0,
+      "left": 4.0,
+      "waste_pesos": 440.0,
+      "revenue": 1375.0,
+      "margin": 495.0,
+      "net": 55.0,
+      "full_price_units": 3,
+      "discount_units": 5.0,
+      "cut_hour": 20.5,
+      "waited": 0,
+      "tips": 10
+     },
+     {
+      "day": 8,
+      "sold": 12.0,
+      "left": 0.0,
+      "waste_pesos": 0.0,
+      "revenue": 2125.0,
+      "margin": 805.0,
+      "net": 805.0,
+      "full_price_units": 5,
+      "discount_units": 7.0,
+      "cut_hour": 20.5,
+      "waited": 0,
+      "tips": 12
+     },
+     {
+      "day": 9,
+      "sold": 8.0,
+      "left": 4.0,
+      "waste_pesos": 440.0,
+      "revenue": 1375.0,
+      "margin": 495.0,
+      "net": 55.0,
+      "full_price_units": 3,
+      "discount_units": 5.0,
+      "cut_hour": 20.5,
+      "waited": 0,
+      "tips": 10
+     },
+     {
+      "day": 10,
+      "sold": 9.0,
+      "left": 3.0,
+      "waste_pesos": 330.0,
+      "revenue": 1500.0,
+      "margin": 510.0,
+      "net": 180.0,
+      "full_price_units": 3,
+      "discount_units": 6.0,
+      "cut_hour": 20.5,
+      "waited": 0,
+      "tips": 7
+     },
+     {
+      "day": 11,
+      "sold": 10.0,
+      "left": 2.0,
+      "waste_pesos": 220.0,
+      "revenue": 1500.0,
+      "margin": 400.0,
+      "net": 180.0,
+      "full_price_units": 2,
+      "discount_units": 8.0,
+      "cut_hour": 20.5,
+      "waited": 0,
+      "tips": 10
+     },
+     {
+      "day": 12,
+      "sold": 7.0,
+      "left": 5.0,
+      "waste_pesos": 550.0,
+      "revenue": 1375.0,
+      "margin": 605.0,
+      "net": 55.0,
+      "full_price_units": 4,
+      "discount_units": 3.0,
+      "cut_hour": 20.5,
+      "waited": 0,
+      "tips": 9
+     },
+     {
+      "day": 13,
+      "sold": 10.0,
+      "left": 2.0,
+      "waste_pesos": 220.0,
+      "revenue": 1875.0,
+      "margin": 775.0,
+      "net": 555.0,
+      "full_price_units": 5,
+      "discount_units": 5.0,
+      "cut_hour": 20.5,
+      "waited": 0,
+      "tips": 6
+     }
+    ],
+    "shift": {
+     "before": {
+      "days": 3,
+      "units_per_day": 3.6666666666666665,
+      "full_price_units_per_day": 3.6666666666666665,
+      "discount_units_per_day": 0.0,
+      "discount_share": 0.0,
+      "median_hour": 19.5,
+      "mean_hour": 19.181818181818183,
+      "revenue_per_day": 916.6666666666666
+     },
+     "after": {
+      "days": 5,
+      "units_per_day": 8.8,
+      "full_price_units_per_day": 3.4,
+      "discount_units_per_day": 5.4,
+      "discount_share": 0.6136363636363636,
+      "median_hour": 20.5,
+      "mean_hour": 20.0625,
+      "revenue_per_day": 1525.0
+     },
+     "mean_hour_shift": 0.8806818181818166,
+     "p_value": 0.02448775612193903,
+     "shifted": false,
+     "full_price_change_per_day": -0.2666666666666666,
+     "discount_share_change": 0.6136363636363636,
+     "verdict": "No reliable change in when customers buy."
+    },
+    "calibration": {
+     "resolved": 11,
+     "units_mae": 6.47019400516331,
+     "naive_units_mae": 7.282828282828283,
+     "units_skill": 0.11158223784858856,
+     "waste_mae_pesos": 711.721340567964,
+     "naive_waste_mae_pesos": 801.1111111111112,
+     "margin_mae_pesos": 97.05291007744964,
+     "interval_coverage": 0.0,
+     "predicted_waste_pesos": 8928.934746247603,
+     "realized_waste_pesos": 1100.0
+    },
+    "marco": [
+     [
+      1,
+      "21:00",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      1,
+      "21:00",
+      "left without buying (price 250 was above what I can pay)"
+     ],
+     [
+      2,
+      "21:15",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      2,
+      "21:15",
+      "left without buying (price 250 was above what I can pay)"
+     ],
+     [
+      4,
+      "21:15",
+      "a friend says the price usually drops around 20:30"
+     ],
+     [
+      5,
+      "20:45",
+      "a friend says the price usually drops around 20:30"
+     ],
+     [
+      5,
+      "21:00",
+      "arrived at the shop, chicken is 125"
+     ],
+     [
+      5,
+      "21:00",
+      "saw the price drop (already cut when I got there) at about 21:00"
+     ],
+     [
+      5,
+      "21:00",
+      "bought 3 at 125 each (a bargain, so I took extra)"
+     ],
+     [
+      5,
+      "21:00",
+      "told 4 friends about it"
+     ],
+     [
+      7,
+      "20:45",
+      "arrived at the shop, chicken is 125"
+     ],
+     [
+      7,
+      "20:45",
+      "saw the price drop (already cut when I got there) at about 20:45"
+     ],
+     [
+      7,
+      "20:45",
+      "bought 3 at 125 each (a bargain, so I took extra)"
+     ],
+     [
+      7,
+      "20:45",
+      "told 4 friends about it"
+     ],
+     [
+      7,
+      "21:00",
+      "a friend says the price usually drops around 20:30"
+     ],
+     [
+      8,
+      "21:00",
+      "a friend says the price usually drops around 20:30"
+     ],
+     [
+      9,
+      "21:30",
+      "arrived at the shop, chicken is 125"
+     ],
+     [
+      9,
+      "21:30",
+      "saw the price drop (already cut when I got there) at about 21:30"
+     ],
+     [
+      9,
+      "21:30",
+      "bought 3 at 125 each (a bargain, so I took extra)"
+     ],
+     [
+      9,
+      "21:30",
+      "told 4 friends about it"
+     ],
+     [
+      10,
+      "20:45",
+      "arrived at the shop, chicken is 125"
+     ],
+     [
+      10,
+      "20:45",
+      "saw the price drop (already cut when I got there) at about 20:45"
+     ],
+     [
+      10,
+      "20:45",
+      "bought 3 at 125 each (a bargain, so I took extra)"
+     ],
+     [
+      10,
+      "20:45",
+      "told 4 friends about it"
+     ],
+     [
+      10,
+      "20:45",
+      "a friend says the price usually drops around 20:30"
+     ],
+     [
+      11,
+      "20:30",
+      "a friend says the price usually drops around 20:30"
+     ],
+     [
+      11,
+      "21:00",
+      "arrived at the shop, chicken is 125"
+     ],
+     [
+      11,
+      "21:00",
+      "saw the price drop (already cut when I got there) at about 21:00"
+     ],
+     [
+      11,
+      "21:00",
+      "bought 3 at 125 each (a bargain, so I took extra)"
+     ],
+     [
+      11,
+      "21:00",
+      "told 4 friends about it"
+     ],
+     [
+      12,
+      "21:15",
+      "a friend says the price usually drops around 20:30"
+     ],
+     [
+      13,
+      "20:45",
+      "a friend says the price usually drops around 20:30"
+     ]
+    ],
+    "waste_pesos": 390.0,
+    "revenue": 1477.2727272727273,
+    "margin": 547.2727272727273,
+    "net": 157.27272727272728,
+    "full_price_units": 3.3636363636363638,
+    "discount_units": 5.090909090909091
+   },
+   "learning": {
+    "arm": "learning",
+    "seed": 4,
+    "days": [
+     {
+      "day": 0,
+      "sold": 3.0,
+      "left": 9.0,
+      "waste_pesos": 990.0,
+      "revenue": 750.0,
+      "margin": 420.0,
+      "net": -570.0,
+      "full_price_units": 3,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 1,
+      "sold": 5.0,
+      "left": 7.0,
+      "waste_pesos": 770.0,
+      "revenue": 1250.0,
+      "margin": 700.0,
+      "net": -70.0,
+      "full_price_units": 5,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 2,
+      "sold": 3.0,
+      "left": 9.0,
+      "waste_pesos": 990.0,
+      "revenue": 750.0,
+      "margin": 420.0,
+      "net": -570.0,
+      "full_price_units": 3,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 3,
+      "sold": 4.0,
+      "left": 8.0,
+      "waste_pesos": 880.0,
+      "revenue": 1000.0,
+      "margin": 560.0,
+      "net": -320.0,
+      "full_price_units": 4,
+      "discount_units": 0.0,
+      "cut_hour": 20.5,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 4,
+      "sold": 12.0,
+      "left": 0.0,
+      "waste_pesos": 0.0,
+      "revenue": 1750.0,
+      "margin": 430.0,
+      "net": 430.0,
+      "full_price_units": 2,
+      "discount_units": 10.0,
+      "cut_hour": 20.5,
+      "waited": 3,
+      "tips": 3
+     },
+     {
+      "day": 5,
+      "sold": 12.0,
+      "left": 0.0,
+      "waste_pesos": 0.0,
+      "revenue": 1875.0,
+      "margin": 555.0,
+      "net": 555.0,
+      "full_price_units": 3,
+      "discount_units": 9.0,
+      "cut_hour": 20.5,
+      "waited": 7,
+      "tips": 6
+     },
+     {
+      "day": 6,
+      "sold": 12.0,
+      "left": 0.0,
+      "waste_pesos": 0.0,
+      "revenue": 1750.0,
+      "margin": 430.0,
+      "net": 430.0,
+      "full_price_units": 2,
+      "discount_units": 10.0,
+      "cut_hour": 20.5,
+      "waited": 8,
+      "tips": 12
+     },
+     {
+      "day": 7,
+      "sold": 12.0,
+      "left": 0.0,
+      "waste_pesos": 0.0,
+      "revenue": 1875.0,
+      "margin": 555.0,
+      "net": 555.0,
+      "full_price_units": 3,
+      "discount_units": 9.0,
+      "cut_hour": 20.5,
+      "waited": 8,
+      "tips": 13
+     },
+     {
+      "day": 8,
+      "sold": 12.0,
+      "left": 0.0,
+      "waste_pesos": 0.0,
+      "revenue": 2125.0,
+      "margin": 805.0,
+      "net": 805.0,
+      "full_price_units": 5,
+      "discount_units": 7.0,
+      "cut_hour": 20.5,
+      "waited": 11,
+      "tips": 9
+     },
+     {
+      "day": 9,
+      "sold": 12.0,
+      "left": 0.0,
+      "waste_pesos": 0.0,
+      "revenue": 1750.0,
+      "margin": 430.0,
+      "net": 430.0,
+      "full_price_units": 2,
+      "discount_units": 10.0,
+      "cut_hour": 20.5,
+      "waited": 9,
+      "tips": 10
+     },
+     {
+      "day": 10,
+      "sold": 12.0,
+      "left": 0.0,
+      "waste_pesos": 0.0,
+      "revenue": 1750.0,
+      "margin": 430.0,
+      "net": 430.0,
+      "full_price_units": 2,
+      "discount_units": 10.0,
+      "cut_hour": 20.5,
+      "waited": 8,
+      "tips": 13
+     },
+     {
+      "day": 11,
+      "sold": 12.0,
+      "left": 0.0,
+      "waste_pesos": 0.0,
+      "revenue": 1625.0,
+      "margin": 305.0,
+      "net": 305.0,
+      "full_price_units": 1,
+      "discount_units": 11.0,
+      "cut_hour": 20.5,
+      "waited": 13,
+      "tips": 16
+     },
+     {
+      "day": 12,
+      "sold": 12.0,
+      "left": 0.0,
+      "waste_pesos": 0.0,
+      "revenue": 1625.0,
+      "margin": 305.0,
+      "net": 305.0,
+      "full_price_units": 1,
+      "discount_units": 11.0,
+      "cut_hour": 20.5,
+      "waited": 9,
+      "tips": 15
+     },
+     {
+      "day": 13,
+      "sold": 12.0,
+      "left": 0.0,
+      "waste_pesos": 0.0,
+      "revenue": 1625.0,
+      "margin": 305.0,
+      "net": 305.0,
+      "full_price_units": 1,
+      "discount_units": 11.0,
+      "cut_hour": 20.5,
+      "waited": 9,
+      "tips": 12
+     }
+    ],
+    "shift": {
+     "before": {
+      "days": 3,
+      "units_per_day": 3.6666666666666665,
+      "full_price_units_per_day": 3.6666666666666665,
+      "discount_units_per_day": 0.0,
+      "discount_share": 0.0,
+      "median_hour": 19.5,
+      "mean_hour": 19.181818181818183,
+      "revenue_per_day": 916.6666666666666
+     },
+     "after": {
+      "days": 5,
+      "units_per_day": 12.0,
+      "full_price_units_per_day": 1.4,
+      "discount_units_per_day": 10.6,
+      "discount_share": 0.8833333333333333,
+      "median_hour": 20.5,
+      "mean_hour": 20.320833333333333,
+      "revenue_per_day": 1675.0
+     },
+     "mean_hour_shift": 1.1390151515151494,
+     "p_value": 0.0004997501249375312,
+     "shifted": true,
+     "full_price_change_per_day": -2.2666666666666666,
+     "discount_share_change": 0.8833333333333333,
+     "verdict": "Customers now buy 1.1 h later (median 19:30 -> 20:30); clearance-priced units went from 0% to 88% of sales, and full-price units from 3.7 to 1.4 per day."
+    },
+    "calibration": {
+     "resolved": 11,
+     "units_mae": 8.015648550617856,
+     "naive_units_mae": 8.828282828282829,
+     "units_skill": 0.09204896280186758,
+     "waste_mae_pesos": 881.7213405679639,
+     "naive_waste_mae_pesos": 971.1111111111112,
+     "margin_mae_pesos": 120.23472825926783,
+     "interval_coverage": 0.0,
+     "predicted_waste_pesos": 10138.934746247603,
+     "realized_waste_pesos": 440.0
+    },
+    "marco": [
+     [
+      1,
+      "21:00",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      1,
+      "21:00",
+      "cashier: it depends, no fixed time"
+     ],
+     [
+      1,
+      "21:15",
+      "left without buying (price 250 was above what I can pay)"
+     ],
+     [
+      2,
+      "21:15",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      2,
+      "21:15",
+      "cashier: it depends, no fixed time"
+     ],
+     [
+      2,
+      "21:30",
+      "left without buying (price 250 was above what I can pay)"
+     ],
+     [
+      5,
+      "21:00",
+      "arrived at the shop, chicken is 125"
+     ],
+     [
+      5,
+      "21:00",
+      "saw the price drop (already cut when I got there) at about 21:00"
+     ],
+     [
+      5,
+      "21:00",
+      "left without buying (sold out)"
+     ],
+     [
+      5,
+      "21:00",
+      "everything was gone; next time I come earlier"
+     ],
+     [
+      7,
+      "19:15",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      7,
+      "19:15",
+      "cashier says the price usually drops around 20:30"
+     ],
+     [
+      7,
+      "19:30",
+      "chicken is 250, too much; I will wait"
+     ],
+     [
+      7,
+      "20:30",
+      "saw the price drop right when it happened at about 20:30"
+     ],
+     [
+      7,
+      "20:30",
+      "bought 3 at 125 each (a bargain, so I took extra)"
+     ],
+     [
+      7,
+      "20:30",
+      "told 4 friends about it"
+     ],
+     [
+      7,
+      "20:30",
+      "a friend says the price usually drops around 20:30"
+     ],
+     [
+      8,
+      "20:30",
+      "a friend says the price usually drops around 20:30"
+     ],
+     [
+      9,
+      "19:30",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      9,
+      "19:30",
+      "chicken is 250, too much; I will wait"
+     ],
+     [
+      9,
+      "20:30",
+      "saw the price drop right when it happened at about 20:30"
+     ],
+     [
+      9,
+      "20:30",
+      "bought 3 at 125 each (a bargain, so I took extra)"
+     ],
+     [
+      9,
+      "20:30",
+      "told 4 friends about it"
+     ],
+     [
+      10,
+      "19:45",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      10,
+      "19:45",
+      "chicken is 250, too much; I will wait"
+     ],
+     [
+      10,
+      "20:30",
+      "saw the price drop right when it happened at about 20:30"
+     ],
+     [
+      10,
+      "20:30",
+      "bought 3 at 125 each (a bargain, so I took extra)"
+     ],
+     [
+      10,
+      "20:30",
+      "told 4 friends about it"
+     ],
+     [
+      11,
+      "19:45",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      11,
+      "19:45",
+      "chicken is 250, too much; I will wait"
+     ],
+     [
+      11,
+      "20:30",
+      "saw the price drop right when it happened at about 20:30"
+     ],
+     [
+      11,
+      "20:30",
+      "bought 3 at 125 each (a bargain, so I took extra)"
+     ],
+     [
+      11,
+      "20:30",
+      "told 4 friends about it"
+     ],
+     [
+      11,
+      "20:30",
+      "a friend says the price usually drops around 20:30"
+     ],
+     [
+      12,
+      "20:30",
+      "a friend says the price usually drops around 20:30"
+     ]
+    ],
+    "waste_pesos": 80.0,
+    "revenue": 1704.5454545454545,
+    "margin": 464.54545454545456,
+    "net": 384.54545454545456,
+    "full_price_units": 2.3636363636363638,
+    "discount_units": 8.909090909090908
+   }
+  },
+  "5": {
+   "none": {
+    "arm": "none",
+    "seed": 5,
+    "days": [
+     {
+      "day": 0,
+      "sold": 8.0,
+      "left": 4.0,
+      "waste_pesos": 440.0,
+      "revenue": 2000.0,
+      "margin": 1120.0,
+      "net": 680.0,
+      "full_price_units": 8,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 1,
+      "sold": 6.0,
+      "left": 6.0,
+      "waste_pesos": 660.0,
+      "revenue": 1500.0,
+      "margin": 840.0,
+      "net": 180.0,
+      "full_price_units": 6,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 2,
+      "sold": 4.0,
+      "left": 8.0,
+      "waste_pesos": 880.0,
+      "revenue": 1000.0,
+      "margin": 560.0,
+      "net": -320.0,
+      "full_price_units": 4,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 3,
+      "sold": 5.0,
+      "left": 7.0,
+      "waste_pesos": 770.0,
+      "revenue": 1250.0,
+      "margin": 700.0,
+      "net": -70.0,
+      "full_price_units": 5,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 4,
+      "sold": 5.0,
+      "left": 7.0,
+      "waste_pesos": 770.0,
+      "revenue": 1250.0,
+      "margin": 700.0,
+      "net": -70.0,
+      "full_price_units": 5,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 5,
+      "sold": 5.0,
+      "left": 7.0,
+      "waste_pesos": 770.0,
+      "revenue": 1250.0,
+      "margin": 700.0,
+      "net": -70.0,
+      "full_price_units": 5,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 6,
+      "sold": 3.0,
+      "left": 9.0,
+      "waste_pesos": 990.0,
+      "revenue": 750.0,
+      "margin": 420.0,
+      "net": -570.0,
+      "full_price_units": 3,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 7,
+      "sold": 7.0,
+      "left": 5.0,
+      "waste_pesos": 550.0,
+      "revenue": 1750.0,
+      "margin": 980.0,
+      "net": 430.0,
+      "full_price_units": 7,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 8,
+      "sold": 8.0,
+      "left": 4.0,
+      "waste_pesos": 440.0,
+      "revenue": 2000.0,
+      "margin": 1120.0,
+      "net": 680.0,
+      "full_price_units": 8,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 9,
+      "sold": 4.0,
+      "left": 8.0,
+      "waste_pesos": 880.0,
+      "revenue": 1000.0,
+      "margin": 560.0,
+      "net": -320.0,
+      "full_price_units": 4,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 10,
+      "sold": 4.0,
+      "left": 8.0,
+      "waste_pesos": 880.0,
+      "revenue": 1000.0,
+      "margin": 560.0,
+      "net": -320.0,
+      "full_price_units": 4,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 11,
+      "sold": 7.0,
+      "left": 5.0,
+      "waste_pesos": 550.0,
+      "revenue": 1750.0,
+      "margin": 980.0,
+      "net": 430.0,
+      "full_price_units": 7,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 12,
+      "sold": 5.0,
+      "left": 7.0,
+      "waste_pesos": 770.0,
+      "revenue": 1250.0,
+      "margin": 700.0,
+      "net": -70.0,
+      "full_price_units": 5,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 13,
+      "sold": 5.0,
+      "left": 7.0,
+      "waste_pesos": 770.0,
+      "revenue": 1250.0,
+      "margin": 700.0,
+      "net": -70.0,
+      "full_price_units": 5,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     }
+    ],
+    "shift": null,
+    "calibration": {
+     "resolved": 0
+    },
+    "marco": [
+     [
+      0,
+      "21:30",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      0,
+      "21:30",
+      "left without buying (price 250 was above what I can pay)"
+     ],
+     [
+      1,
+      "21:00",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      1,
+      "21:00",
+      "left without buying (price 250 was above what I can pay)"
+     ],
+     [
+      3,
+      "21:00",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      3,
+      "21:00",
+      "left without buying (price 250 was above what I can pay)"
+     ],
+     [
+      4,
+      "21:00",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      4,
+      "21:00",
+      "left without buying (price 250 was above what I can pay)"
+     ],
+     [
+      5,
+      "21:15",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      5,
+      "21:15",
+      "left without buying (price 250 was above what I can pay)"
+     ],
+     [
+      7,
+      "21:15",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      7,
+      "21:15",
+      "left without buying (price 250 was above what I can pay)"
+     ],
+     [
+      8,
+      "20:45",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      8,
+      "20:45",
+      "left without buying (price 250 was above what I can pay)"
+     ],
+     [
+      9,
+      "21:15",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      9,
+      "21:15",
+      "left without buying (price 250 was above what I can pay)"
+     ],
+     [
+      10,
+      "21:15",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      10,
+      "21:15",
+      "left without buying (price 250 was above what I can pay)"
+     ],
+     [
+      12,
+      "20:45",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      12,
+      "20:45",
+      "left without buying (price 250 was above what I can pay)"
+     ],
+     [
+      13,
+      "20:30",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      13,
+      "20:30",
+      "left without buying (price 250 was above what I can pay)"
+     ]
+    ],
+    "waste_pesos": 740.0,
+    "revenue": 1318.1818181818182,
+    "margin": 738.1818181818181,
+    "net": -1.8181818181818181,
+    "full_price_units": 5.2727272727272725,
+    "discount_units": 0.0
+   },
+   "naive": {
+    "arm": "naive",
+    "seed": 5,
+    "days": [
+     {
+      "day": 0,
+      "sold": 8.0,
+      "left": 4.0,
+      "waste_pesos": 440.0,
+      "revenue": 2000.0,
+      "margin": 1120.0,
+      "net": 680.0,
+      "full_price_units": 8,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 1,
+      "sold": 6.0,
+      "left": 6.0,
+      "waste_pesos": 660.0,
+      "revenue": 1500.0,
+      "margin": 840.0,
+      "net": 180.0,
+      "full_price_units": 6,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 2,
+      "sold": 4.0,
+      "left": 8.0,
+      "waste_pesos": 880.0,
+      "revenue": 1000.0,
+      "margin": 560.0,
+      "net": -320.0,
+      "full_price_units": 4,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 3,
+      "sold": 10.0,
+      "left": 2.0,
+      "waste_pesos": 220.0,
+      "revenue": 1875.0,
+      "margin": 775.0,
+      "net": 555.0,
+      "full_price_units": 5,
+      "discount_units": 5.0,
+      "cut_hour": 20.5,
+      "waited": 0,
+      "tips": 3
+     },
+     {
+      "day": 4,
+      "sold": 8.0,
+      "left": 4.0,
+      "waste_pesos": 440.0,
+      "revenue": 1625.0,
+      "margin": 745.0,
+      "net": 305.0,
+      "full_price_units": 5,
+      "discount_units": 3.0,
+      "cut_hour": 20.5,
+      "waited": 0,
+      "tips": 4
+     },
+     {
+      "day": 5,
+      "sold": 10.0,
+      "left": 2.0,
+      "waste_pesos": 220.0,
+      "revenue": 1875.0,
+      "margin": 775.0,
+      "net": 555.0,
+      "full_price_units": 5,
+      "discount_units": 5.0,
+      "cut_hour": 20.5,
+      "waited": 0,
+      "tips": 4
+     },
+     {
+      "day": 6,
+      "sold": 6.0,
+      "left": 6.0,
+      "waste_pesos": 660.0,
+      "revenue": 1125.0,
+      "margin": 465.0,
+      "net": -195.0,
+      "full_price_units": 3,
+      "discount_units": 3.0,
+      "cut_hour": 20.5,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 7,
+      "sold": 12.0,
+      "left": 0.0,
+      "waste_pesos": 0.0,
+      "revenue": 2375.0,
+      "margin": 1055.0,
+      "net": 1055.0,
+      "full_price_units": 7,
+      "discount_units": 5.0,
+      "cut_hour": 20.5,
+      "waited": 0,
+      "tips": 3
+     },
+     {
+      "day": 8,
+      "sold": 12.0,
+      "left": 0.0,
+      "waste_pesos": 0.0,
+      "revenue": 2375.0,
+      "margin": 1055.0,
+      "net": 1055.0,
+      "full_price_units": 7,
+      "discount_units": 5.0,
+      "cut_hour": 20.5,
+      "waited": 0,
+      "tips": 4
+     },
+     {
+      "day": 9,
+      "sold": 10.0,
+      "left": 2.0,
+      "waste_pesos": 220.0,
+      "revenue": 1625.0,
+      "margin": 525.0,
+      "net": 305.0,
+      "full_price_units": 3,
+      "discount_units": 7.0,
+      "cut_hour": 20.5,
+      "waited": 0,
+      "tips": 7
+     },
+     {
+      "day": 10,
+      "sold": 7.0,
+      "left": 5.0,
+      "waste_pesos": 550.0,
+      "revenue": 1375.0,
+      "margin": 605.0,
+      "net": 55.0,
+      "full_price_units": 4,
+      "discount_units": 3.0,
+      "cut_hour": 20.5,
+      "waited": 0,
+      "tips": 4
+     },
+     {
+      "day": 11,
+      "sold": 9.0,
+      "left": 3.0,
+      "waste_pesos": 330.0,
+      "revenue": 2000.0,
+      "margin": 1010.0,
+      "net": 680.0,
+      "full_price_units": 7,
+      "discount_units": 2.0,
+      "cut_hour": 20.5,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 12,
+      "sold": 10.0,
+      "left": 2.0,
+      "waste_pesos": 220.0,
+      "revenue": 1875.0,
+      "margin": 775.0,
+      "net": 555.0,
+      "full_price_units": 5,
+      "discount_units": 5.0,
+      "cut_hour": 20.5,
+      "waited": 0,
+      "tips": 7
+     },
+     {
+      "day": 13,
+      "sold": 10.0,
+      "left": 2.0,
+      "waste_pesos": 220.0,
+      "revenue": 1750.0,
+      "margin": 650.0,
+      "net": 430.0,
+      "full_price_units": 4,
+      "discount_units": 6.0,
+      "cut_hour": 20.5,
+      "waited": 0,
+      "tips": 7
+     }
+    ],
+    "shift": {
+     "before": {
+      "days": 3,
+      "units_per_day": 6.0,
+      "full_price_units_per_day": 6.0,
+      "discount_units_per_day": 0.0,
+      "discount_share": 0.0,
+      "median_hour": 18.625,
+      "mean_hour": 18.72222222222222,
+      "revenue_per_day": 1500.0
+     },
+     "after": {
+      "days": 5,
+      "units_per_day": 9.2,
+      "full_price_units_per_day": 4.6,
+      "discount_units_per_day": 4.6,
+      "discount_share": 0.5,
+      "median_hour": 20.375,
+      "mean_hour": 19.92391304347826,
+      "revenue_per_day": 1725.0
+     },
+     "mean_hour_shift": 1.2016908212560402,
+     "p_value": 0.0004997501249375312,
+     "shifted": true,
+     "full_price_change_per_day": -1.4000000000000004,
+     "discount_share_change": 0.5,
+     "verdict": "Customers now buy 1.2 h later (median 18:38 -> 20:22); clearance-priced units went from 0% to 50% of sales, and full-price units from 6.0 to 4.6 per day."
+    },
+    "calibration": {
+     "resolved": 11,
+     "units_mae": 4.3156029186231715,
+     "naive_units_mae": 5.815850815850816,
+     "units_skill": 0.25795845607641665,
+     "waste_mae_pesos": 474.71632104854893,
+     "naive_waste_mae_pesos": 639.7435897435897,
+     "margin_mae_pesos": 64.73404377934759,
+     "interval_coverage": 0.0,
+     "predicted_waste_pesos": 5661.8795315340385,
+     "realized_waste_pesos": 440.0
+    },
+    "marco": [
+     [
+      0,
+      "21:30",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      0,
+      "21:30",
+      "left without buying (price 250 was above what I can pay)"
+     ],
+     [
+      1,
+      "21:00",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      1,
+      "21:00",
+      "left without buying (price 250 was above what I can pay)"
+     ],
+     [
+      3,
+      "21:00",
+      "arrived at the shop, chicken is 125"
+     ],
+     [
+      3,
+      "21:00",
+      "saw the price drop (already cut when I got there) at about 21:00"
+     ],
+     [
+      3,
+      "21:00",
+      "bought 3 at 125 each (a bargain, so I took extra)"
+     ],
+     [
+      4,
+      "21:00",
+      "arrived at the shop, chicken is 125"
+     ],
+     [
+      4,
+      "21:00",
+      "saw the price drop (already cut when I got there) at about 21:00"
+     ],
+     [
+      4,
+      "21:00",
+      "bought 3 at 125 each (a bargain, so I took extra)"
+     ],
+     [
+      4,
+      "21:00",
+      "told 4 friends about it"
+     ],
+     [
+      5,
+      "21:15",
+      "arrived at the shop, chicken is 125"
+     ],
+     [
+      5,
+      "21:15",
+      "saw the price drop (already cut when I got there) at about 21:15"
+     ],
+     [
+      5,
+      "21:15",
+      "bought 3 at 125 each (a bargain, so I took extra)"
+     ],
+     [
+      5,
+      "21:15",
+      "told 4 friends about it"
+     ],
+     [
+      7,
+      "21:15",
+      "arrived at the shop, chicken is 125"
+     ],
+     [
+      7,
+      "21:15",
+      "saw the price drop (already cut when I got there) at about 21:15"
+     ],
+     [
+      7,
+      "21:15",
+      "bought 3 at 125 each (a bargain, so I took extra)"
+     ],
+     [
+      8,
+      "20:45",
+      "arrived at the shop, chicken is 125"
+     ],
+     [
+      8,
+      "20:45",
+      "saw the price drop (already cut when I got there) at about 20:45"
+     ],
+     [
+      8,
+      "20:45",
+      "bought 1 at 125 each"
+     ],
+     [
+      8,
+      "20:45",
+      "told 4 friends about it"
+     ],
+     [
+      9,
+      "21:15",
+      "arrived at the shop, chicken is 125"
+     ],
+     [
+      9,
+      "21:15",
+      "saw the price drop (already cut when I got there) at about 21:15"
+     ],
+     [
+      9,
+      "21:15",
+      "bought 3 at 125 each (a bargain, so I took extra)"
+     ],
+     [
+      9,
+      "21:15",
+      "told 4 friends about it"
+     ],
+     [
+      10,
+      "21:15",
+      "arrived at the shop, chicken is 125"
+     ],
+     [
+      10,
+      "21:15",
+      "saw the price drop (already cut when I got there) at about 21:15"
+     ],
+     [
+      10,
+      "21:15",
+      "bought 3 at 125 each (a bargain, so I took extra)"
+     ],
+     [
+      10,
+      "21:15",
+      "told 4 friends about it"
+     ],
+     [
+      12,
+      "20:45",
+      "arrived at the shop, chicken is 125"
+     ],
+     [
+      12,
+      "20:45",
+      "saw the price drop (already cut when I got there) at about 20:45"
+     ],
+     [
+      12,
+      "20:45",
+      "bought 3 at 125 each (a bargain, so I took extra)"
+     ],
+     [
+      12,
+      "20:45",
+      "told 4 friends about it"
+     ],
+     [
+      13,
+      "20:30",
+      "arrived at the shop, chicken is 125"
+     ],
+     [
+      13,
+      "20:30",
+      "saw the price drop (already cut when I got there) at about 20:30"
+     ],
+     [
+      13,
+      "20:30",
+      "bought 3 at 125 each (a bargain, so I took extra)"
+     ],
+     [
+      13,
+      "20:30",
+      "told 4 friends about it"
+     ]
+    ],
+    "waste_pesos": 280.0,
+    "revenue": 1806.8181818181818,
+    "margin": 766.8181818181819,
+    "net": 486.8181818181818,
+    "full_price_units": 5,
+    "discount_units": 4.454545454545454
+   },
+   "learning": {
+    "arm": "learning",
+    "seed": 5,
+    "days": [
+     {
+      "day": 0,
+      "sold": 8.0,
+      "left": 4.0,
+      "waste_pesos": 440.0,
+      "revenue": 2000.0,
+      "margin": 1120.0,
+      "net": 680.0,
+      "full_price_units": 8,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 1,
+      "sold": 6.0,
+      "left": 6.0,
+      "waste_pesos": 660.0,
+      "revenue": 1500.0,
+      "margin": 840.0,
+      "net": 180.0,
+      "full_price_units": 6,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 2,
+      "sold": 4.0,
+      "left": 8.0,
+      "waste_pesos": 880.0,
+      "revenue": 1000.0,
+      "margin": 560.0,
+      "net": -320.0,
+      "full_price_units": 4,
+      "discount_units": 0.0,
+      "cut_hour": null,
+      "waited": 0,
+      "tips": 0
+     },
+     {
+      "day": 3,
+      "sold": 12.0,
+      "left": 0.0,
+      "waste_pesos": 0.0,
+      "revenue": 2125.0,
+      "margin": 805.0,
+      "net": 805.0,
+      "full_price_units": 5,
+      "discount_units": 7.0,
+      "cut_hour": 20.5,
+      "waited": 0,
+      "tips": 6
+     },
+     {
+      "day": 4,
+      "sold": 12.0,
+      "left": 0.0,
+      "waste_pesos": 0.0,
+      "revenue": 2125.0,
+      "margin": 805.0,
+      "net": 805.0,
+      "full_price_units": 5,
+      "discount_units": 7.0,
+      "cut_hour": 20.5,
+      "waited": 6,
+      "tips": 4
+     },
+     {
+      "day": 5,
+      "sold": 12.0,
+      "left": 0.0,
+      "waste_pesos": 0.0,
+      "revenue": 2125.0,
+      "margin": 805.0,
+      "net": 805.0,
+      "full_price_units": 5,
+      "discount_units": 7.0,
+      "cut_hour": 20.5,
+      "waited": 5,
+      "tips": 7
+     },
+     {
+      "day": 6,
+      "sold": 12.0,
+      "left": 0.0,
+      "waste_pesos": 0.0,
+      "revenue": 1875.0,
+      "margin": 555.0,
+      "net": 555.0,
+      "full_price_units": 3,
+      "discount_units": 9.0,
+      "cut_hour": 20.5,
+      "waited": 6,
+      "tips": 9
+     },
+     {
+      "day": 7,
+      "sold": 12.0,
+      "left": 0.0,
+      "waste_pesos": 0.0,
+      "revenue": 2125.0,
+      "margin": 805.0,
+      "net": 805.0,
+      "full_price_units": 5,
+      "discount_units": 7.0,
+      "cut_hour": 20.5,
+      "waited": 8,
+      "tips": 10
+     },
+     {
+      "day": 8,
+      "sold": 12.0,
+      "left": 0.0,
+      "waste_pesos": 0.0,
+      "revenue": 2375.0,
+      "margin": 1055.0,
+      "net": 1055.0,
+      "full_price_units": 7,
+      "discount_units": 5.0,
+      "cut_hour": 20.5,
+      "waited": 9,
+      "tips": 3
+     },
+     {
+      "day": 9,
+      "sold": 12.0,
+      "left": 0.0,
+      "waste_pesos": 0.0,
+      "revenue": 1875.0,
+      "margin": 555.0,
+      "net": 555.0,
+      "full_price_units": 3,
+      "discount_units": 9.0,
+      "cut_hour": 20.5,
+      "waited": 9,
+      "tips": 13
+     },
+     {
+      "day": 10,
+      "sold": 12.0,
+      "left": 0.0,
+      "waste_pesos": 0.0,
+      "revenue": 1875.0,
+      "margin": 555.0,
+      "net": 555.0,
+      "full_price_units": 3,
+      "discount_units": 9.0,
+      "cut_hour": 20.5,
+      "waited": 7,
+      "tips": 0
+     },
+     {
+      "day": 11,
+      "sold": 12.0,
+      "left": 0.0,
+      "waste_pesos": 0.0,
+      "revenue": 2125.0,
+      "margin": 805.0,
+      "net": 805.0,
+      "full_price_units": 5,
+      "discount_units": 7.0,
+      "cut_hour": 20.5,
+      "waited": 6,
+      "tips": 3
+     },
+     {
+      "day": 12,
+      "sold": 12.0,
+      "left": 0.0,
+      "waste_pesos": 0.0,
+      "revenue": 2125.0,
+      "margin": 805.0,
+      "net": 805.0,
+      "full_price_units": 5,
+      "discount_units": 7.0,
+      "cut_hour": 20.5,
+      "waited": 6,
+      "tips": 10
+     },
+     {
+      "day": 13,
+      "sold": 12.0,
+      "left": 0.0,
+      "waste_pesos": 0.0,
+      "revenue": 1875.0,
+      "margin": 555.0,
+      "net": 555.0,
+      "full_price_units": 3,
+      "discount_units": 9.0,
+      "cut_hour": 20.5,
+      "waited": 9,
+      "tips": 16
+     }
+    ],
+    "shift": {
+     "before": {
+      "days": 3,
+      "units_per_day": 6.0,
+      "full_price_units_per_day": 6.0,
+      "discount_units_per_day": 0.0,
+      "discount_share": 0.0,
+      "median_hour": 18.625,
+      "mean_hour": 18.72222222222222,
+      "revenue_per_day": 1500.0
+     },
+     "after": {
+      "days": 5,
+      "units_per_day": 12.0,
+      "full_price_units_per_day": 3.8,
+      "discount_units_per_day": 8.2,
+      "discount_share": 0.6833333333333333,
+      "median_hour": 20.5,
+      "mean_hour": 20.033333333333335,
+      "revenue_per_day": 1975.0
+     },
+     "mean_hour_shift": 1.3111111111111136,
+     "p_value": 0.0004997501249375312,
+     "shifted": true,
+     "full_price_change_per_day": -2.2,
+     "discount_share_change": 0.6833333333333333,
+     "verdict": "Customers now buy 1.3 h later (median 18:38 -> 20:30); clearance-priced units went from 0% to 68% of sales, and full-price units from 6.0 to 3.8 per day."
+    },
+    "calibration": {
+     "resolved": 11,
+     "units_mae": 5.224693827714081,
+     "naive_units_mae": 6.724941724941726,
+     "units_skill": 0.22308712232605188,
+     "waste_mae_pesos": 574.7163210485489,
+     "naive_waste_mae_pesos": 739.7435897435897,
+     "margin_mae_pesos": 78.37040741571121,
+     "interval_coverage": 0.0,
+     "predicted_waste_pesos": 6321.8795315340385,
+     "realized_waste_pesos": 0.0
+    },
+    "marco": [
+     [
+      0,
+      "21:30",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      0,
+      "21:30",
+      "cashier: it depends, no fixed time"
+     ],
+     [
+      0,
+      "21:45",
+      "left without buying (price 250 was above what I can pay)"
+     ],
+     [
+      1,
+      "21:00",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      1,
+      "21:00",
+      "cashier: it depends, no fixed time"
+     ],
+     [
+      1,
+      "21:15",
+      "left without buying (price 250 was above what I can pay)"
+     ],
+     [
+      3,
+      "21:00",
+      "arrived at the shop, chicken is 125"
+     ],
+     [
+      3,
+      "21:00",
+      "saw the price drop (already cut when I got there) at about 21:00"
+     ],
+     [
+      3,
+      "21:00",
+      "bought 3 at 125 each (a bargain, so I took extra)"
+     ],
+     [
+      4,
+      "19:30",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      4,
+      "19:30",
+      "cashier says the price usually drops around 20:30"
+     ],
+     [
+      4,
+      "19:45",
+      "chicken is 250, too much; I will wait"
+     ],
+     [
+      4,
+      "20:30",
+      "saw the price drop right when it happened at about 20:30"
+     ],
+     [
+      4,
+      "20:30",
+      "bought 3 at 125 each (a bargain, so I took extra)"
+     ],
+     [
+      4,
+      "20:30",
+      "told 4 friends about it"
+     ],
+     [
+      5,
+      "19:45",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      5,
+      "19:45",
+      "chicken is 250, too much; I will wait"
+     ],
+     [
+      5,
+      "20:30",
+      "saw the price drop right when it happened at about 20:30"
+     ],
+     [
+      5,
+      "20:30",
+      "bought 3 at 125 each (a bargain, so I took extra)"
+     ],
+     [
+      5,
+      "20:30",
+      "told 4 friends about it"
+     ],
+     [
+      6,
+      "20:30",
+      "a friend says the price usually drops around 20:30"
+     ],
+     [
+      7,
+      "20:00",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      7,
+      "20:00",
+      "chicken is 250, too much; I will wait"
+     ],
+     [
+      7,
+      "20:30",
+      "saw the price drop right when it happened at about 20:30"
+     ],
+     [
+      7,
+      "20:30",
+      "bought 3 at 125 each (a bargain, so I took extra)"
+     ],
+     [
+      7,
+      "20:30",
+      "told 4 friends about it"
+     ],
+     [
+      8,
+      "20:00",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      8,
+      "20:00",
+      "chicken is 250, too much; I will wait"
+     ],
+     [
+      8,
+      "20:30",
+      "saw the price drop right when it happened at about 20:30"
+     ],
+     [
+      8,
+      "20:30",
+      "bought 3 at 125 each (a bargain, so I took extra)"
+     ],
+     [
+      9,
+      "20:00",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      9,
+      "20:00",
+      "chicken is 250, too much; I will wait"
+     ],
+     [
+      9,
+      "20:30",
+      "saw the price drop right when it happened at about 20:30"
+     ],
+     [
+      9,
+      "20:30",
+      "bought 3 at 125 each (a bargain, so I took extra)"
+     ],
+     [
+      9,
+      "20:30",
+      "told 4 friends about it"
+     ],
+     [
+      10,
+      "20:00",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      10,
+      "20:00",
+      "chicken is 250, too much; I will wait"
+     ],
+     [
+      10,
+      "20:30",
+      "saw the price drop right when it happened at about 20:30"
+     ],
+     [
+      10,
+      "20:30",
+      "bought 3 at 125 each (a bargain, so I took extra)"
+     ],
+     [
+      11,
+      "20:30",
+      "a friend says the price usually drops around 20:30"
+     ],
+     [
+      12,
+      "20:00",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      12,
+      "20:00",
+      "chicken is 250, too much; I will wait"
+     ],
+     [
+      12,
+      "20:30",
+      "saw the price drop right when it happened at about 20:30"
+     ],
+     [
+      12,
+      "20:30",
+      "bought 3 at 125 each (a bargain, so I took extra)"
+     ],
+     [
+      12,
+      "20:30",
+      "told 4 friends about it"
+     ],
+     [
+      13,
+      "20:00",
+      "arrived at the shop, chicken is 250"
+     ],
+     [
+      13,
+      "20:00",
+      "chicken is 250, too much; I will wait"
+     ],
+     [
+      13,
+      "20:30",
+      "saw the price drop right when it happened at about 20:30"
+     ],
+     [
+      13,
+      "20:30",
+      "bought 3 at 125 each (a bargain, so I took extra)"
+     ],
+     [
+      13,
+      "20:30",
+      "told 4 friends about it"
+     ],
+     [
+      13,
+      "20:30",
+      "a friend says the price usually drops around 20:30"
+     ]
+    ],
+    "waste_pesos": 0.0,
+    "revenue": 2056.818181818182,
+    "margin": 736.8181818181819,
+    "net": 736.8181818181819,
+    "full_price_units": 4.454545454545454,
+    "discount_units": 7.545454545454546
+   }
+  }
+ },
+ "note": "Per-evening means over the days after the baseline. The customers' judgement is a rule-based utility model, an assumption of this simulator, not measured human behavior."
+}

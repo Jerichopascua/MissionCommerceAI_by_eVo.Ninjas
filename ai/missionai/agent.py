@@ -16,8 +16,9 @@ MAX_HORIZON_DAYS = 3
 
 
 class MarkdownAgent:
-    def __init__(self, client, model, recorder, product_info, base_per_day, explainer=None, endpoint=None):
+    def __init__(self, client, model, recorder, product_info, base_per_day, explainer=None, endpoint=None, not_before_hour=None):
         self.client, self.model, self.recorder = client, model, recorder
+        self.not_before_hour = not_before_hour      # the owner's clearance window: no markdown before this hour
         self.product_info, self.base_per_day = product_info, base_per_day
         self.explainer = explainer or (lambda d, o: explain_mod.explain(d, o, endpoint))
         self.applied = {}        # (warehouse, batch) -> discount currently in force
@@ -27,6 +28,8 @@ class MarkdownAgent:
 
     def tick(self, hour: float, warehouse_ids) -> list:
         actions = []
+        if self.not_before_hour is not None and hour < self.not_before_hour:
+            return actions
         policy = self.client.policy()
         if not policy.get("configured", True) or str(policy.get("autonomyMode", "Off")).lower() == "off":
             return [{"type": "skip", "reason": "pricing autonomy is off"}]

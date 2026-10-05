@@ -1,5 +1,7 @@
 # The concept, explained with real data
 
+> Customers that think and learn on their own (waiting for the 8:30 PM price cut, telling friends) are covered in `customer-actors.md`. This page covers the shop-side AI.
+
 Companion to `concept-demo-guide.md` (how to run it). This page answers: what is MissionCommerce AI trying to do, what do the data look like before and after each feature, how does the AI think, where does it learn, and which exact part of the program takes actions. Every number below comes from a real run (the demo script, or recorded runs in `results/`).
 
 ---

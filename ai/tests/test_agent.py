@@ -46,6 +46,14 @@ class AgentTests(unittest.TestCase):
         self.assertEqual(c.posts, [])
         self.assertEqual(len(rec.items), 0)
 
+    def test_clearance_window_blocks_markdowns_before_its_hour(self):
+        c = FakeClient()
+        rec = PredictionRecorder(Path(tempfile.mkdtemp()) / "p.jsonl")
+        agent = MarkdownAgent(c, DemandModel(prior_beta=-1.5), rec, lambda pid: INFO, lambda wh, pid: 12.0, not_before_hour=20.5)
+        self.assertEqual(agent.tick(20.25, [1]), [])
+        self.assertEqual(c.posts, [])
+        self.assertEqual(len(agent.tick(20.5, [1])), 1)
+
     def test_unconfigured_policy_posts_nothing(self):
         c = FakeClient(policy={"configured": False, "autonomyMode": "Off"})
         agent, _ = make(c)

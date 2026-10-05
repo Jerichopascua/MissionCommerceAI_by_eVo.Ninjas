@@ -35,6 +35,7 @@ Numbers are from recorded runs in `results/` (small `smoke` world, one trial day
 | `sim/` | Simulator: world planner, behavior, `PesoWebDriver`, day runner, incidents and scoring, Quick Sim, proof harness (81 tests) |
 | `ai/missionai/` | Demand response, markdown optimizer and agent, prediction recorder, detectors, explainer (64 tests) |
 | `pesoweb-additions/` | The PesoWeb patches (per plan), SQL scripts, smoke scripts, README for a live test database |
+| `Docs/customer-actors.md` | Customer actors with memory and judgement (the chicken story), with results |
 | `ui/dashboard/` | Results dashboard (reads `results/`); `ui/prototype/` is the early design mock |
 | `results/` | Recorded run outputs the dashboard reads |
 | `Docs/` | Problem statement, spec and plans (`Docs/superpowers/`), AMD setup guide, onboarding contract |

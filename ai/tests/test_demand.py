@@ -74,6 +74,13 @@ class DemandTests(unittest.TestCase):
         self.assertLess(m.share_left(12), 0.15)
         self.assertGreater(m.share_left(6), 0.99)
 
+    def test_a_bigger_prior_share_keeps_late_hours_possible(self):
+        tight, loose = DemandModel(), DemandModel()
+        tight.fit_hours({18: 50, 19: 50})
+        loose.fit_hours({18: 50, 19: 50}, prior_share=0.5)
+        self.assertLess(tight.share_left(21), 0.02)
+        self.assertGreater(loose.share_left(21), 0.1)
+
     def test_more_days_left_means_more_expected_units(self):
         m = DemandModel()
         self.assertGreater(m.expected_units("x", 5.0, 1.0, 3, 6)[0], m.expected_units("x", 5.0, 1.0, 1, 6)[0] * 2.5)
