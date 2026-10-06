@@ -28,38 +28,47 @@ The page shows no screenshots of the product itself, only illustrations. So the 
 - A two-column capability section: the capabilities as an accordion on the left (one open at a time), one illustration on the right that changes with the open item.
 - Cards with generous rounding and lots of white space; stories as three image cards.
 
-## 3. How their five capabilities map to what we have
+## 3. How their five capabilities map to what we have (updated 2026-10-06)
 
-| DMall capability | What we have today | Gap | Next step |
-|---|---|---|---|
-| Digitised workflows | PesoWeb POS and back office; the Approval Center is a real workflow (propose, check, decide, log, undo) | Only pricing has a workflow like this | Reuse the Approval Center pattern for stock counts and write-offs |
-| Role-based operations | Roles and permissions; approval lanes by role (store manager, pricing manager, owner) | No task inbox per role; no onboarding flow | A "My tasks" tab that lists what is waiting for the signed-in role |
-| Real-time visibility | **Hub Overview**: today's sales, transactions, open exceptions, expiry at risk, active markdowns and waiting AI proposals, by branch | No stock turnover or shrinkage figure; the page refreshes only when you press Refresh | Add turnover and shrinkage tiles; refresh every minute |
-| Reports on demand | PesoWeb's own Reports screens; the AI dashboard for AI results | The hub shows today only: no day, week, month, region or category picker | A period and category picker on the Overview |
-| Anomaly rules and notifications | **Needs attention** list with fixed rules on today's numbers (open exceptions, expired stock not written off, cash difference, stock close to expiry, AI proposals waiting) | Rules are fixed in code; no editor; no notification; no automatic task for a person | A rule editor, then push notifications and task assignment |
-| Data-driven decisions | AI proposals with evidence, rule checks, a conservative profit estimate and a price test, in the Approval Center | Pricing only; no Replenish or Customer Mission | Build AI Replenish next, then Customer Mission |
-| Compare stores and regions | **Compare your branches** table; head-company view of every company | No regions | Add a region field to branches |
+| DMall capability | What we have now | What is still missing |
+|---|---|---|
+| Digitised workflows | PesoWeb POS and back office; the Approval Center is a full workflow (propose, check, decide, log, undo); reorders and alerts have decide or acknowledge steps | Stock counts and write-offs have no workflow of this kind |
+| Role-based operations | Roles and permissions; **My tasks** lists, for the signed-in person, what waits for the roles they hold (store manager, pricing manager, owner) | No named assignee: a task belongs to a role, not to one person; no onboarding flow |
+| Real-time visibility | **Overview**: sales, gross margin, stock turnover, days of stock, shrinkage, expiry at risk, exceptions, by branch; refreshes itself every minute | No regions; stock turnover uses the stock value now, not an average over the period |
+| Reports on demand | **Period** (today, yesterday, 7 days, 30 days, this month) and **category** pickers on the Overview | No export; no custom date range; no targets to compare against |
+| Anomaly rules and notifications | **Rules** tab: eight rules with a limit, a responsible role, a severity and an email switch; alerts open and close by themselves; **My tasks** shows them; the count appears on the tab | Rules are checked when the hub is opened and each time the agent runner checks in, not by a service of PesoWeb's own; email needs the company's mail server; no push or SMS |
+| Data-driven decisions | AI price proposals with evidence in the Approval Center; **AI Replenish** suggests what to reorder, how much, and by when | Customer Mission is not built; PesoWeb does not place the purchase order |
+| Compare stores | **Compare your branches** table; the head company sees every company's AI settings | No regions |
 
-## 4. What we built from this (in PesoWeb, at `/ai/hub`)
+## 4. What is in PesoWeb now (at `/ai/hub`)
 
-- **Overview tab:** a hero band, six headline tiles, a branch comparison table with sales bars and an OK or Check flag per branch, and the "needs attention" list with links to where each item is handled.
-- **AI Settings tab (the three levels you asked for):**
-  - this company: the six AI features with a switch each (enforced by PesoWeb);
-  - each branch: whether the AI may mark down there, and the hour before which it may not (enforced by PesoWeb on AI markdowns; a person can still mark down by hand);
-  - the head company: a read-only table of every company's AI features, pricing autonomy, margin floors, auto-approve, waiting approvals and branch count, with a filter.
-- **A one-page explainer** in DMall's narrative style at `ui/hub/index.html`: the four problems, the five capabilities with screenshots of the real screens, the results, and the honest limits.
+- **Overview:** period and category pickers, a "refresh every minute" switch, eight headline tiles, the branch comparison table (each branch flagged OK or Check), and the "needs attention" list.
+- **My tasks:** AI price proposals to decide, alerts from the rules, and reorders to place, for the roles the signed-in person holds. Urgent first. Alerts can be acknowledged; reorders marked Ordered or Dismissed.
+- **Reorders:** the suggestions from AI Replenish with the reasoning, and a button to run it now.
+- **Rules:** edit each rule's limit, responsible role, severity and email switch.
+- **AI Settings:** this company's six features, each branch's AI markdown switch and start hour, and (head company only) every company's AI settings.
 
-## 5. Honest limits of what is built
+How the numbers are defined (kept in one place in the code, `HubMath`):
 
-- The Overview shows today's numbers, refreshed on demand. It is not yet "every minute", and it has no stock turnover or shrinkage tile.
-- The "needs attention" rules are fixed. Nothing is notified and no task is assigned yet.
-- Branch settings cover AI markdowns only (on or off, and a start hour). A branch cannot yet have its own margin floors or its own AI Loss Prevention budget.
-- AI Replenish and AI Customer Mission are not built, and the hub says so.
+- **Stock turnover** = cost of goods sold in the period divided by the stock value on the shelf now.
+- **Days of stock** = stock value divided by the period's daily cost of sales.
+- **Shrinkage** = expired stock written off, plus stock lost to adjustments and stock counts (stock found offsets stock lost, never below zero), shown as a share of cost of sales.
 
-## 6. Suggested order for the next steps
+How AI Replenish decides (`ai/missionai/replenish.py`): reorder point = daily sales x delivery days + a safety allowance (about 90 percent service level) for normal swings; order up to daily sales x (delivery days + cover days) + the allowance; round up to a pack; cap perishables at what sells before they expire. Defaults: 2 delivery days, 7 cover days, 5 days of shelf life for perishables. These are assumptions to set per company, not facts about suppliers.
 
-1. Auto-refresh and the turnover and shrinkage tiles (small).
-2. A period and category picker on the Overview (medium).
-3. "My tasks" for the signed-in role, fed by the Approval Center and the anomaly rules (medium).
-4. A rule editor and notifications (larger).
-5. AI Replenish, so the hub has a second decision workflow (larger).
+## 5. Honest limits
+
+- Alerts and tasks are only as fresh as the last check. There is no background service in PesoWeb for it yet; the agent runner and anyone opening the hub trigger the check.
+- A task belongs to a role, not to a named person.
+- AI Replenish on the simulated worlds uses the sales rate saved by the history phase (two baseline days), so its suggestions are labelled "limited". With dated sales in a live shop it uses the last 14 days and calls the evidence "learned" from 7 days.
+- The reorder scenario in the demo is staged: the fastest sellers at one branch were set down to about a day of stock. Without that, the simulated shelves are stocked so deeply that nothing needs reordering.
+- Branch settings cover AI markdowns only. A branch cannot yet have its own margin floors.
+- Not built: AI Customer Mission, regions, a competitor price feed, push or SMS notifications.
+
+## 6. Suggested next steps
+
+1. A background check inside PesoWeb so alerts open without anyone opening the hub or the agent running.
+2. Name an assignee on a rule or task (a person, not only a role).
+3. Regions, and per-branch targets to compare against.
+4. Turn a Replenish suggestion into a draft purchase order in PesoWeb.
+5. AI Customer Mission.

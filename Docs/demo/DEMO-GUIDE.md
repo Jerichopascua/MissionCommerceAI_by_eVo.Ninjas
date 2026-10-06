@@ -76,15 +76,29 @@ The owner sets the guardrails the AI cannot override:
 - **Largest single price increase** and **how long a proposal waits** before it expires.
 - **Auto-approve small, learned changes:** off by default.
 
-### 7a. Where the AI settings are: the Intelligence Hub
+### 7a. The Intelligence Hub: where the AI settings, tasks, rules and reorders are
+
+The Intelligence Hub (menu: Inventory, then Intelligence Hub) is the home for monitoring and for the AI at every level. It has five tabs.
 
 ![Intelligence Hub overview](screens/17-hub-overview.png)
 
-The Intelligence Hub (menu: Inventory, then Intelligence Hub) is the home for the AI at every level. The **Overview** tab shows today for this company: headline tiles, a branch comparison table (each branch flagged OK or Check), and a "needs attention" list where every line links to the screen that handles it.
+**Overview.** Pick a period (today, yesterday, last 7 days, last 30 days, this month) and optionally one category. Eight tiles show sales, gross margin, stock turnover, days of stock, shrinkage, expiry at risk, open exceptions and waiting AI proposals, and the page refreshes itself every minute. The branch comparison flags each branch OK or Check. (On the simulated shelves the days-of-stock figure is very high because they are stocked far beyond what sells; that is the simulation, not a calculation fault.)
+
+![My tasks](screens/21-hub-my-tasks.png)
+
+**My tasks.** Everything waiting for the roles the signed-in person holds: AI price proposals to decide, alerts from the rules, and reorders to place. Urgent items first. "Got it" acknowledges an alert (it still closes by itself when the numbers recover); "Ordered" or "Dismiss" settles a reorder.
+
+![Reorders suggested by AI Replenish](screens/22-hub-reorders.png)
+
+**Reorders.** AI Replenish asks, for each product, whether the stock will last until a delivery arrives. Each suggestion shows what is on hand, how fast it sells, the days of cover left, how much to order and about what it costs, and the reasoning in words. A red cover figure means the stock runs out before a delivery could arrive. Perishables are capped at what sells before they expire (see Yakult). PesoWeb does not place the order: you order from the supplier and mark it Ordered. This demo scenario is staged: the fastest sellers at one branch were set down to about a day of stock.
+
+![Rules](screens/23-hub-rules.png)
+
+**Rules.** Eight plain rules (expired stock not written off, stock close to expiry, cash shift closed with a difference, selling below cost, shrinkage, too much stock, open exceptions, AI proposals waiting). For each: switch it on or off, set the limit, choose the responsible role and the severity, and choose whether to also email that role (through the company's own mail settings). The last column counts open alerts.
 
 ![AI settings: company and branches](screens/18-hub-ai-settings.png)
 
-The **AI Settings** tab has the settings at each level:
+**AI Settings.** The settings at each level:
 
 - **This company:** the six AI features, each with a switch (enforced by PesoWeb), and a link to the margin rules in the Approval Center.
 - **Each branch:** whether the AI may mark prices down at that branch, and the hour before which it may not (for example, no markdowns before 20:00). A person can still mark down by hand. PesoWeb enforces both on AI markdowns.

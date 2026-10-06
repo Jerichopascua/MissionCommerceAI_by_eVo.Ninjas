@@ -74,14 +74,16 @@ footer{padding:36px 0 50px;color:var(--muted);font-size:14px;text-align:center}
   <div class="two">
     <div class="acc" id="acc">
       <button aria-expanded="true" data-i="0">Real-time visibility of every branch <span>+</span></button>
-      <div class="panel">Sales, transactions, open exceptions, expiry at risk, active markdowns and waiting AI proposals for today, side by side by branch. A branch is flagged when something needs a look.</div>
-      <button aria-expanded="false" data-i="1">Needs attention, with the screen to fix it <span>+</span></button>
-      <div class="panel">Plain rules on today's numbers: expired stock not written off, a cash shift closed with a difference, open exceptions, AI proposals waiting. Each line links to where it is handled.</div>
-      <button aria-expanded="false" data-i="2">Decisions with the evidence beside them <span>+</span></button>
+      <div class="panel">Sales, gross margin, stock turnover, days of stock, shrinkage, expiry at risk and open exceptions, side by side by branch, for the period and category you choose. It refreshes itself every minute.</div>
+      <button aria-expanded="false" data-i="1">Tasks for your role, with the screen to fix them <span>+</span></button>
+      <div class="panel">My tasks lists what is waiting for the roles you hold: AI price proposals to decide, alerts from your rules, and reorders to place. Urgent first, each with the button or link that settles it.</div>
+      <button aria-expanded="false" data-i="2">Rules you set, alerts that close themselves <span>+</span></button>
+      <div class="panel">Eight plain rules: expired stock, cash differences, selling below cost, shrinkage, too much stock and more. You set the limit, the responsible role and whether to email them. An alert opens when a branch breaks a rule and closes when the numbers recover.</div>
+      <button aria-expanded="false" data-i="3">Reorder suggestions with their reasoning <span>+</span></button>
+      <div class="panel">AI Replenish checks whether each product will last until a delivery arrives, given how fast it sells, and suggests how much to order and by when. Perishables are capped at what sells before they expire. You place the order and mark it done.</div>
+      <button aria-expanded="false" data-i="4">Decisions with the evidence beside them <span>+</span></button>
       <div class="panel">Every AI price proposal arrives with its reason, the margin before and after, what the AI learned from this shop's own sales, a cautious profit estimate, and the rule checks. Approve, reject, or approve at a different price.</div>
-      <button aria-expanded="false" data-i="3">Roles decide how much each person can approve <span>+</span></button>
-      <div class="panel">Small, well-evidenced changes go to the store manager; larger ones to the pricing manager; changes on top sellers to the owner. The owner sets the limits, and can switch auto-approval on for small learned changes.</div>
-      <button aria-expanded="false" data-i="4">AI settings for the company, each branch and the whole group <span>+</span></button>
+      <button aria-expanded="false" data-i="5">AI settings for the company, each branch and the whole group <span>+</span></button>
       <div class="panel">Switch each AI feature on or off, set per branch whether the AI may mark prices down and from what hour, and (for the head company) see every company's AI settings in one table. PesoWeb enforces all of it.</div>
     </div>
     <div class="shot">
@@ -107,8 +109,8 @@ footer{padding:36px 0 50px;color:var(--muted);font-size:14px;text-align:center}
     <ul>
       <li>The shoppers and their reaction to price are simulated; the catalog, PesoWeb and the AI's decisions are real.</li>
       <li>On thin real margins the benefit is a few percent of gross margin, not a transformation. The larger waste reduction is on generated shops with normal margins.</li>
-      <li>Not built yet: AI Replenish, AI Customer Mission, a competitor price feed, and notifications that assign a task to a person.</li>
-      <li>Not yet tested on the AMD GPU; that comes last.</li>
+      <li>Not built yet: AI Customer Mission, a competitor price feed, regions, and push or SMS notifications. Alerts email only if the company has set up its mail server, and a task belongs to a role, not to one named person.</li>
+      <li>AI Replenish does not place the purchase order; a person orders and marks it done. Its demo scenario is staged. Not yet tested on the AMD GPU; that comes last.</li>
     </ul>
   </div>
 
@@ -117,10 +119,11 @@ footer{padding:36px 0 50px;color:var(--muted);font-size:14px;text-align:center}
 <script>
 (function(){
   var shots=[
-    ['17-hub-overview.png','Overview: how each branch is doing today, and what needs attention.'],
-    ['17-hub-overview.png','Needs attention: each rule is a plain check, with a link to the screen that handles it.'],
-    ['12-approval-center-owner-lane-item.png','Approval Center: the proposal, its evidence and the rule checks, with the slider to approve a different price.'],
-    ['13-approval-center-settings.png','Approval settings: margin floors, lane sizes, expiry and auto-approve, set by the owner.'],
+    ['17-hub-overview.png','Overview: how each branch is doing for the period and category you pick.'],
+    ['21-hub-my-tasks.png','My tasks: what is waiting for your roles, urgent first.'],
+    ['23-hub-rules.png','Rules: the limit, the responsible role, the severity and the email switch for each.'],
+    ['22-hub-reorders.png','Reorders: what to order, how much, and why.'],
+    ['12-approval-center-owner-lane-item.png','Approval Center: the proposal, its evidence and the rule checks.'],
     ['18-hub-ai-settings.png','AI settings: the six features, and each branch.']
   ];
   var acc=document.getElementById('acc'),img=document.getElementById('shotimg'),cap=document.getElementById('shotcap');

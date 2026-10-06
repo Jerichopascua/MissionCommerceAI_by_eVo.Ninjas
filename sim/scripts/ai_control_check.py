@@ -35,7 +35,7 @@ def main() -> int:
     states = drv._call("GET", "/api/ai/control", a.token)
     by = {s["key"]: s for s in states}
     check(len(states) == 6 and all(s["enabled"] for s in states), "six features, all on for a company that never touched the switch")
-    check(by["Pricing"]["buildState"] == "Built" and by["Replenish"]["buildState"] == "NotBuilt", "each says whether it is built")
+    check(by["Pricing"]["buildState"] == "Built" and by["Replenish"]["buildState"] == "Built" and by["CustomerMission"]["buildState"] == "NotBuilt", "each says whether it is built")
 
     print("2. Switching AI Pricing off stops AI proposals, not a person's")
     st, o = drv._call("POST", "/api/Pricing/ListPrice", a.token, json_body={"WarehouseId": wh, "ProductId": pid, "NewPrice": 103, "Source": "Ai", "Confidence": "learned"}, raw=True)
@@ -58,7 +58,7 @@ def main() -> int:
     check(st == 202, "a run is requested")
     st2, _ = drv._call("POST", "/api/ai/control/run/Pricing", a.token, raw=True)
     check(st2 == 409, "a second request while one waits is refused")
-    st3, _ = drv._call("POST", "/api/ai/control/run/Replenish", a.token, raw=True)
+    st3, _ = drv._call("POST", "/api/ai/control/run/CustomerMission", a.token, raw=True)
     check(st3 == 409, "a feature that is not built cannot be run")
     ran = []
     agent = agent_service.AgentRunner(drv, a, {"Pricing": lambda: ran.append(1) or "proposed 2 price changes"}, log=lambda *_: None)

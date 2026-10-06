@@ -305,9 +305,28 @@ class PesoWebDriver:
         q = f"?afterId={after_id}&take=1000" + (f"&warehouseId={warehouse_id}" if warehouse_id else "")
         return (self._call("GET", f"/api/ai/receipts{q}", acct.token) or {}).get("receipts", [])
 
-    def movements(self, acct: Account, warehouse_id: int = None, kind: str = "SALE_OUT", after_id: int = 0) -> list:
-        q = f"?type={kind}&afterId={after_id}&take=5000" + (f"&warehouseId={warehouse_id}" if warehouse_id else "")
+    def movements(self, acct: Account, warehouse_id: int = None, kind: str = "SALE_OUT", after_id: int = 0, since: str = None) -> list:
+        q = f"?type={kind}&afterId={after_id}&take=5000" + (f"&warehouseId={warehouse_id}" if warehouse_id else "") + (f"&since={since}" if since else "")
         return (self._call("GET", f"/api/ai/movements{q}", acct.token) or {}).get("movements", [])
+
+    # ---- Intelligence Hub: rules, tasks, AI Replenish ---------------------------------------------------------
+    def hub_evaluate(self, acct: Account) -> dict:
+        """Ask PesoWeb to check the company's hub rules now (opens, updates and closes alerts)."""
+        return self._call("POST", "/api/ai/hub/evaluate", acct.token) or {}
+
+    def hub_tasks(self, acct: Account) -> dict:
+        return self._call("GET", "/api/ai/hub/tasks", acct.token) or {}
+
+    def post_replenish(self, acct: Account, warehouse_ids: list, items: list):
+        """items: dicts with WarehouseId, ProductId, OnHand, RatePerDay, DaysOfCover, ReorderPoint, SuggestedQty, UnitCost, LeadTimeDays, CoverDays,
+        Confidence, Reason. Returns (http status, body)."""
+        return self._call("POST", "/api/ai/replenish", acct.token, json_body={"WarehouseIds": warehouse_ids, "Items": items}, raw=True)
+
+    def replenish_suggestions(self, acct: Account, status: str = "Open") -> list:
+        return self._call("GET", f"/api/ai/replenish?status={status}", acct.token) or []
+
+    def decide_replenish(self, acct: Account, suggestion_id: int, decision: str):
+        return self._call("POST", f"/api/ai/replenish/{suggestion_id}/decision", acct.token, json_body={"decision": decision}, raw=True)
 
     # ---- stock counts -------------------------------------------------------------------------------------
     def create_count(self, acct: Account, warehouse_id: int, product_ids: list, note: str = "") -> dict:

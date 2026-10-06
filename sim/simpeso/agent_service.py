@@ -30,7 +30,12 @@ class AgentRunner:
         return self.drv._call("GET", "/api/ai/settings", self.acct.token)
 
     def poll_once(self) -> list:
-        """Handle every waiting run request once. Returns one result row per request."""
+        """Handle every waiting run request once. Returns one result row per request. Also asks PesoWeb to check the hub rules,
+        so alerts open and close even when nobody has the Intelligence Hub open."""
+        try:
+            self.drv._call("POST", "/api/ai/hub/evaluate", self.acct.token, raw=True)
+        except Exception:                   # a rules check that fails must not stop the runs
+            pass
         settings = self.settings()
         waiting = self.drv._call("GET", "/api/ai/run-requests?status=Requested", self.acct.token) or []
         results = []
@@ -81,6 +86,53 @@ def pricing_handler(drv, acct, warehouse_ids: list, model: dict, limit: int = 8,
     return run
 
 
+BASELINE_DAYS_IN_MODEL = 2     # the saved model's sales rate is the average of the history phase's baseline days
+
+
+def replenish_handler(drv, acct, warehouse_ids: list, model: dict = None, lead_days: int = 2, cover_days: int = 7, perishable_shelf_days: int = 5,
+                      window_days: int = 14):
+    """AI Replenish run: for every product at every branch, will the stock last until a delivery arrives? Posts the products that need an
+    order to PesoWeb as suggestions (replacing the branch's earlier open ones). A person confirms; nothing is ordered here.
+
+    Demand comes from the shop's own sales: the last `window_days` of sales when PesoWeb has dated sales, or, for a simulated world whose
+    days all share one calendar date, the sales rate saved by its history phase (a Poisson spread is assumed, and the result is labelled limited)."""
+    from . import price_run
+    from missionai import replenish as rp
+    import datetime as dt
+
+    def daily_demand(wh):
+        since = (dt.date.today() - dt.timedelta(days=window_days)).isoformat()
+        per = {}
+        for m in drv.movements(acct, wh, "SALE_OUT", 0, since):
+            day = (m.get("transactionDate") or "")[:10]
+            per.setdefault(m["productId"], {}).setdefault(day, 0.0)
+            per[m["productId"]][day] += float(m["qtyOut"])
+        return lambda p: rp.demand_from_daily(list(per.get(p["id"], {}).values()) + [0.0] * max(0, window_days - len(per.get(p["id"], {})))) if p["id"] in per else None
+
+    def run() -> str:
+        items, urgent = [], 0
+        for wh in warehouse_ids:
+            products = price_run.browse(drv, acct, wh)
+            if model:
+                rates = model["rates"]
+                demand = lambda p, wh=wh: (rp.demand_poisson(rates[f"{wh}:{p['id']}"], BASELINE_DAYS_IN_MODEL) if f"{wh}:{p['id']}" in rates else None)
+                min_days = BASELINE_DAYS_IN_MODEL
+            else:
+                demand, min_days = daily_demand(wh), rp.MIN_DAYS_OF_DATA
+            for s in rp.suggest_all(products, demand, lead_days=lead_days, cover_days=cover_days, min_days_of_data=min_days,
+                                    shelf_life_for=lambda p: perishable_shelf_days if p.get("perishable") else None):
+                urgent += 1 if s.urgent else 0
+                items.append({"WarehouseId": wh, "ProductId": s.product_id, "OnHand": s.on_hand, "RatePerDay": s.rate_per_day, "DaysOfCover": s.days_of_cover,
+                              "ReorderPoint": s.reorder_point, "SuggestedQty": s.suggested_qty, "UnitCost": s.unit_cost, "LeadTimeDays": s.lead_time_days,
+                              "CoverDays": s.cover_days, "Confidence": s.confidence, "Reason": s.reason})
+        status, body = drv.post_replenish(acct, warehouse_ids, items)
+        if status != 200:
+            raise RuntimeError(f"PesoWeb refused the suggestions: {status} {body}")
+        return f"{body.get('added', 0)} reorder suggestions for {len(warehouse_ids)} branches ({urgent} urgent)"
+
+    return run
+
+
 def main(argv=None) -> int:
     from . import runner
     from .driver import PesoWebDriver
@@ -99,7 +151,7 @@ def main(argv=None) -> int:
     drv = PesoWebDriver(args.base_url, "agent-service")
     acct = drv.login(comp["owner"]["email"], comp["owner"]["password"])
     whs = [b["warehouse_id"] for b in comp["branches"].values() if "warehouse_id" in b]
-    agent = AgentRunner(drv, acct, {"Pricing": pricing_handler(drv, acct, whs, model, args.limit)})
+    agent = AgentRunner(drv, acct, {"Pricing": pricing_handler(drv, acct, whs, model, args.limit), "Replenish": replenish_handler(drv, acct, whs, model)})
     if args.once:
         agent.poll_once()
         return 0

@@ -96,6 +96,20 @@ Agent side: `sim/simpeso/agent_service.py` (`python -m simpeso.agent_service --r
 - Angular screen `/ai/hub` (menu "Intelligence Hub"): Overview and AI Settings tabs. The Approval Center settings panel also gained the margin floors, deepest markdown and change-rate limit.
 - Checked by 184 PesoWeb tests and `sim/scripts/ai_control_check.py` (23 live checks, 7 of them on branches and the head-company views).
 
+## Plan 11 addition (hub metrics, rules and alerts, My tasks, AI Replenish)
+
+`patches/plan11` (tag `plan11-complete`):
+- Tables `HubRules`, `HubAlerts`, `ReplenishSuggestions` (migration `AddHubRulesAlertsReplenish`, script `scripts/20261006_hub_rules_alerts_replenish.sql`).
+- `GET /api/ai/hub/metrics?period=today|yesterday|7d|30d|month&categoryId=` (sales, cost of sales, gross margin, stock turnover, days of stock, shrinkage, expiry, cash difference, markdowns, exceptions, by branch); `GET /api/ai/hub/categories`.
+- Rules: `GET /api/ai/hub/rules`, `PUT /api/ai/hub/rules/{key}` (limit, responsible role, severity, email). Alerts open and close by themselves when the rules are checked: on `GET /api/ai/hub/tasks`, on saving a rule, and on `POST /api/ai/hub/evaluate` (the agent runner calls it every poll). `POST /api/ai/hub/alerts/{id}/ack`, `GET /api/ai/hub/notifications`.
+- `GET /api/ai/hub/tasks`: approvals, alerts and reorders for the roles the caller holds (the approval lanes). Email on a new alert uses the company's own mail settings and does nothing if none are set.
+- AI Replenish: `POST /api/ai/replenish` (agent, `AI.Read`), `GET /api/ai/replenish?status=Open`, `POST /api/ai/replenish/{id}/decision` (`Ordered` or `Dismissed`). A switched-off AI Replenish gets 422 `AI_FEATURE_OFF`.
+- `GET /api/ai/movements` gained `since=` so an agent can read recent sales only.
+- Angular `/ai/hub`: Overview (pickers, auto-refresh, new tiles), My tasks, Reorders, Rules, AI Settings.
+- Checked by 204 PesoWeb tests, `sim/scripts/hub_check.py` (22 live checks), `ai_control_check.py` (23) and `approval_center_check.py` (17).
+
+Agent side: `ai/missionai/replenish.py` (the reorder maths, 10 tests); `sim/simpeso/agent_service.py` gained the Replenish handler and asks PesoWeb to check the rules on every poll; `sim/scripts/hub_demo_seed.py` stages the demo reorder scenario in a simulated world (test-bench housekeeping, throwaway database only).
+
 ## Live verification environment (no admin rights needed)
 
 PesoWeb databases come from a backup plus SQL scripts, not from running every EF migration (an old migration has a foreign-key cycle, and the history is incomplete). To get a throwaway database on SQL Server LocalDB:
