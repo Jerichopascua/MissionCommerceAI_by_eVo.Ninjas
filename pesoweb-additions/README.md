@@ -137,6 +137,13 @@ Agent side: `ai/missionai/missions.py` (10 tests) and the competitor cap in `pri
 
 A top-level menu group "Intelligent Hub" (under Dashboard, in the side menu and the home menu) replaces the three single entries that sat under Inventory: Overview, My tasks, Approval Center, Reorders, Customer missions, AI Impact, Alert rules, AI Control, AI Settings. The hub items open `/ai/hub?tab=<name>` (the page reads the `tab` query parameter, also while already open); Approval Center needs `Pricing.View`, the rest `AI.Control`.
 
+## Plan 16 addition (test snapshots)
+
+`patches/plan16`: `Services/SnapshotService.cs` (`SnapshotRules`, `SnapshotService`, `SnapshotStartupService`), `Controllers/SnapshotsController.cs` (`GET/POST /api/snapshots`, `POST /api/snapshots/initial`, `POST /api/snapshots/restore`, `DELETE /api/snapshots/{name}`), the screen `ClientApp/src/app/ai/snapshots` (`/ai/snapshots`, menu: Intelligent Hub, Test snapshots, head super admin only). No migration.
+- Off unless `Snapshots:Enabled=true` (then 404). Allowed: the root super admin, or addresses in `Snapshots:AllowedEmails` (used by the live check). `Snapshots:Folder` (default `%USERPROFILE%\PesoWeb_Snapshots`), `Snapshots:AutoInitial` (default true).
+- Each snapshot is a SQL Server `BACKUP ... COPY_ONLY, CHECKSUM` file plus a `.json` with the structure fingerprint (SHA-256 over columns, indexes, foreign keys, check and default constraints, module definitions and the migration list) and counts. Restore is refused unless the current structure equals the recorded one; it takes a safety snapshot first, verifies the file, restores through `master` in single-user mode, and re-checks the structure.
+- Tests: `SnapshotRulesTests` (16); PesoWeb total 277. Live: `sim/scripts/snapshot_check.py` (18 checks: saves, changes the database, restores and sees the change gone, then adds a probe stored procedure and sees the restore refused). It needs PesoWeb started with `Snapshots__Enabled=true Snapshots__AllowedEmails=snapadmin@snap.test` and nothing else using the database.
+
 ## Live verification environment (no admin rights needed)
 
 PesoWeb databases come from a backup plus SQL scripts, not from running every EF migration (an old migration has a foreign-key cycle, and the history is incomplete). To get a throwaway database on SQL Server LocalDB:

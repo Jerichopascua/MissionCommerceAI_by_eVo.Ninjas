@@ -96,6 +96,7 @@ Retailo_v1_mission/
 │   ├── HubMetricsService.cs, HubRuleService.cs, HubTaskService.cs, HubInsightServices.cs,
 │   │   HubChannelService.cs, HubBackgroundService.cs, ReplenishService.cs, GroupOverviewService.cs   (ours) Intelligence Hub
 │   ├── AiImpactService.cs         (ours) AI Impact: before/after and AI branch vs control branch
+│   ├── SnapshotService.cs         (ours) test snapshots: save, restore, structure guard, initial snapshot
 │   ├── MarkdownPricingService.cs, MarkdownGuardrails.cs, MarkdownService.cs   markdown (clearance) pricing
 │   ├── StockService, InventoryBatchService, ExpiryService, StockCountService, ReceivingService,
 │   │   CashShiftService, ExceptionService, LedgerService, TransactionService, SyncService, ...

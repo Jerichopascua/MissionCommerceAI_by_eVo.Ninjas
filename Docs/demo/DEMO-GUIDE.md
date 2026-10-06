@@ -215,6 +215,24 @@ python -m simpeso.runner score --run myworld        # how many planted incidents
 
 **Stopping it:** each command ends by itself; stop the agent runner with Ctrl+C. A day of simulated sales cannot be un-sold: to reset, restore the database backup (recipe in `pesoweb-additions/README.md`, "Live verification environment").
 
+## Part D. Test snapshots: save the database, restore it, start again from the initial data
+
+Running the simulation changes the database. Snapshots let you get back to a known state without rebuilding anything.
+
+![Test snapshots](screens/28-test-snapshots.png)
+
+**Where:** Intelligent Hub, then **Test snapshots** (last item of the group). It is shown only when you are signed in as the **head super admin** (`superadmin@email.com`), because a snapshot is a copy of the whole database: every company, branch, product, sale and AI setting. It works only where the server has `Snapshots__Enabled=true`; `ui\demo\start-demo.ps1` sets that for the demo, and everywhere else the feature does not exist (the page says so).
+
+- **Initial snapshot.** For the current database structure there is always one initial snapshot, the default starting point (name `INITIAL-<date>-<structure id>`). If the structure has no initial snapshot yet, PesoWeb makes one by itself about 20 seconds after it starts, from the data as it is at that moment, and the page offers **Make the current data the initial snapshot** if you want to set it by hand. An initial snapshot cannot be deleted from the page.
+- **Save.** Type a file name (and an optional note) and press **Save snapshot**. The whole database is copied to `C:\Users\<you>\PesoWeb_Snapshots` (about 210 MB each for the current demo database). A name is never saved over, and only letters, digits, spaces, dots, dashes and underscores are accepted.
+- **Restore.** Press **Restore** on a snapshot and type `RESTORE`. First PesoWeb saves a **safety snapshot** (`before-restore-<time>`) of the database as it is now, so a restore can itself be undone; then it checks the file, replaces the database, and checks the structure came back as recorded. Everything saved since the snapshot, for every company, is gone.
+- **The structure guard.** A snapshot can only be restored into the database structure it was taken from. PesoWeb records, with every snapshot, a fingerprint of the tables, columns, indexes, constraints, views, **stored procedures**, functions, triggers and the list of applied migrations. If any of that differs now, the snapshot shows **Can be restored now: No** with the reason (for example "2 migration(s) were applied since", or "stored procedures ... differ"), and the restore is refused. Old snapshots stay on disk but become unrestorable; use a snapshot taken after the change.
+- **After you change the database.** Apply the migration or script, restart PesoWeb: with no initial snapshot for the new structure it creates one. Clean the data first if you want the initial snapshot to be clean (see the note below).
+
+**Not covered:** snapshots are for the test and demo database only. They do not replace PesoWeb's own Database Backup utility, which is per company. They are not meant for production and are off unless `Snapshots__Enabled` is set.
+
+**Note on the first initial snapshot.** The demo database has accumulated throwaway test companies from the checks. The automatic initial snapshot (`INITIAL-20261006-1958-...`) contains all of them (about 276 companies and 496 branches). If you want a clean starting point, remove the throwaway companies first, then press **Make the current data the initial snapshot**.
+
 ## Suggested 6-minute demo order
 
 1. **Login** and the head company (screens 01, 02): "this is the platform, and these are the defaults" (45 seconds).

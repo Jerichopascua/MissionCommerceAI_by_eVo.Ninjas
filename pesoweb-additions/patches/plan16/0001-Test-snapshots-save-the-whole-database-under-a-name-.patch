@@ -1,0 +1,865 @@
+From fbecf2c4edb7b2b82c55b402720b03ad27bbf285 Mon Sep 17 00:00:00 2001
+From: unknown <jericho.pascua@gmail.com>
+Date: Tue, 6 Oct 2026 20:04:20 +0800
+Subject: [PATCH] Test snapshots: save the whole database under a name, restore
+ it with a structure guard (tables, columns, stored procedures, migrations),
+ initial snapshot per structure, safety snapshot before restore, screen for
+ the head super admin
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+---
+ .../app/ai/snapshots/snapshots.component.html |  90 +++++
+ .../app/ai/snapshots/snapshots.component.ts   |  84 ++++
+ ClientApp/src/app/app.component.html          |   8 +
+ ClientApp/src/app/app.module.ts               |   3 +
+ .../src/app/homemenu/homemenu.component.html  |   8 +
+ ClientApp/src/app/services/app.service.ts     |   5 +
+ Controllers/SnapshotsController.cs            |  83 ++++
+ Program.cs                                    |   2 +
+ Retailo.Tests/SnapshotRulesTests.cs           |  80 ++++
+ Services/SnapshotService.cs                   | 373 ++++++++++++++++++
+ 10 files changed, 736 insertions(+)
+ create mode 100644 ClientApp/src/app/ai/snapshots/snapshots.component.html
+ create mode 100644 ClientApp/src/app/ai/snapshots/snapshots.component.ts
+ create mode 100644 Controllers/SnapshotsController.cs
+ create mode 100644 Retailo.Tests/SnapshotRulesTests.cs
+ create mode 100644 Services/SnapshotService.cs
+
+diff --git a/ClientApp/src/app/ai/snapshots/snapshots.component.html b/ClientApp/src/app/ai/snapshots/snapshots.component.html
+new file mode 100644
+index 0000000..aaf776d
+--- /dev/null
++++ b/ClientApp/src/app/ai/snapshots/snapshots.component.html
+@@ -0,0 +1,90 @@
++<!-- Main Content -->
++<div class="main-content">
++	<div class="page-header">
++		<div class="page-block">
++			<div class="row align-items-center">
++				<div class="col-auto">
++					<div class="page-header-title"><h4>{{app.Localize('Test snapshots')}}</h4></div>
++					<ul class="breadcrumb">
++						<li class="breadcrumb-item"><a [routerLink]="['/']"><i class="fa fa-home me-1"></i>{{app.Localize('Home')}}</a></li>
++						<li class="breadcrumb-item">{{app.Localize('Intelligent Hub')}}</li>
++						<li class="breadcrumb-item">{{app.Localize('Test snapshots')}}</li>
++					</ul>
++				</div>
++				<div class="col"><div class="float-end"><button type="button" class="btn btn-outline-secondary" (click)="load()"><i class="fa fa-rotate me-1"></i>{{app.Localize('Refresh')}}</button></div></div>
++			</div>
++		</div>
++	</div>
++
++	<div class="alert alert-danger" *ngIf="error">{{error}}</div>
++	<div class="alert alert-success" *ngIf="message">{{message}}</div>
++	<div class="alert alert-warning" *ngIf="off">{{app.Localize('Snapshots are switched off on this server, or this login is not allowed to use them. They are for the test and demo database only: the server needs Snapshots:Enabled set to true, and you must be signed in as the head super admin.')}}</div>
++
++	<ng-container *ngIf="status">
++		<div class="snap-section">
++			<h5>{{app.Localize('The database right now')}}</h5>
++			<div class="snap-note">{{app.Localize('A snapshot is a copy of the whole database: every company, branch, product, sale and AI setting in it. It can only be restored into the same database structure.')}}</div>
++			<div class="row g-3 mt-1">
++				<div class="col-md-3"><div class="snap-note">{{app.Localize('Database')}}</div><b>{{status.database}}</b></div>
++				<div class="col-md-3"><div class="snap-note">{{app.Localize('Companies / branches')}}</div><b>{{status.companies}} / {{status.branches}}</b></div>
++				<div class="col-md-3"><div class="snap-note">{{app.Localize('Structure')}}</div><b>{{status.structure}}</b> <span class="snap-note">({{status.tables}} {{app.Localize('tables')}}, {{status.modules}} {{app.Localize('procedures, views and functions')}}, {{status.migrations}} {{app.Localize('migrations')}})</span></div>
++				<div class="col-md-3"><div class="snap-note">{{app.Localize('Initial snapshot for this structure')}}</div>
++					<span class="pill ok" *ngIf="status.hasInitial">{{status.initialSnapshot}}</span>
++					<span class="pill no" *ngIf="!status.hasInitial">{{app.Localize('none yet')}}</span></div>
++			</div>
++			<div class="alert alert-warning mt-3 mb-0 d-flex justify-content-between align-items-center flex-wrap gap-2" *ngIf="!status.hasInitial">
++				<span>{{status.message}}</span>
++				<button type="button" class="btn btn-sm btn-primary" (click)="makeInitial()" [disabled]="busy">{{app.Localize('Make the current data the initial snapshot')}}</button>
++			</div>
++			<div class="snap-note mt-2">{{app.Localize('Saved in')}} {{status.folder}}</div>
++		</div>
++
++		<div class="snap-section">
++			<h5>{{app.Localize('Save a snapshot')}}</h5>
++			<div class="snap-note">{{app.Localize('Saves the database as it is now under the name you give. A name is never saved over.')}}</div>
++			<div class="row g-2 mt-1 align-items-end">
++				<div class="col-md-4"><label class="snap-note">{{app.Localize('File name')}}</label><input class="form-control" maxlength="60" [(ngModel)]="name" placeholder="before-the-demo"></div>
++				<div class="col-md-5"><label class="snap-note">{{app.Localize('Note (optional)')}}</label><input class="form-control" maxlength="200" [(ngModel)]="note"></div>
++				<div class="col-md-3"><button type="button" class="btn btn-primary w-100" (click)="save()" [disabled]="busy || !name"><i class="fa fa-floppy-disk me-1"></i>{{app.Localize('Save snapshot')}}</button></div>
++			</div>
++		</div>
++
++		<div class="snap-section">
++			<h5>{{app.Localize('Snapshots')}}</h5>
++			<div *ngIf="!snapshots.length" class="text-muted py-3">{{app.Localize('No snapshots yet.')}}</div>
++			<div class="table-responsive" *ngIf="snapshots.length">
++				<table class="table align-middle mb-0">
++					<thead><tr><th>{{app.Localize('Name')}}</th><th>{{app.Localize('Kind')}}</th><th>{{app.Localize('Taken')}}</th><th class="text-end">{{app.Localize('Companies / branches')}}</th><th class="text-end">{{app.Localize('Size')}}</th><th>{{app.Localize('Can be restored now')}}</th><th></th></tr></thead>
++					<tbody>
++						<tr *ngFor="let s of snapshots">
++							<td><b>{{s.name}}</b><div class="snap-note" *ngIf="s.note">{{s.note}}</div></td>
++							<td><span class="pill info">{{s.kind}}</span> <span class="snap-note" *ngIf="s.automatic">{{app.Localize('automatic')}}</span></td>
++							<td>{{s.createdAtUtc | date:'MMM d, y, h:mm a'}}<div class="snap-note">{{s.createdBy}}</div></td>
++							<td class="text-end">{{s.companies}} / {{s.branches}}</td>
++							<td class="text-end">{{mb(s.sizeBytes)}}</td>
++							<td>
++								<span class="pill ok" *ngIf="s.restorable">{{app.Localize('Yes')}}</span>
++								<span class="pill no" *ngIf="!s.restorable">{{app.Localize('No')}}</span>
++								<div class="snap-note" *ngIf="!s.restorable" style="max-width:360px">{{s.reason}}</div>
++							</td>
++							<td class="text-end text-nowrap">
++								<button type="button" class="btn btn-sm btn-outline-primary me-1" (click)="askRestore(s.name)" [disabled]="busy || !s.restorable"><i class="fa fa-clock-rotate-left me-1"></i>{{app.Localize('Restore')}}</button>
++								<button type="button" class="btn btn-sm btn-outline-danger" (click)="remove(s.name)" [disabled]="busy || s.kind==='Initial'"><i class="fa fa-trash"></i></button>
++							</td>
++						</tr>
++					</tbody>
++				</table>
++			</div>
++
++			<div class="alert alert-danger mt-3 mb-0" *ngIf="restoring">
++				<b>{{app.Localize('Restore')}} "{{restoring}}"?</b>
++				{{app.Localize('Everything saved in the database since this snapshot, for every company, is replaced. A safety copy of the database as it is now is saved first, so this can be undone. Type RESTORE to confirm.')}}
++				<div class="d-flex gap-2 mt-2">
++					<input class="form-control" style="max-width:220px" [(ngModel)]="confirmText" placeholder="RESTORE">
++					<button type="button" class="btn btn-danger" (click)="restore()" [disabled]="busy || confirmText !== 'RESTORE'">{{app.Localize('Restore now')}}</button>
++					<button type="button" class="btn btn-outline-secondary" (click)="restoring = null">{{app.Localize('Cancel')}}</button>
++				</div>
++			</div>
++		</div>
++	</ng-container>
++</div>
+diff --git a/ClientApp/src/app/ai/snapshots/snapshots.component.ts b/ClientApp/src/app/ai/snapshots/snapshots.component.ts
+new file mode 100644
+index 0000000..9d82d54
+--- /dev/null
++++ b/ClientApp/src/app/ai/snapshots/snapshots.component.ts
+@@ -0,0 +1,84 @@
++import { Component, Inject, OnInit } from '@angular/core';
++import { HttpClient } from '@angular/common/http';
++import { AppService } from '../../services/app.service';
++
++// Test snapshots: save the whole database under a name, restore it later, and keep an initial snapshot for the current database structure.
++// A snapshot is restored only into the structure it was taken from (tables, columns, stored procedures and so on); after a structure change
++// the old snapshots stay on disk but cannot be restored, and a new initial snapshot is made. Head super admin only; off unless the server allows it.
++@Component({
++  selector: 'app-snapshots',
++  templateUrl: './snapshots.component.html',
++  styles: [`
++    .snap-section { border: 1px solid #e3ebf8; border-radius: 14px; background: #fff; padding: 16px 18px; margin-bottom: 18px; }
++    .snap-note { font-size: 13px; color: #6b7a90; }
++    .pill { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; }
++    .pill.ok { background: #e6f6ec; color: #1a7f43; }
++    .pill.no { background: #fdecec; color: #b42323; }
++    .pill.info { background: #e8f1ff; color: #1f55b5; }
++  `]
++})
++export class SnapshotsComponent implements OnInit {
++  public status: any = null;
++  public snapshots: any[] = [];
++  public name = '';
++  public note = '';
++  public restoring: string | null = null;
++  public confirmText = '';
++  public busy = false;
++  public off = false;
++  public error = '';
++  public message = '';
++
++  constructor(private http: HttpClient, @Inject('BASE_URL') private baseUrl: string, public app: AppService) { }
++
++  ngOnInit(): void { this.load(); }
++
++  public load(): void {
++    this.http.get<any>(this.baseUrl + 'api/snapshots').subscribe({
++      next: (r) => { this.status = r.status; this.snapshots = r.snapshots; this.off = false; },
++      error: (e) => {
++        this.off = e.status === 404 || e.status === 403;
++        this.error = this.off ? '' : this.text(e, 'Could not load the snapshots.');
++      }
++    });
++  }
++
++  private text(e: any, fallback: string): string { return (e && e.error && e.error.message) || fallback; }
++
++  public save(): void {
++    this.busy = true; this.error = ''; this.message = '';
++    this.http.post<any>(this.baseUrl + 'api/snapshots', { name: this.name, note: this.note }).subscribe({
++      next: (r) => { this.busy = false; this.message = 'Saved "' + r.name + '" (' + this.mb(r.sizeBytes) + ').'; this.name = ''; this.note = ''; this.load(); },
++      error: (e) => { this.busy = false; this.error = this.text(e, 'Could not save the snapshot.'); }
++    });
++  }
++
++  public makeInitial(): void {
++    this.busy = true; this.error = ''; this.message = '';
++    this.http.post<any>(this.baseUrl + 'api/snapshots/initial', {}).subscribe({
++      next: (r) => { this.busy = false; this.message = 'The initial snapshot for the current structure is "' + r.name + '".'; this.load(); },
++      error: (e) => { this.busy = false; this.error = this.text(e, 'Could not make the initial snapshot.'); }
++    });
++  }
++
++  public askRestore(name: string): void { this.restoring = name; this.confirmText = ''; this.error = ''; this.message = ''; }
++
++  public restore(): void {
++    if (!this.restoring) { return; }
++    this.busy = true; this.error = ''; this.message = '';
++    this.http.post<any>(this.baseUrl + 'api/snapshots/restore', { name: this.restoring, confirmText: this.confirmText }).subscribe({
++      next: (r) => { this.busy = false; this.message = r.message; this.restoring = null; this.load(); },
++      error: (e) => { this.busy = false; this.error = this.text(e, 'Could not restore the snapshot.'); }
++    });
++  }
++
++  public remove(name: string): void {
++    if (!window.confirm('Delete the snapshot "' + name + '"?')) { return; }
++    this.http.delete(this.baseUrl + 'api/snapshots/' + encodeURIComponent(name)).subscribe({
++      next: () => this.load(),
++      error: (e) => (this.error = this.text(e, 'Could not delete the snapshot.'))
++    });
++  }
++
++  public mb(bytes: number): string { return (bytes / 1024 / 1024).toFixed(0) + ' MB'; }
++}
+diff --git a/ClientApp/src/app/app.component.html b/ClientApp/src/app/app.component.html
+index 49b04d2..3291723 100644
+--- a/ClientApp/src/app/app.component.html
++++ b/ClientApp/src/app/app.component.html
+@@ -342,6 +342,14 @@
+ 							</span>
+ 						</a>
+ 					</li>
++					<li *ngIf="app.CanUseTestSnapshots()">
++						<a [routerLinkActive]="'active'" [routerLink]="['/ai/snapshots']">
++							<i class="fa fa-camera"></i>
++							<span>
++								{{app.Localize('Test snapshots')}}
++							</span>
++						</a>
++					</li>
+ 				</ul>
+ 			</li>
+ 			<li *ngIf="app.HasSomePermission('Sales')"
+diff --git a/ClientApp/src/app/app.module.ts b/ClientApp/src/app/app.module.ts
+index 57a2561..39c75c3 100644
+--- a/ClientApp/src/app/app.module.ts
++++ b/ClientApp/src/app/app.module.ts
+@@ -60,6 +60,7 @@ import { UnitsComponent } from './inventory/units/units.component';
+ import { ApprovalCenterComponent } from './pricing/approvalcenter/approvalcenter.component';
+ import { AiControlComponent } from './ai/aicontrol/aicontrol.component';
+ import { AiHubComponent } from './ai/aihub/aihub.component';
++import { SnapshotsComponent } from './ai/snapshots/snapshots.component';
+ import { VariationsComponent } from './inventory/variations/variations.component';
+ import { ProductListComponent } from './inventory/products/productlist/productlist.component';
+ import { ProductAddComponent } from './inventory/products/productadd/productadd.component';
+@@ -204,6 +205,7 @@ const routes: Routes = [
+   { path: 'inventory/units', component: UnitsComponent, canActivate: [AuthGuard], data: { permission: "Inventory.Units" } },
+   { path: 'pricing/approvals', component: ApprovalCenterComponent, canActivate: [AuthGuard], data: { permission: "Pricing.View" } },
+   { path: 'ai/control', component: AiControlComponent, canActivate: [AuthGuard], data: { permission: "AI.Control" } },
++  { path: 'ai/snapshots', component: SnapshotsComponent, canActivate: [AuthGuard], data: { permission: "Utilities.DatabaseBackup" } },
+   { path: 'ai/hub', component: AiHubComponent, canActivate: [AuthGuard], data: { permission: "AI.Control" } },
+   { path: 'inventory/variations', component: VariationsComponent, canActivate: [AuthGuard], data: { permission: "Inventory.Variations" } },
+   { path: 'inventory/products', component: ProductListComponent, canActivate: [AuthGuard], data: { permission: "Inventory.ProductList" } },
+@@ -320,6 +322,7 @@ const routes: Routes = [
+     ApprovalCenterComponent,
+     AiControlComponent,
+     AiHubComponent,
++    SnapshotsComponent,
+     VariationsComponent,
+     ProductListComponent,
+     ProductAddComponent,
+diff --git a/ClientApp/src/app/homemenu/homemenu.component.html b/ClientApp/src/app/homemenu/homemenu.component.html
+index 064c5ab..e17470c 100644
+--- a/ClientApp/src/app/homemenu/homemenu.component.html
++++ b/ClientApp/src/app/homemenu/homemenu.component.html
+@@ -177,6 +177,14 @@
+ 											</span>
+ 										</a>
+ 									</li>
++									<li *ngIf="app.CanUseTestSnapshots()">
++										<a [routerLinkActive]="'active'" [routerLink]="['/ai/snapshots']">
++											<i class="fa fa-camera"></i>
++											<span>
++												{{app.Localize('Test snapshots')}}
++											</span>
++										</a>
++									</li>
+ 								</ul>
+ 							</li>
+ 							<li *ngIf="app.HasSomePermission('Sales')"
+diff --git a/ClientApp/src/app/services/app.service.ts b/ClientApp/src/app/services/app.service.ts
+index f28c095..00c6e4d 100644
+--- a/ClientApp/src/app/services/app.service.ts
++++ b/ClientApp/src/app/services/app.service.ts
+@@ -274,6 +274,11 @@ export class AppService {
+     return this.IsRootSuperAdmin() || title === 'superadmin' || title === 'admin';
+   }
+ 
++  // The test snapshots cover every company in the database, so only the head super admin is offered them (the server enforces it too).
++  public CanUseTestSnapshots(): boolean {
++    return this.IsRootSuperAdmin();
++  }
++
+   public CanAccessDatabaseBackupSetup(): boolean {
+     return this.HasPermission('Utilities.DatabaseBackup');
+   }
+diff --git a/Controllers/SnapshotsController.cs b/Controllers/SnapshotsController.cs
+new file mode 100644
+index 0000000..e647084
+--- /dev/null
++++ b/Controllers/SnapshotsController.cs
+@@ -0,0 +1,83 @@
++using GoPosify.Data;
++using GoPosify.Services;
++using Microsoft.AspNetCore.Authorization;
++using Microsoft.AspNetCore.Mvc;
++
++namespace GoPosify.Controllers
++{
++    // Whole-database snapshots for the test bench and demo (save under a name, restore, an initial snapshot per database structure).
++    // They cover every company in the database, so only the root super admin (or an address listed in Snapshots:AllowedEmails) may use them,
++    // and only where Snapshots:Enabled is true. Where it is off the endpoints answer 404 as if they did not exist.
++    [ApiController]
++    [Authorize]
++    public class SnapshotsController : BaseController
++    {
++        private readonly ISnapshotService _snapshots;
++
++        public SnapshotsController(AppDBContext dbContext, ISnapshotService snapshots) : base(dbContext) => _snapshots = snapshots;
++
++        public class SaveDTO { public string Name { get; set; } public string Note { get; set; } }
++        public class RestoreDTO { public string Name { get; set; } public string ConfirmText { get; set; } }
++
++        // Null when allowed; otherwise the answer to return.
++        private async Task<(IActionResult Refusal, string Who)> GateAsync()
++        {
++            if (!_snapshots.Options.Enabled) return (NotFound(), null);
++            var user = await GetCurrentUserRecordAsync();
++            var allowed = user != null && (IsRootSuperAdmin(user) || _snapshots.Options.AllowedEmails.Contains(user.Email ?? "", StringComparer.OrdinalIgnoreCase));
++            return allowed ? (null, user.Email) : (Forbid(), null);
++        }
++
++        // GET: api/snapshots   (the state of the database structure, and every snapshot with whether it can be restored now)
++        [HttpGet("~/api/snapshots")]
++        public async Task<IActionResult> Index()
++        {
++            var (refusal, _) = await GateAsync();
++            if (refusal != null) return refusal;
++            return Ok(new { status = await _snapshots.StatusAsync(), snapshots = await _snapshots.ListAsync() });
++        }
++
++        // POST: api/snapshots   { name, note }   (save the database as it is now)
++        [HttpPost("~/api/snapshots")]
++        public async Task<IActionResult> Save([FromBody] SaveDTO dto)
++        {
++            var (refusal, who) = await GateAsync();
++            if (refusal != null) return refusal;
++            var r = await _snapshots.SaveAsync(dto?.Name, dto?.Note, who);
++            return r.Ok ? Ok(new { r.Snapshot.Name, r.Snapshot.SizeBytes }) : BadRequest(new { message = r.Message });
++        }
++
++        // POST: api/snapshots/initial   (make the database as it is now the initial snapshot for its structure)
++        [HttpPost("~/api/snapshots/initial")]
++        public async Task<IActionResult> Initial()
++        {
++            var (refusal, who) = await GateAsync();
++            if (refusal != null) return refusal;
++            var name = $"INITIAL-{DateTime.Now:yyyyMMdd-HHmm}-{await _snapshots.StructureIdAsync()}";
++            var r = await _snapshots.SaveAsync(name, "Made the initial snapshot by hand.", who, SnapshotKinds.Initial);
++            return r.Ok ? Ok(new { r.Snapshot.Name, r.Snapshot.SizeBytes }) : BadRequest(new { message = r.Message });
++        }
++
++        // POST: api/snapshots/restore   { name, confirmText: "RESTORE" }
++        [HttpPost("~/api/snapshots/restore")]
++        public async Task<IActionResult> Restore([FromBody] RestoreDTO dto)
++        {
++            var (refusal, who) = await GateAsync();
++            if (refusal != null) return refusal;
++            if (!string.Equals(dto?.ConfirmText, "RESTORE", StringComparison.Ordinal))
++                return BadRequest(new { message = "Type RESTORE to confirm. Everything saved in the database since the snapshot will be replaced." });
++            var r = await _snapshots.RestoreAsync(dto.Name, who);
++            return r.Ok ? Ok(new { message = r.Message }) : Conflict(new { message = r.Message });
++        }
++
++        // DELETE: api/snapshots/{name}
++        [HttpDelete("~/api/snapshots/{name}")]
++        public async Task<IActionResult> Delete(string name)
++        {
++            var (refusal, _) = await GateAsync();
++            if (refusal != null) return refusal;
++            var r = await _snapshots.DeleteAsync(name);
++            return r.Ok ? Ok() : BadRequest(new { message = r.Message });
++        }
++    }
++}
+diff --git a/Program.cs b/Program.cs
+index 1f1a682..408228e 100644
+--- a/Program.cs
++++ b/Program.cs
+@@ -326,6 +326,8 @@ builder.Services.AddScoped<IApprovalQueueService, ApprovalQueueService>();
+ builder.Services.AddScoped<IAiControlService, AiControlService>();
+ builder.Services.AddScoped<IHubMetricsService, HubMetricsService>();
+ builder.Services.AddScoped<IAiImpactService, AiImpactService>();
++builder.Services.AddSingleton<ISnapshotService, SnapshotService>();
++builder.Services.AddHostedService<SnapshotStartupService>();
+ builder.Services.AddScoped<IAlertNotifier, SmtpAlertNotifier>();
+ builder.Services.AddScoped<IHubRuleService, HubRuleService>();
+ builder.Services.AddScoped<IReplenishService, ReplenishService>();
+diff --git a/Retailo.Tests/SnapshotRulesTests.cs b/Retailo.Tests/SnapshotRulesTests.cs
+new file mode 100644
+index 0000000..fec42a6
+--- /dev/null
++++ b/Retailo.Tests/SnapshotRulesTests.cs
+@@ -0,0 +1,80 @@
++using GoPosify.Services;
++using Xunit;
++
++namespace Retailo.Tests;
++
++public class SnapshotRulesTests
++{
++    private static SchemaInfo Now(string fp = "aaa", params string[] migrations) => new() { Fingerprint = fp, Migrations = migrations.ToList() };
++    private static SnapshotMeta Snap(string fp = "aaa", string db = "PesoWeb", params string[] migrations) => new() { Name = "s", Database = db, SchemaFingerprint = fp, Migrations = migrations.ToList() };
++
++    [Fact]
++    public void The_same_structure_can_be_restored()
++    {
++        var (ok, reason) = SnapshotRules.CanRestore(Snap("aaa", "PesoWeb", "M1", "M2"), Now("aaa", "M1", "M2"), "PesoWeb");
++        Assert.True(ok);
++        Assert.Null(reason);
++    }
++
++    [Fact]
++    public void A_migration_applied_since_the_snapshot_refuses_the_restore_and_says_which()
++    {
++        var (ok, reason) = SnapshotRules.CanRestore(Snap("aaa", "PesoWeb", "M1"), Now("bbb", "M1", "M2"), "PesoWeb");
++        Assert.False(ok);
++        Assert.Contains("1 migration(s) were applied since (M2)", reason);
++        Assert.Contains("refused", reason);
++    }
++
++    [Fact]
++    public void A_snapshot_from_a_newer_structure_is_refused_too()
++    {
++        var (ok, reason) = SnapshotRules.CanRestore(Snap("bbb", "PesoWeb", "M1", "M2"), Now("aaa", "M1"), "PesoWeb");
++        Assert.False(ok);
++        Assert.Contains("this database does not (M2)", reason);
++    }
++
++    [Fact]
++    public void A_changed_stored_procedure_with_the_same_migrations_is_refused_by_the_fingerprint()
++    {
++        var (ok, reason) = SnapshotRules.CanRestore(Snap("aaa", "PesoWeb", "M1"), Now("changed", "M1"), "PesoWeb");
++        Assert.False(ok);
++        Assert.Contains("stored procedures", reason);
++    }
++
++    [Fact]
++    public void A_snapshot_without_a_structure_record_or_from_another_database_is_refused()
++    {
++        Assert.False(SnapshotRules.CanRestore(Snap(""), Now(), "PesoWeb").Ok);
++        Assert.False(SnapshotRules.CanRestore(Snap("aaa", "Other"), Now("aaa"), "PesoWeb").Ok);
++        Assert.False(SnapshotRules.CanRestore(null, Now(), "PesoWeb").Ok);
++    }
++
++    [Theory]
++    [InlineData("check-A", true)]
++    [InlineData("Before the demo 2026.10", true)]
++    [InlineData("", false)]
++    [InlineData("  ", false)]
++    [InlineData("../evil", false)]
++    [InlineData("a/b", false)]
++    [InlineData("a..b", false)]
++    [InlineData("-leading", false)]
++    [InlineData("trailing.", false)]
++    public void Names_are_letters_digits_spaces_dots_dashes_and_underscores_only(string name, bool valid) =>
++        Assert.Equal(valid, SnapshotRules.ValidName(SnapshotRules.CleanName(name)));
++
++    [Fact]
++    public void A_file_name_can_never_leave_the_snapshot_folder()
++    {
++        Assert.DoesNotContain("/", SnapshotRules.FileStem("a/b" + (char)92 + "c:d"));
++        Assert.DoesNotContain("\\", SnapshotRules.FileStem("a/b" + (char)92 + "c:d"));
++        Assert.Equal("my snapshot-1.v2", SnapshotRules.FileStem("my snapshot-1.v2"));
++    }
++
++    [Fact]
++    public void Options_are_off_unless_switched_on()
++    {
++        var off = SnapshotOptions.From(new Microsoft.Extensions.Configuration.ConfigurationBuilder().Build());
++        Assert.False(off.Enabled);
++        Assert.True(off.AutoInitial);
++    }
++}
+diff --git a/Services/SnapshotService.cs b/Services/SnapshotService.cs
+new file mode 100644
+index 0000000..a7d236c
+--- /dev/null
++++ b/Services/SnapshotService.cs
+@@ -0,0 +1,373 @@
++using System.Security.Cryptography;
++using System.Text;
++using System.Text.Json;
++using System.Text.RegularExpressions;
++using Microsoft.Data.SqlClient;
++
++namespace GoPosify.Services;
++
++// Whole-database snapshots for the test bench and demo: save the database under a name, restore it later, and keep an initial snapshot for
++// the current database structure. A snapshot can only be restored into a database whose structure (tables, columns, indexes, constraints,
++// views, stored procedures, functions, triggers and the list of applied migrations) is exactly the one the snapshot was taken from.
++// Off unless Snapshots:Enabled is true; never meant for production.
++
++public sealed class SnapshotOptions
++{
++    public bool Enabled { get; set; }
++    public string Folder { get; set; }
++    public bool AutoInitial { get; set; } = true;
++    public string[] AllowedEmails { get; set; } = Array.Empty<string>();
++
++    public static SnapshotOptions From(IConfiguration c)
++    {
++        var folder = c["Snapshots:Folder"];
++        if (string.IsNullOrWhiteSpace(folder))
++            folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "PesoWeb_Snapshots");
++        return new SnapshotOptions
++        {
++            Enabled = c.GetValue<bool?>("Snapshots:Enabled") ?? false,
++            Folder = folder,
++            AutoInitial = c.GetValue<bool?>("Snapshots:AutoInitial") ?? true,
++            AllowedEmails = (c["Snapshots:AllowedEmails"] ?? "").Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
++        };
++    }
++}
++
++public static class SnapshotKinds
++{
++    public const string Initial = "Initial";   // the starting point for the current database structure
++    public const string Saved = "Saved";       // saved by a person under a name
++    public const string Safety = "Safety";     // taken automatically just before a restore, so a restore can itself be undone
++}
++
++public sealed class SchemaInfo
++{
++    public string Fingerprint { get; set; }
++    public List<string> Migrations { get; set; } = new();
++    public int Tables { get; set; }
++    public int Modules { get; set; }           // views, procedures, functions, triggers
++}
++
++public sealed class SnapshotMeta
++{
++    public string Name { get; set; }
++    public string Kind { get; set; }
++    public string Note { get; set; }
++    public string Database { get; set; }
++    public DateTime CreatedAtUtc { get; set; }
++    public string CreatedBy { get; set; }
++    public bool Automatic { get; set; }
++    public long SizeBytes { get; set; }
++    public string SchemaFingerprint { get; set; }
++    public List<string> Migrations { get; set; } = new();
++    public int Companies { get; set; }
++    public int Branches { get; set; }
++}
++
++public static class SnapshotRules
++{
++    private static readonly Regex NameOk = new(@"^[A-Za-z0-9][A-Za-z0-9 _.\-]{0,59}$", RegexOptions.Compiled);
++
++    public static string CleanName(string name) => (name ?? "").Trim();
++
++    public static bool ValidName(string name) => NameOk.IsMatch(name ?? "") && !(name ?? "").EndsWith(".") && !(name ?? "").Contains("..");
++
++    // File names must stay inside the snapshot folder whatever is typed.
++    public static string FileStem(string name) => Regex.Replace(name, @"[^A-Za-z0-9_.\- ]", "_");
++
++    // Restorable only into the same structure. The reasons are written for a person.
++    public static (bool Ok, string Reason) CanRestore(SnapshotMeta snapshot, SchemaInfo current, string currentDatabase)
++    {
++        if (snapshot == null) return (false, "Unknown snapshot.");
++        if (string.IsNullOrEmpty(snapshot.SchemaFingerprint))
++            return (false, "This snapshot has no record of the database structure it was taken from, so it cannot be checked and will not be restored.");
++        if (!string.Equals(snapshot.Database, currentDatabase, StringComparison.OrdinalIgnoreCase))
++            return (false, $"This snapshot is of the database '{snapshot.Database}', not '{currentDatabase}'.");
++        var onlyInSnapshot = snapshot.Migrations.Except(current.Migrations).ToList();
++        var onlyNow = current.Migrations.Except(snapshot.Migrations).ToList();
++        if (onlyInSnapshot.Count > 0 || onlyNow.Count > 0)
++        {
++            var parts = new List<string>();
++            if (onlyNow.Count > 0) parts.Add($"{onlyNow.Count} migration(s) were applied since ({Short(onlyNow)})");
++            if (onlyInSnapshot.Count > 0) parts.Add($"the snapshot has {onlyInSnapshot.Count} migration(s) this database does not ({Short(onlyInSnapshot)})");
++            return (false, "The database structure has changed since this snapshot: " + string.Join("; ", parts) + ". Restoring would put back an old structure, so it is refused. Use a snapshot taken after the change.");
++        }
++        if (!string.Equals(snapshot.SchemaFingerprint, current.Fingerprint, StringComparison.Ordinal))
++            return (false, "The tables, columns, stored procedures, views, functions or indexes differ from the ones this snapshot was taken from (same migrations, different structure). Restoring would put back the old definitions, so it is refused. Use a snapshot taken after the change.");
++        return (true, null);
++    }
++
++    private static string Short(List<string> ids) => string.Join(", ", ids.Take(3)) + (ids.Count > 3 ? ", ..." : "");
++}
++
++public interface ISnapshotService
++{
++    SnapshotOptions Options { get; }
++    Task<object> StatusAsync();
++    Task<List<object>> ListAsync();
++    Task<(bool Ok, string Message, SnapshotMeta Snapshot)> SaveAsync(string name, string note, string by, string kind = SnapshotKinds.Saved, bool automatic = false);
++    Task<(bool Ok, string Message)> RestoreAsync(string name, string by);
++    Task<(bool Ok, string Message)> DeleteAsync(string name);
++    Task<bool> EnsureInitialAsync();
++    // A short id of the current database structure (the start of its fingerprint).
++    Task<string> StructureIdAsync();
++}
++
++public sealed class SnapshotService : ISnapshotService
++{
++    private static readonly SemaphoreSlim Gate = new(1, 1);
++    private readonly IConfiguration _config;
++    private readonly ILogger<SnapshotService> _log;
++    public SnapshotOptions Options { get; }
++
++    public SnapshotService(IConfiguration config, ILogger<SnapshotService> log)
++    {
++        _config = config;
++        _log = log;
++        Options = SnapshotOptions.From(config);
++    }
++
++    private string ConnectionString => _config.GetConnectionString("default");
++    private string DatabaseName => new SqlConnectionStringBuilder(ConnectionString).InitialCatalog;
++    private string Bak(string name) => Path.Combine(Options.Folder, SnapshotRules.FileStem(name) + ".bak");
++    private string Json(string name) => Path.Combine(Options.Folder, SnapshotRules.FileStem(name) + ".json");
++
++    // ---- the structure of the database, as one fingerprint ---------------------------------------------------------
++    public async Task<SchemaInfo> SchemaAsync()
++    {
++        await using var c = new SqlConnection(ConnectionString);
++        await c.OpenAsync();
++        var parts = new List<string>();
++
++        async Task Collect(string tag, string sql)
++        {
++            await using var cmd = new SqlCommand(sql, c) { CommandTimeout = 120 };
++            await using var r = await cmd.ExecuteReaderAsync();
++            while (await r.ReadAsync())
++            {
++                var cells = new string[r.FieldCount];
++                for (var i = 0; i < r.FieldCount; i++) cells[i] = r.IsDBNull(i) ? "" : Convert.ToString(r.GetValue(i), System.Globalization.CultureInfo.InvariantCulture);
++                parts.Add(tag + "|" + string.Join("|", cells));
++            }
++        }
++
++        // Data is never part of it: only definitions. Each query is ordered so the fingerprint does not depend on the order the server returns rows.
++        await Collect("col", "SELECT t.name, c.name, ty.name, c.max_length, c.precision, c.scale, c.is_nullable, c.is_identity, c.is_computed FROM sys.columns c JOIN sys.tables t ON t.object_id = c.object_id JOIN sys.types ty ON ty.user_type_id = c.user_type_id WHERE t.is_ms_shipped = 0 ORDER BY t.name, c.name");
++        await Collect("idx", "SELECT t.name, ISNULL(i.name, ''), i.type_desc, i.is_unique, i.is_primary_key, ISNULL(i.filter_definition, ''), (SELECT STRING_AGG(col.name + CASE WHEN ic.is_descending_key = 1 THEN ' DESC' ELSE '' END + CASE WHEN ic.is_included_column = 1 THEN ' INC' ELSE '' END, ',') WITHIN GROUP (ORDER BY ic.is_included_column, ic.key_ordinal, col.name) FROM sys.index_columns ic JOIN sys.columns col ON col.object_id = ic.object_id AND col.column_id = ic.column_id WHERE ic.object_id = i.object_id AND ic.index_id = i.index_id) FROM sys.indexes i JOIN sys.tables t ON t.object_id = i.object_id WHERE t.is_ms_shipped = 0 AND i.type > 0 ORDER BY t.name, ISNULL(i.name, '')");
++        await Collect("fk", "SELECT OBJECT_NAME(fk.parent_object_id), fk.name, OBJECT_NAME(fk.referenced_object_id), fk.delete_referential_action_desc, fk.update_referential_action_desc FROM sys.foreign_keys fk ORDER BY OBJECT_NAME(fk.parent_object_id), fk.name");
++        await Collect("chk", "SELECT OBJECT_NAME(parent_object_id), name, definition FROM sys.check_constraints ORDER BY OBJECT_NAME(parent_object_id), name");
++        await Collect("def", "SELECT OBJECT_NAME(parent_object_id), name, definition FROM sys.default_constraints ORDER BY OBJECT_NAME(parent_object_id), name");
++        await Collect("mod", "SELECT o.type, o.name, REPLACE(REPLACE(m.definition, CHAR(13), ''), CHAR(10), ' ') FROM sys.sql_modules m JOIN sys.objects o ON o.object_id = m.object_id WHERE o.is_ms_shipped = 0 ORDER BY o.type, o.name");
++
++        var migrations = new List<string>();
++        await using (var cmd = new SqlCommand("IF OBJECT_ID('__EFMigrationsHistory') IS NOT NULL SELECT MigrationId FROM __EFMigrationsHistory ORDER BY MigrationId ELSE SELECT TOP 0 '' ", c))
++        await using (var r = await cmd.ExecuteReaderAsync())
++            while (await r.ReadAsync()) migrations.Add(r.GetString(0));
++        parts.AddRange(migrations.Select(m => "mig|" + m));
++
++        var text = string.Join("\n", parts);
++        var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(text))).ToLowerInvariant();
++        return new SchemaInfo { Fingerprint = hash, Migrations = migrations, Tables = parts.Count(p => p.StartsWith("col|")) == 0 ? 0 : parts.Where(p => p.StartsWith("col|")).Select(p => p.Split('|')[1]).Distinct().Count(), Modules = parts.Count(p => p.StartsWith("mod|")) };
++    }
++
++    private async Task<(int Companies, int Branches)> CountsAsync()
++    {
++        await using var c = new SqlConnection(ConnectionString);
++        await c.OpenAsync();
++        await using var cmd = new SqlCommand("SELECT COUNT(DISTINCT TenantID), COUNT(*) FROM Warehouses", c);
++        await using var r = await cmd.ExecuteReaderAsync();
++        return await r.ReadAsync() ? (r.GetInt32(0), r.GetInt32(1)) : (0, 0);
++    }
++
++    // ---- listing --------------------------------------------------------------------------------------------------
++    private List<SnapshotMeta> Read()
++    {
++        if (!Directory.Exists(Options.Folder)) return new List<SnapshotMeta>();
++        var list = new List<SnapshotMeta>();
++        foreach (var f in Directory.GetFiles(Options.Folder, "*.json"))
++        {
++            try
++            {
++                var m = JsonSerializer.Deserialize<SnapshotMeta>(File.ReadAllText(f));
++                if (m != null && !string.IsNullOrEmpty(m.Name) && File.Exists(Bak(m.Name))) list.Add(m);
++            }
++            catch (Exception) { /* a file that is not one of ours is ignored */ }
++        }
++        return list.OrderByDescending(m => m.CreatedAtUtc).ToList();
++    }
++
++    public async Task<List<object>> ListAsync()
++    {
++        var current = await SchemaAsync();
++        return Read().Select(m =>
++        {
++            var (ok, reason) = SnapshotRules.CanRestore(m, current, DatabaseName);
++            return (object)new { m.Name, m.Kind, m.Note, m.CreatedAtUtc, m.CreatedBy, m.Automatic, m.SizeBytes, m.Companies, m.Branches, restorable = ok, reason };
++        }).ToList();
++    }
++
++    public async Task<object> StatusAsync()
++    {
++        var current = await SchemaAsync();
++        var initial = Read().Where(m => m.Kind == SnapshotKinds.Initial && m.SchemaFingerprint == current.Fingerprint && m.Database == DatabaseName).OrderByDescending(m => m.CreatedAtUtc).FirstOrDefault();
++        var counts = await CountsAsync();
++        return new
++        {
++            enabled = true, database = DatabaseName, folder = Options.Folder, structure = current.Fingerprint.Substring(0, 12), migrations = current.Migrations.Count,
++            lastMigration = current.Migrations.LastOrDefault(), tables = current.Tables, modules = current.Modules, companies = counts.Companies, branches = counts.Branches,
++            initialSnapshot = initial?.Name, hasInitial = initial != null,
++            message = initial == null ? "There is no initial snapshot for the current database structure yet. Create one while the data is in the state you want to start from." : null
++        };
++    }
++
++    // ---- save, restore, delete ---------------------------------------------------------------------------------------
++    public async Task<(bool Ok, string Message, SnapshotMeta Snapshot)> SaveAsync(string name, string note, string by, string kind = SnapshotKinds.Saved, bool automatic = false)
++    {
++        name = SnapshotRules.CleanName(name);
++        if (!SnapshotRules.ValidName(name))
++            return (false, "Use 1 to 60 letters, digits, spaces, dots, dashes or underscores, starting with a letter or digit.", null);
++        await Gate.WaitAsync();
++        try { return await SaveLockedAsync(name, note, by, kind, automatic); }
++        finally { Gate.Release(); }
++    }
++
++    private async Task<(bool Ok, string Message, SnapshotMeta Snapshot)> SaveLockedAsync(string name, string note, string by, string kind, bool automatic)
++    {
++        Directory.CreateDirectory(Options.Folder);
++        if (File.Exists(Bak(name)) || File.Exists(Json(name))) return (false, $"A snapshot named '{name}' already exists. Choose another name, or delete it first.", null);
++        var schema = await SchemaAsync();
++        var counts = await CountsAsync();
++        var bak = Bak(name);
++        await using (var c = new SqlConnection(ConnectionString))
++        {
++            await c.OpenAsync();
++            await using var cmd = new SqlCommand($"BACKUP DATABASE [{DatabaseName.Replace("]", "]]")}] TO DISK = @p WITH COPY_ONLY, INIT, FORMAT, CHECKSUM, NAME = @n", c) { CommandTimeout = 0 };
++            cmd.Parameters.AddWithValue("@p", bak);
++            cmd.Parameters.AddWithValue("@n", "PesoWeb snapshot " + name);
++            await cmd.ExecuteNonQueryAsync();
++        }
++        var meta = new SnapshotMeta
++        {
++            Name = name, Kind = kind, Note = string.IsNullOrWhiteSpace(note) ? null : note.Trim(), Database = DatabaseName, CreatedAtUtc = DateTime.UtcNow, CreatedBy = by,
++            Automatic = automatic, SizeBytes = new FileInfo(bak).Length, SchemaFingerprint = schema.Fingerprint, Migrations = schema.Migrations, Companies = counts.Companies, Branches = counts.Branches
++        };
++        var tmp = Json(name) + ".tmp";
++        await File.WriteAllTextAsync(tmp, JsonSerializer.Serialize(meta, new JsonSerializerOptions { WriteIndented = true }));
++        File.Move(tmp, Json(name), true);
++        _log.LogInformation("Snapshot '{Name}' saved ({Kind}, {Mb} MB).", name, kind, meta.SizeBytes / 1024 / 1024);
++        return (true, null, meta);
++    }
++
++    public async Task<(bool Ok, string Message)> RestoreAsync(string name, string by)
++    {
++        await Gate.WaitAsync();
++        try
++        {
++            var meta = Read().FirstOrDefault(m => string.Equals(m.Name, SnapshotRules.CleanName(name), StringComparison.OrdinalIgnoreCase));
++            if (meta == null) return (false, "Unknown snapshot.");
++            var current = await SchemaAsync();
++            var (ok, reason) = SnapshotRules.CanRestore(meta, current, DatabaseName);
++            if (!ok) return (false, reason);
++
++            // the file must be readable before anything is touched
++            await using (var c = new SqlConnection(ConnectionString))
++            {
++                await c.OpenAsync();
++                await using var cmd = new SqlCommand("RESTORE VERIFYONLY FROM DISK = @p WITH CHECKSUM", c) { CommandTimeout = 0 };
++                cmd.Parameters.AddWithValue("@p", Bak(meta.Name));
++                try { await cmd.ExecuteNonQueryAsync(); }
++                catch (SqlException e) { return (false, "The snapshot file could not be verified, so nothing was changed: " + e.Message); }
++            }
++
++            // a safety snapshot of the database as it is now, so this restore can be undone
++            var safety = $"before-restore-{DateTime.Now:yyyyMMdd-HHmmss}";
++            var s = await SaveLockedAsync(safety, $"Taken automatically before restoring '{meta.Name}'.", by, SnapshotKinds.Safety, true);
++            if (!s.Ok) return (false, "Could not take the safety snapshot, so nothing was changed: " + s.Message);
++
++            var master = new SqlConnectionStringBuilder(ConnectionString) { InitialCatalog = "master", Pooling = false }.ConnectionString;
++            var db = DatabaseName.Replace("]", "]]");
++            await using (var c = new SqlConnection(master))
++            {
++                await c.OpenAsync();
++                try
++                {
++                    await Exec(c, $"ALTER DATABASE [{db}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE");
++                    await using var cmd = new SqlCommand($"RESTORE DATABASE [{db}] FROM DISK = @p WITH REPLACE, CHECKSUM, RECOVERY", c) { CommandTimeout = 0 };
++                    cmd.Parameters.AddWithValue("@p", Bak(meta.Name));
++                    await cmd.ExecuteNonQueryAsync();
++                }
++                finally
++                {
++                    try { await Exec(c, $"ALTER DATABASE [{db}] SET MULTI_USER"); } catch (Exception e) { _log.LogError(e, "Could not set the database back to multi-user."); }
++                }
++            }
++            SqlConnection.ClearAllPools();
++
++            var after = await SchemaAsync();
++            if (after.Fingerprint != meta.SchemaFingerprint)
++                return (false, $"The snapshot was restored but the structure afterwards does not match the one recorded. Restore '{safety}' to go back.");
++            _log.LogInformation("Snapshot '{Name}' restored by {By}; safety copy '{Safety}'.", meta.Name, by, safety);
++            return (true, $"Restored '{meta.Name}'. A safety copy of what was there before is saved as '{safety}'.");
++        }
++        finally { Gate.Release(); }
++    }
++
++    private static async Task Exec(SqlConnection c, string sql)
++    {
++        await using var cmd = new SqlCommand(sql, c) { CommandTimeout = 0 };
++        await cmd.ExecuteNonQueryAsync();
++    }
++
++    public async Task<(bool Ok, string Message)> DeleteAsync(string name)
++    {
++        await Gate.WaitAsync();
++        try
++        {
++            var meta = Read().FirstOrDefault(m => string.Equals(m.Name, SnapshotRules.CleanName(name), StringComparison.OrdinalIgnoreCase));
++            if (meta == null) return (false, "Unknown snapshot.");
++            if (meta.Kind == SnapshotKinds.Initial) return (false, "An initial snapshot is the starting point for its database structure and is not deleted from here.");
++            File.Delete(Bak(meta.Name));
++            File.Delete(Json(meta.Name));
++            return (true, null);
++        }
++        finally { Gate.Release(); }
++    }
++
++    // After a change to the database structure there is no initial snapshot for it. One is made, from the data as it is at that moment.
++    public async Task<string> StructureIdAsync() => (await SchemaAsync()).Fingerprint.Substring(0, 8);
++
++    public async Task<bool> EnsureInitialAsync()
++    {
++        if (!Options.Enabled || !Options.AutoInitial) return false;
++        var current = await SchemaAsync();
++        if (Read().Any(m => m.Kind == SnapshotKinds.Initial && m.SchemaFingerprint == current.Fingerprint && m.Database == DatabaseName)) return false;
++        var name = $"INITIAL-{DateTime.Now:yyyyMMdd-HHmm}-{current.Fingerprint.Substring(0, 8)}";
++        var r = await SaveAsync(name, "Taken automatically because the database structure has no initial snapshot yet; it holds the data as it was at that moment.", "system", SnapshotKinds.Initial, true);
++        if (!r.Ok) _log.LogWarning("Automatic initial snapshot failed: {Message}", r.Message);
++        return r.Ok;
++    }
++}
++
++public sealed class SnapshotStartupService : BackgroundService
++{
++    private readonly ISnapshotService _snapshots;
++    private readonly ILogger<SnapshotStartupService> _log;
++
++    public SnapshotStartupService(ISnapshotService snapshots, ILogger<SnapshotStartupService> log)
++    {
++        _snapshots = snapshots;
++        _log = log;
++    }
++
++    protected override async Task ExecuteAsync(CancellationToken stop)
++    {
++        if (!_snapshots.Options.Enabled) return;
++        try
++        {
++            await Task.Delay(TimeSpan.FromSeconds(20), stop);
++            if (await _snapshots.EnsureInitialAsync()) _log.LogInformation("An initial snapshot was created for the current database structure.");
++        }
++        catch (OperationCanceledException) { }
++        catch (Exception e) { _log.LogWarning(e, "The initial snapshot check failed."); }
++    }
++}
+-- 
+2.46.0.windows.1
+

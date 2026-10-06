@@ -34,6 +34,7 @@ Write-Host 'Starting the demo...'
 
 if (-not (Test-Port 5071)) {
     $env:ConnectionStrings__default = $conn
+    $env:Snapshots__Enabled = 'true'          # test snapshots (save / restore of the whole demo database); off everywhere else
     Start-Process -WindowStyle Minimized -WorkingDirectory $PesoWeb -FilePath 'dotnet' -ArgumentList 'run', '--project', 'Retailo.csproj', '--no-build', '--no-launch-profile', '--urls', 'http://localhost:5071'
 } else { Write-Host '  PesoWeb is already running on 5071' }
 
