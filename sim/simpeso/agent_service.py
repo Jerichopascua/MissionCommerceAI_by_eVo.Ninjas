@@ -133,6 +133,46 @@ def replenish_handler(drv, acct, warehouse_ids: list, model: dict = None, lead_d
     return run
 
 
+def monitoring_handler(drv, acct, warehouse_ids: list, today=None, history_days: int = 28, event_pages: int = 20):
+    """AI Monitoring: asks PesoWeb to check the company's rules, then compares each branch with its own recent past and posts
+    everything unusual as findings (alerts follow the "Unusual activity found by AI" rule). The scan is complete each time, so findings
+    that no longer apply close."""
+    def run() -> str:
+        import datetime as dt
+        from missionai import monitor
+        day = today() if callable(today) else (today or dt.date.today())
+        drv._call("POST", "/api/ai/hub/evaluate", acct.token, raw=True)
+        names = drv.branch_names(acct)
+        since = (day - dt.timedelta(days=history_days)).isoformat()
+        daily = {}
+        for wh in warehouse_ids:
+            rows, after = [], 0
+            while True:
+                page = drv.baskets(acct, wh, after, since)
+                got = page.get("baskets", [])
+                rows += got
+                if len(got) < 2000:
+                    break
+                after = page["nextAfterId"]
+            daily[wh] = monitor.daily_totals(rows)
+        events, after = [], 0
+        for _ in range(event_pages):
+            page = drv.events(acct, after)
+            got = page.get("events", [])
+            events += got
+            if len(got) < 1000:
+                break
+            after = page["nextAfterId"]
+        findings = monitor.all_findings(names, day, daily, drv.cash_shifts(acct), events, drv.ledger_drift(acct))
+        status, body = drv.post_monitor_findings(acct, findings)
+        if status != 200:
+            raise RuntimeError(f"PesoWeb refused the findings ({status}): {body}")
+        shown = ", ".join(sorted({f["kind"] for f in findings})) or "nothing unusual"
+        return (f"checked the rules and {len(warehouse_ids)} branch(es) against their own recent past: {len(findings)} unusual ({shown}); "
+                f"{body.get('opened', 0)} new, {body.get('updated', 0)} still open, {body.get('closed', 0)} closed")
+    return run
+
+
 def main(argv=None) -> int:
     from . import runner
     from .driver import PesoWebDriver
@@ -168,7 +208,8 @@ def main(argv=None) -> int:
         return by_wh
 
     agent = AgentRunner(drv, acct, {"Pricing": pricing_handler(drv, acct, whs, model, args.limit), "Replenish": replenish_handler(drv, acct, whs, model),
-                                    "CustomerMission": mission_sim.mission_handler(drv, acct, whs, mission_source)})
+                                    "CustomerMission": mission_sim.mission_handler(drv, acct, whs, mission_source),
+                                    "Monitoring": monitoring_handler(drv, acct, whs)})
     if args.once:
         agent.poll_once()
         return 0

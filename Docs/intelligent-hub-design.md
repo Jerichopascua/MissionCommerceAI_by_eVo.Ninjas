@@ -36,7 +36,7 @@ The page shows no screenshots of the product itself, only illustrations. So the 
 | Role-based operations | Roles and permissions; **My tasks** lists what waits for the roles you hold and anything assigned to you by name | No onboarding flow |
 | Real-time visibility | **Overview**: sales, margin, stock turnover, days of stock, shrinkage, expiry, exceptions, by branch and region, against sales and waste targets; refreshes every minute | Stock turnover uses the stock value now, not an average over the period; regions are free text |
 | Reports on demand | **Period**, **category** and **region** pickers on the Overview | No export; no custom date range |
-| Anomaly rules and notifications | **Rules**: eight rules with a limit, role, named assignee, severity, email and a **webhook channel**; PesoWeb checks them itself every few minutes; **My tasks**, the tab count and **browser desktop alerts** | No SMS or mobile push (needs a paid gateway); email needs the company's mail server |
+| Anomaly rules and notifications | **Rules**: eight rules with a limit (plus one fed by AI Monitoring), role, named assignee, severity, email and a **webhook channel**; PesoWeb checks them itself every few minutes; **My tasks**, the tab count and **browser desktop alerts** | No SMS or mobile push (needs a paid gateway); email needs the company's mail server |
 | Data-driven decisions | AI price proposals with evidence **and rival prices** in the Approval Center; **AI Replenish**; **AI Customer Mission** | The mission classifier is simple (59% agreement on simulated shoppers); PesoWeb does not send the purchase order to the supplier |
 | Compare stores and regions | **By region** and **Compare your branches** tables; the head company sees every company's AI settings | Region targets are the sum of the branch targets, not set separately |
 
@@ -73,6 +73,17 @@ How the channel works: a company sets a public https address. PesoWeb posts a JS
 - **Draft purchase orders:** the supplier is the one the product was last bought from at that branch, else the company's first supplier. PesoWeb does not send the order to the supplier; a person does.
 - **Replenish demo is staged** (the fastest sellers at one branch set to about a day of stock), and its evidence on simulated worlds is labelled "limited" (two baseline days).
 - Branch settings cover AI markdowns, region and targets. A branch cannot yet have its own margin floors.
+
+## 5a. AI Monitoring (added 2026-10-06)
+
+AI Monitoring now has a **Run now** and a second job beyond the fixed rules: it compares each branch with its own recent past (`ai/missionai/monitor.py`, plain statistics, no model).
+
+- **Sales:** the latest completed day against the middle of the previous days (at least 7 of history); flagged at half or less, or double or more, and several spreads away. Today is never judged, it is not finished.
+- **Cash:** one shift closed far above the branch's usual difference (at least 100 pesos and 3 times usual); a cashier short on 3 of the last 10 shifts. Worded as "worth a look together", not an accusation.
+- **Returns and deletions:** their share of the day's sales at least 10% and more than twice the branch's usual.
+- **Stock ledger:** products whose shelf quantity differs from the ledger.
+
+Findings are posted to `POST /api/ai/monitor-findings` and follow the rule "Unusual activity found by AI" (Owner, Watch by default; role, severity, named person and email are editable; switching the rule off closes them). Each scan is complete: a repeat updates its alert, a finding that no longer applies closes. Limits: needs history (a new shop says nothing about sales at first); thresholds are fixed, not learned; it reads PesoWeb's sales dates, which in a simulated world all carry today's clock, so the sales check is proven by tests and not by the simulated worlds.
 
 ## 6. What is not built
 

@@ -46,7 +46,7 @@ def main() -> int:
 
     print("2. Rules, alerts and My tasks")
     rules = drv._call("GET", "/api/ai/hub/rules", a.token)
-    check(len(rules) == 8 and all(r["enabled"] for r in rules), "eight rules, all on by default")
+    check(len(rules) == 9 and all(r["enabled"] for r in rules), "nine rules (eight measured, one fed by AI Monitoring), all on by default")
     st, _ = drv._call("PUT", "/api/ai/hub/rules/Shrinkage", a.token, json_body={"enabled": True, "threshold": 2, "role": "Janitor", "severity": "Act", "notifyEmail": False}, raw=True)
     check(st == 400, "a rule with an unknown role is refused")
     st, _ = drv._call("PUT", "/api/ai/hub/rules/Nope", a.token, json_body={"enabled": True, "threshold": 2, "role": "Owner", "severity": "Act", "notifyEmail": False}, raw=True)

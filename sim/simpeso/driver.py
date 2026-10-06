@@ -309,6 +309,24 @@ class PesoWebDriver:
         q = f"?type={kind}&afterId={after_id}&take=5000" + (f"&warehouseId={warehouse_id}" if warehouse_id else "") + (f"&since={since}" if since else "")
         return (self._call("GET", f"/api/ai/movements{q}", acct.token) or {}).get("movements", [])
 
+    # ---- AI Monitoring ------------------------------------------------------------------------------------------
+    def branch_names(self, acct: Account) -> dict:
+        return {b["warehouseId"]: b["name"] for b in (self._call("GET", "/api/ai/branch-settings", acct.token) or [])}
+
+    def cash_shifts(self, acct: Account) -> list:
+        return self._call("GET", "/api/ai/cash-shifts?closedOnly=true", acct.token) or []
+
+    def events(self, acct: Account, after_id: int = 0, take: int = 1000) -> dict:
+        return self._call("GET", f"/api/ai/events?afterId={after_id}&take={take}", acct.token) or {"events": [], "nextAfterId": after_id}
+
+    def ledger_drift(self, acct: Account) -> list:
+        return self._call("GET", "/api/ai/ledger-drift", acct.token) or []
+
+    def post_monitor_findings(self, acct: Account, findings: list):
+        """findings: dicts with key, warehouse_id, kind, message, value. Returns (status, body)."""
+        body = [{"Key": f["key"], "WarehouseId": f.get("warehouse_id"), "Kind": f["kind"], "Message": f["message"], "Value": f["value"]} for f in findings]
+        return self._call("POST", "/api/ai/monitor-findings", acct.token, json_body={"Findings": body}, raw=True)
+
     # ---- AI Customer Mission, competitor prices, channel ------------------------------------------------------
     def baskets(self, acct: Account, warehouse_id: int, after_id: int = 0, since: str = None, take: int = 2000) -> dict:
         q = f"?warehouseId={warehouse_id}&afterId={after_id}&take={take}" + (f"&since={since}" if since else "")

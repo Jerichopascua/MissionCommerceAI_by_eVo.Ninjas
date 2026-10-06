@@ -98,7 +98,7 @@ The Intelligence Hub (menu: Inventory, then Intelligence Hub) is the home for mo
 
 ![Rules, assignees and channels](screens/23-hub-rules.png)
 
-**Rules.** Eight plain rules (expired stock not written off, stock close to expiry, cash shift closed with a difference, selling below cost, shrinkage, too much stock, open exceptions, AI proposals waiting). For each: switch it on or off, set the limit, choose the responsible role, the severity, and optionally **a named person** (who then gets the alert and the email instead of the whole role), and whether to also email. PesoWeb checks the rules itself every few minutes (and when the hub opens, and when the agent runner checks in), so alerts open without anyone looking. **Notifications and channels** lets a company send alerts and price changes to another system through a webhook (a chat room, a shelf-label service, an e-commerce site): public https addresses only, with a test message, and a switch for browser desktop alerts. SMS is not available.
+**Rules.** Nine rules: eight measured by PesoWeb (expired stock not written off, stock close to expiry, cash shift closed with a difference, selling below cost, shrinkage, too much stock, open exceptions, AI proposals waiting) and one fed by AI Monitoring ("Unusual activity found by AI", which has no limit to set). For each: switch it on or off, set the limit, choose the responsible role, the severity, and optionally **a named person** (who then gets the alert and the email instead of the whole role), and whether to also email. PesoWeb checks the rules itself every few minutes (and when the hub opens, and when the agent runner checks in), so alerts open without anyone looking. **Notifications and channels** lets a company send alerts and price changes to another system through a webhook (a chat room, a shelf-label service, an e-commerce site): public https addresses only, with a test message, and a switch for browser desktop alerts. SMS is not available.
 
 ![AI settings: company and branches](screens/18-hub-ai-settings.png)
 
@@ -110,6 +110,8 @@ The Intelligence Hub (menu: Inventory, then Intelligence Hub) is the home for mo
 ![AI settings: every company](screens/19-hub-head-all-companies.png)
 
 - **The head company:** a read-only table of every company's AI features, pricing autonomy, margin floors, auto-approve, waiting approvals and branch count, with a filter. A company owner does not see this section.
+
+**AI Monitoring (run now).** On the AI Control page, AI Monitoring has a **Run now** button. Besides checking the rules, it compares each branch with its own recent past and flags what is out of the ordinary: a day when sales fell by half (or doubled), one cash difference far above the shop's usual, a cashier short again and again, a burst of returned or deleted sales, stock on the shelf that no longer equals the stock ledger. Each finding says what was seen and against what, never who is to blame, and arrives as an alert for the Owner (change the role, severity or named person in Rules). It needs a week or so of history before it judges sales.
 
 ### 7b. Switching the AI on and off, and Run now
 
