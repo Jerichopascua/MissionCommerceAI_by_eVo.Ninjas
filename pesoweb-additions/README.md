@@ -129,6 +129,10 @@ Agent side: `ai/missionai/missions.py` (10 tests) and the competitor cap in `pri
 
 `patches/plan13`: column `FindingKey` on `HubAlerts` (migration `AddAlertFindingKey`, script `scripts/20261006_alert_finding_key.sql`); the rule `AiAnomaly` ("Unusual activity found by AI", fed by the AI, ignored by PesoWeb's own rule check); `POST /api/ai/monitor-findings` (agent; one complete scan, repeats update, missing findings close, refused with AI_FEATURE_OFF when AI Monitoring is off); AI Monitoring `CanRun` (run-now). Agent side: `ai/missionai/monitor.py` (18 tests), `monitoring_handler` in `sim/simpeso/agent_service.py`, `sim/scripts/monitor_check.py` (9 live checks). PesoWeb tests 250.
 
+## Plan 14 addition (AI Impact)
+
+`patches/plan14`: `Services/AiImpactService.cs` (`ImpactMath`, `AiImpactService`), `GET /api/ai/hub/impact?days=&switchDate=` (policy AI.Control), the "AI Impact" tab and a control-branch hint in AI Settings. No migration. Tests: `AiImpactTests` (11); PesoWeb total 261. Live: `sim/scripts/impact_check.py` (11 checks; it backdates a throwaway shop's sales with SQL and, to allow two branches, raises its owner's plan with SQL: test bench only) and leaves a demo shop behind.
+
 ## Live verification environment (no admin rights needed)
 
 PesoWeb databases come from a backup plus SQL scripts, not from running every EF migration (an old migration has a foreign-key cycle, and the history is incomplete). To get a throwaway database on SQL Server LocalDB:

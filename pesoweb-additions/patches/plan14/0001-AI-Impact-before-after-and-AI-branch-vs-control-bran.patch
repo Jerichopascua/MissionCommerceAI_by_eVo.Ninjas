@@ -1,0 +1,601 @@
+From 53fc90ba2853335477a93bbeb494f4bedaacb693 Mon Sep 17 00:00:00 2001
+From: unknown <jericho.pascua@gmail.com>
+Date: Tue, 6 Oct 2026 19:10:45 +0800
+Subject: [PATCH] AI Impact: before/after and AI branch vs control branch
+ comparison (service, endpoint, hub tab, tests)
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+---
+ .../src/app/ai/aihub/aihub.component.html     |  81 +++++++
+ ClientApp/src/app/ai/aihub/aihub.component.ts |  20 ++
+ Controllers/AiControlController.cs            |  10 +-
+ Program.cs                                    |   1 +
+ Retailo.Tests/AiImpactTests.cs                | 204 ++++++++++++++++++
+ Services/AiImpactService.cs                   | 173 +++++++++++++++
+ 6 files changed, 488 insertions(+), 1 deletion(-)
+ create mode 100644 Retailo.Tests/AiImpactTests.cs
+ create mode 100644 Services/AiImpactService.cs
+
+diff --git a/ClientApp/src/app/ai/aihub/aihub.component.html b/ClientApp/src/app/ai/aihub/aihub.component.html
+index 92076cc..d48b31f 100644
+--- a/ClientApp/src/app/ai/aihub/aihub.component.html
++++ b/ClientApp/src/app/ai/aihub/aihub.component.html
+@@ -47,6 +47,7 @@
+ 		<li class="nav-item"><a class="nav-link" [class.active]="tab==='reorders'" style="cursor:pointer" (click)="tab='reorders'; loadReorders()">{{app.Localize('Reorders')}}
+ 			<span class="badge rounded-pill bg-secondary ms-1" *ngIf="reorders.length>0">{{reorders.length}}</span></a></li>
+ 		<li class="nav-item"><a class="nav-link" [class.active]="tab==='missions'" style="cursor:pointer" (click)="tab='missions'; loadMissions()">{{app.Localize('Customer missions')}}</a></li>
++		<li class="nav-item"><a class="nav-link" [class.active]="tab==='impact'" style="cursor:pointer" (click)="tab='impact'; loadImpact()">{{app.Localize('AI Impact')}}</a></li>
+ 		<li class="nav-item"><a class="nav-link" [class.active]="tab==='rules'" style="cursor:pointer" (click)="tab='rules'; loadRules()">{{app.Localize('Rules')}}</a></li>
+ 		<li class="nav-item"><a class="nav-link" [class.active]="tab==='settings'" style="cursor:pointer" (click)="tab='settings'">{{app.Localize('AI Settings')}}</a></li>
+ 	</ul>
+@@ -312,6 +313,85 @@
+ 		</div>
+ 	</div>
+ 
++	<!-- ============================ AI IMPACT ============================ -->
++	<div *ngIf="tab==='impact'">
++		<div class="hub-section">
++			<div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
++				<div>
++					<h5>{{app.Localize('What changed after the AI started pricing')}}</h5>
++					<div class="hub-note">{{app.Localize('Equal stretches of days before and after the AI started changing prices, and (when you keep a branch with the AI off as a control) AI branches against that control branch. It shows a difference, not proof: seasons, promotions and supplier prices change too.')}}</div>
++				</div>
++				<div class="d-flex gap-2 align-items-end flex-wrap">
++					<div><label class="hub-note">{{app.Localize('Days each side')}}</label><input type="number" min="3" max="60" class="form-control form-control-sm" style="width:90px" [(ngModel)]="impactDays"></div>
++					<div><label class="hub-note">{{app.Localize('AI start day (optional)')}}</label><input type="date" class="form-control form-control-sm" [(ngModel)]="impactSwitch"></div>
++					<button type="button" class="btn btn-sm btn-primary" (click)="loadImpact()" [disabled]="impactBusy"><i class="fa fa-refresh me-1"></i>{{app.Localize('Compare')}}</button>
++				</div>
++			</div>
++			<div *ngIf="!impact" class="text-center text-muted py-4">{{app.Localize('Press Compare.')}}</div>
++			<div *ngIf="impact && !impact.available" class="alert alert-info mt-3 mb-0">{{impact.message}}</div>
++		</div>
++
++		<ng-container *ngIf="impact && impact.available">
++			<div class="hub-section">
++				<h6>{{app.Localize('The whole company')}}: {{impact.windowDays}} {{app.Localize('days before and after')}} {{impact.switchDate | date:'MMM d'}} <span class="hub-note">({{impact.switchSource}})</span></h6>
++				<div class="table-responsive">
++					<table class="table align-middle mb-0">
++						<thead><tr><th></th><th class="text-end">{{app.Localize('Before')}}</th><th class="text-end">{{app.Localize('After')}}</th><th class="text-end">{{app.Localize('Change')}}</th></tr></thead>
++						<tbody>
++							<tr><td>{{app.Localize('Sales')}}</td><td class="text-end">{{money(impact.before.metrics.sales)}}</td><td class="text-end">{{money(impact.after.metrics.sales)}}</td><td class="text-end"><b>{{chg(impact.change.salesPct)}}</b></td></tr>
++							<tr><td>{{app.Localize('Gross margin rate')}}</td><td class="text-end">{{pct(impact.before.metrics.marginPct)}}</td><td class="text-end">{{pct(impact.after.metrics.marginPct)}}</td><td class="text-end"><b>{{pts(impact.change.marginPts)}} {{app.Localize('points')}}</b></td></tr>
++							<tr><td>{{app.Localize('Gross margin')}}</td><td class="text-end">{{money(impact.before.metrics.margin)}}</td><td class="text-end">{{money(impact.after.metrics.margin)}}</td><td class="text-end"><b>{{money(impact.change.marginPerDay)}} {{app.Localize('per day')}}</b></td></tr>
++							<tr><td>{{app.Localize('Waste (expired stock written off, as % of cost of sales)')}}</td><td class="text-end">{{pct(impact.before.metrics.wastePct)}}</td><td class="text-end">{{pct(impact.after.metrics.wastePct)}}</td><td class="text-end"><b>{{pts(impact.change.wastePts)}} {{app.Localize('points')}}</b></td></tr>
++						</tbody>
++					</table>
++				</div>
++				<div class="hub-note mt-2">{{impact.aiPriceChanges}} {{app.Localize('AI price changes were applied after the start day.')}}</div>
++			</div>
++
++			<div class="hub-section">
++				<h6>{{app.Localize('AI branches against the control branch')}}</h6>
++				<div *ngIf="!impact.control.available" class="alert alert-warning mb-0">{{impact.control.message}}</div>
++				<ng-container *ngIf="impact.control.available">
++					<div class="table-responsive">
++						<table class="table align-middle mb-0">
++							<thead><tr><th></th><th class="text-end">{{app.Localize('Sales')}}</th><th class="text-end">{{app.Localize('Margin rate')}}</th><th class="text-end">{{app.Localize('Waste rate')}}</th></tr></thead>
++							<tbody>
++								<tr><td>{{app.Localize('AI branches')}} ({{impact.control.ai.branches}}), {{app.Localize('change')}}</td><td class="text-end">{{chg(impact.control.ai.change.salesPct)}}</td><td class="text-end">{{pts(impact.control.ai.change.marginPts)}} {{app.Localize('pts')}}</td><td class="text-end">{{pts(impact.control.ai.change.wastePts)}} {{app.Localize('pts')}}</td></tr>
++								<tr><td>{{app.Localize('Control branches')}} ({{impact.control.control.branches}}), {{app.Localize('change')}}</td><td class="text-end">{{chg(impact.control.control.change.salesPct)}}</td><td class="text-end">{{pts(impact.control.control.change.marginPts)}} {{app.Localize('pts')}}</td><td class="text-end">{{pts(impact.control.control.change.wastePts)}} {{app.Localize('pts')}}</td></tr>
++								<tr class="fw-bold"><td>{{app.Localize('AI relative to control')}}</td><td class="text-end">{{pts(impact.control.difference.salesPts)}} {{app.Localize('pts')}}</td><td class="text-end">{{pts(impact.control.difference.marginPts)}} {{app.Localize('pts')}}</td><td class="text-end">{{pts(impact.control.difference.wastePts)}} {{app.Localize('pts')}}</td></tr>
++							</tbody>
++						</table>
++					</div>
++					<div class="mt-2">{{impact.control.reading}}</div>
++				</ng-container>
++			</div>
++
++			<div class="hub-section">
++				<h6>{{app.Localize('By branch')}}</h6>
++				<div class="table-responsive">
++					<table class="table align-middle mb-0">
++						<thead><tr><th>{{app.Localize('Branch')}}</th><th>{{app.Localize('AI')}}</th><th class="text-end">{{app.Localize('AI markdowns')}}</th><th class="text-end">{{app.Localize('Sales')}}</th><th class="text-end">{{app.Localize('Margin rate before')}}</th><th class="text-end">{{app.Localize('after')}}</th><th class="text-end">{{app.Localize('Waste rate before')}}</th><th class="text-end">{{app.Localize('after')}}</th></tr></thead>
++						<tbody>
++							<tr *ngFor="let b of impact.branches">
++								<td><b>{{b.name}}</b></td>
++								<td><span class="pill" [class.ok]="b.role==='AI'" [class.check]="b.role==='Excluded'">{{roleText(b.role)}}</span></td>
++								<td class="text-end">{{b.aiMarkdowns}}</td>
++								<td class="text-end">{{chg(b.change.salesPct)}}</td>
++								<td class="text-end">{{pct(b.before.marginPct)}}</td><td class="text-end">{{pct(b.after.marginPct)}}</td>
++								<td class="text-end">{{pct(b.before.wastePct)}}</td><td class="text-end">{{pct(b.after.wastePct)}}</td>
++							</tr>
++						</tbody>
++					</table>
++				</div>
++			</div>
++
++			<div class="hub-section">
++				<h6>{{app.Localize('Read this before you quote it')}}</h6>
++				<ul class="mb-0"><li *ngFor="let c of impact.caveats">{{c}}</li></ul>
++			</div>
++		</ng-container>
++	</div>
++
+ 	<!-- ============================ AI SETTINGS ============================ -->
+ 	<div *ngIf="tab==='settings'">
+ 		<div class="hub-section">
+@@ -340,6 +420,7 @@
+ 		<div class="hub-section">
+ 			<h5>{{app.Localize('Branches')}}</h5>
+ 			<div class="hub-note mb-2">{{app.Localize('Per branch: whether the AI may mark prices down there, and the hour before which it may not (a person can still mark down by hand; PesoWeb enforces both). Also the region it belongs to and its targets, which the Overview then compares against.')}}</div>
++			<div class="hub-note mb-2"><b>{{app.Localize('To measure what the AI does:')}}</b> {{app.Localize('keep one similar branch with AI markdowns off as a control and the others on. The AI Impact tab then compares them over the same days.')}}</div>
+ 			<div class="table-responsive">
+ 				<table class="table align-middle mb-0">
+ 					<thead><tr><th>{{app.Localize('Branch')}}</th><th>{{app.Localize('AI markdowns')}}</th><th>{{app.Localize('Not before')}}</th><th>{{app.Localize('Region')}}</th><th>{{app.Localize('Sales target per day')}}</th><th>{{app.Localize('Waste target (% of cost of sales)')}}</th><th></th></tr></thead>
+diff --git a/ClientApp/src/app/ai/aihub/aihub.component.ts b/ClientApp/src/app/ai/aihub/aihub.component.ts
+index e555808..bbdd822 100644
+--- a/ClientApp/src/app/ai/aihub/aihub.component.ts
++++ b/ClientApp/src/app/ai/aihub/aihub.component.ts
+@@ -33,6 +33,10 @@ import { AppService } from '../../services/app.service';
+ })
+ export class AiHubComponent implements OnInit, OnDestroy {
+   public tab = 'overview';
++  public impact: any = null;
++  public impactDays = 14;
++  public impactSwitch = '';
++  public impactBusy = false;
+   public loading = false;
+   public error = '';
+   public message = '';
+@@ -246,6 +250,22 @@ export class AiHubComponent implements OnInit, OnDestroy {
+   }
+ 
+ 
++  // ---- AI impact ----------------------------------------------------------------------------------------------------------
++  public loadImpact(): void {
++    this.impactBusy = true;
++    const q = '?days=' + this.impactDays + (this.impactSwitch ? '&switchDate=' + this.impactSwitch : '');
++    this.http.get<any>(this.baseUrl + 'api/ai/hub/impact' + q).subscribe({
++      next: (r) => { this.impact = r; this.impactBusy = false; },
++      error: () => { this.impact = { available: false, message: 'Could not load the comparison.' }; this.impactBusy = false; }
++    });
++  }
++
++  public pts(n: number | null | undefined): string { return n === null || n === undefined ? '-' : (n > 0 ? '+' : '') + Number(n).toFixed(1); }
++  public chg(n: number | null | undefined): string { return n === null || n === undefined ? '-' : (n > 0 ? '+' : '') + Number(n).toFixed(1) + '%'; }
++  public roleText(r: string): string {
++    return r === 'AI' ? 'AI on' : r === 'Control' ? 'Control (AI off)' : r === 'Excluded' ? 'Left out' : 'AI on, no change yet';
++  }
++
+   // ---- customer missions ------------------------------------------------------------------------------------------------
+   public loadMissions(): void {
+     this.http.get<any[]>(this.baseUrl + 'api/ai/missions').subscribe({ next: (m) => (this.missions = m), error: () => { } });
+diff --git a/Controllers/AiControlController.cs b/Controllers/AiControlController.cs
+index caa6ad9..bbdea5d 100644
+--- a/Controllers/AiControlController.cs
++++ b/Controllers/AiControlController.cs
+@@ -23,14 +23,16 @@ namespace GoPosify.Controllers
+         private readonly IMissionService _missions;
+         private readonly ICompetitorService _competitors;
+         private readonly IHubChannelService _channel;
++        private readonly IAiImpactService _impact;
+ 
+         public AiControlController(AppDBContext dbContext, IAiControlService control, IGroupOverviewService group, IHubMetricsService metrics,
+             IHubRuleService rules, IHubTaskService tasks, IReplenishService replenish, IMissionService missions, ICompetitorService competitors,
+-            IHubChannelService channel) : base(dbContext)
++            IHubChannelService channel, IAiImpactService impact) : base(dbContext)
+         {
+             _missions = missions;
+             _competitors = competitors;
+             _channel = channel;
++            _impact = impact;
+             _control = control;
+             _group = group;
+             _metrics = metrics;
+@@ -161,6 +163,12 @@ namespace GoPosify.Controllers
+             return Ok(await _metrics.GetAsync(period, categoryId, CurrentDateTime(), region));
+         }
+ 
++        // GET: api/ai/hub/impact?days=14&switchDate=2026-10-01   (AI Impact: equal windows before and after the AI started pricing, and AI branches against control branches)
++        [HttpGet("~/api/ai/hub/impact")]
++        [Authorize(Policy = "AI.Control")]
++        public async Task<IActionResult> HubImpact(int days = 14, DateTime? switchDate = null) =>
++            Ok(await _impact.GetAsync(days, switchDate, CurrentDateTime()));
++
+         // GET: api/ai/hub/categories   (for the category picker)
+         [HttpGet("~/api/ai/hub/categories")]
+         [Authorize(Policy = "AI.Control")]
+diff --git a/Program.cs b/Program.cs
+index 398b533..1f1a682 100644
+--- a/Program.cs
++++ b/Program.cs
+@@ -325,6 +325,7 @@ builder.Services.AddScoped<IListPriceService, ListPriceService>();
+ builder.Services.AddScoped<IApprovalQueueService, ApprovalQueueService>();
+ builder.Services.AddScoped<IAiControlService, AiControlService>();
+ builder.Services.AddScoped<IHubMetricsService, HubMetricsService>();
++builder.Services.AddScoped<IAiImpactService, AiImpactService>();
+ builder.Services.AddScoped<IAlertNotifier, SmtpAlertNotifier>();
+ builder.Services.AddScoped<IHubRuleService, HubRuleService>();
+ builder.Services.AddScoped<IReplenishService, ReplenishService>();
+diff --git a/Retailo.Tests/AiImpactTests.cs b/Retailo.Tests/AiImpactTests.cs
+new file mode 100644
+index 0000000..46782bf
+--- /dev/null
++++ b/Retailo.Tests/AiImpactTests.cs
+@@ -0,0 +1,204 @@
++using GoPosify.Models;
++using GoPosify.Services;
++using Retailo.Tests.Support;
++using Xunit;
++
++namespace Retailo.Tests;
++
++public class AiImpactMathTests
++{
++    [Fact]
++    public void Change_is_percent_for_sales_and_points_for_rates_and_null_without_data()
++    {
++        var before = ImpactMath.Build(1000m, 10, 800m, 20m);      // margin 20%, waste 2.5%
++        var after = ImpactMath.Build(1100m, 12, 825m, 8.25m);     // margin 25%, waste 1.0%
++        var c = ImpactMath.Change(before, after);
++        Assert.Equal(10.0m, c.SalesPct);
++        Assert.Equal(5.0m, c.MarginPts);
++        Assert.Equal(-1.5m, c.WastePts);
++        var none = ImpactMath.Change(ImpactMath.Build(0m, 0, 0m, 0m), after);
++        Assert.Null(none.SalesPct);
++        Assert.Null(none.MarginPts);
++    }
++
++    [Fact]
++    public void Sum_adds_up_before_working_out_the_rates()
++    {
++        var s = ImpactMath.Sum(new[] { ImpactMath.Build(1000m, 1, 800m, 0m), ImpactMath.Build(3000m, 1, 1800m, 0m) });
++        Assert.Equal(4000m, s.Sales);
++        Assert.Equal(35.0m, s.MarginPct);                         // 1400 / 4000, not the average of 20 and 40
++    }
++}
++
++public class AiImpactServiceTests
++{
++    private static readonly DateTime Now = new(2026, 10, 20, 12, 0, 0);
++    private static readonly DateTime Switch = new(2026, 10, 15);     // 5 full days after it
++
++    private sealed class World
++    {
++        public TestAppDbContext Db;
++        public AiImpactService Svc;
++        public Warehouse A, B;
++        public Product P;
++    }
++
++    private static async Task<World> CreateAsync(bool controlBranch = true)
++    {
++        var db = new TestAppDbContext(TestAppDbContext.NewDbName(), 5);
++        var a = new Warehouse { WarehouseName = "AI branch", Email = "a@x.test", Phone = "1", Address = "a" };
++        var b = new Warehouse { WarehouseName = "Control branch", Email = "b@x.test", Phone = "1", Address = "b" };
++        db.Warehouses.AddRange(a, b);
++        await db.SaveChangesAsync();
++        var p = PricingFixtures.NewProduct(price: 100m, cost: 60m, monitorExpiry: false);
++        db.Products.Add(p);
++        await db.SaveChangesAsync();
++        if (controlBranch) db.AiBranchSettings.Add(new AiBranchSetting { WarehouseId = b.Id, PricingEnabled = false, UpdatedAt = Now });
++        await db.SaveChangesAsync();
++        return new World { Db = db, Svc = new AiImpactService(db), A = a, B = b, P = p };
++    }
++
++    private static async Task Day(World w, Warehouse wh, DateTime day, decimal sales, decimal cost, decimal writeOff = 0m)
++    {
++        var when = day.AddHours(10);
++        var sale = new Sale { WarehouseId = wh.Id, SaleDate = when, TotalAmount = sales, PaymentMethod = "Cash" };
++        w.Db.Sales.Add(sale);
++        w.Db.InventoryTransactions.Add(new InventoryTransaction { TransactionType = "SALE_OUT", WarehouseId = wh.Id, ProductId = w.P.Id, QtyOut = 1, UnitCost = cost, TransactionDate = when });
++        if (writeOff > 0m)
++            w.Db.InventoryTransactions.Add(new InventoryTransaction { TransactionType = ExpiryTransactionTypes.WriteOff, WarehouseId = wh.Id, ProductId = w.P.Id, QtyOut = 1, UnitCost = writeOff, TransactionDate = when });
++        await w.Db.SaveChangesAsync();
++    }
++
++    private static void AiChange(World w, Warehouse wh, DateTime when, bool markdown = true) =>
++        w.Db.PriceChanges.Add(new PriceChange { WarehouseId = wh.Id, ProductId = w.P.Id, PriceBefore = 100m, PriceAfter = 90m, Source = PriceChangeSource.Ai, Status = PriceChangeStatus.Applied, CreatedAt = when,
++            BatchId = markdown ? 1 : null, EndsAt = markdown ? when.AddDays(1) : null });
++
++    private static async Task Seed(World w)
++    {
++        for (var i = 1; i <= 5; i++)
++        {
++            await Day(w, w.A, Switch.AddDays(-i), 1000m, 800m, 25m);      // before: margin 20%
++            await Day(w, w.B, Switch.AddDays(-i), 1000m, 800m, 25m);
++            await Day(w, w.A, Switch.AddDays(i - 1), 1000m, 720m, 5m);    // after: margin 28%, less waste
++            await Day(w, w.B, Switch.AddDays(i - 1), 1000m, 790m, 25m);   // after: margin 21%, waste unchanged
++        }
++        AiChange(w, w.A, Switch.AddHours(9));
++        await w.Db.SaveChangesAsync();
++    }
++
++    private static T Get<T>(object o, string name) => (T)o.GetType().GetProperty(name)!.GetValue(o)!;
++
++    [Fact]
++    public async Task Nothing_to_compare_before_the_AI_has_changed_a_price()
++    {
++        var w = await CreateAsync();
++        await using var _ = w.Db;
++        var r = await w.Svc.GetAsync(14, null, Now);
++        Assert.False(Get<bool>(r, "available"));
++        Assert.Contains("has not changed any price", Get<string>(r, "message"));
++    }
++
++    [Fact]
++    public async Task Too_early_until_three_full_days_have_passed()
++    {
++        var w = await CreateAsync();
++        await using var _ = w.Db;
++        AiChange(w, w.A, Now.AddDays(-2));
++        await w.Db.SaveChangesAsync();
++        var r = await w.Svc.GetAsync(14, null, Now);
++        Assert.False(Get<bool>(r, "available"));
++        Assert.Contains("Too early", Get<string>(r, "message"));
++    }
++
++    [Fact]
++    public async Task The_company_before_and_after_use_equal_windows_around_the_first_applied_AI_change()
++    {
++        var w = await CreateAsync();
++        await using var _ = w.Db;
++        await Seed(w);
++        var r = await w.Svc.GetAsync(14, null, Now);
++        Assert.True(Get<bool>(r, "available"));
++        Assert.Equal(5, Get<int>(r, "windowDays"));
++        Assert.Equal(Switch, Get<DateTime>(r, "switchDate"));
++        var before = Get<ImpactMetrics>(Get<object>(r, "before"), "metrics");
++        var after = Get<ImpactMetrics>(Get<object>(r, "after"), "metrics");
++        Assert.Equal(10000m, before.Sales);
++        Assert.Equal(10000m, after.Sales);
++        Assert.Equal(20.0m, before.MarginPct);
++        Assert.Equal(24.5m, after.MarginPct);         // (1000-720 + 1000-790) / 2000 per day
++        Assert.Equal(4.5m, Get<decimal?>(Get<object>(r, "change"), "marginPts"));
++    }
++
++    [Fact]
++    public async Task AI_branches_are_compared_with_control_branches_by_difference_in_differences()
++    {
++        var w = await CreateAsync();
++        await using var _ = w.Db;
++        await Seed(w);
++        var c = Get<object>(await w.Svc.GetAsync(14, null, Now), "control");
++        Assert.True(Get<bool>(c, "available"));
++        var d = Get<object>(c, "difference");
++        Assert.Equal(7.0m, Get<decimal?>(d, "marginPts"));       // AI +8.0 points, control +1.0
++        Assert.True(Get<decimal?>(d, "wastePts") < 0);           // AI waste fell, control waste did not
++        Assert.Contains("relative to the control", Get<string>(c, "reading"));
++    }
++
++    [Fact]
++    public async Task With_no_control_branch_it_says_how_to_set_one_up()
++    {
++        var w = await CreateAsync(controlBranch: false);
++        await using var _ = w.Db;
++        await Seed(w);
++        var c = Get<object>(await w.Svc.GetAsync(14, null, Now), "control");
++        Assert.False(Get<bool>(c, "available"));
++        Assert.Contains("No branch is set aside as a control", Get<string>(c, "message"));
++    }
++
++    [Fact]
++    public async Task A_switched_off_branch_that_the_AI_priced_during_the_period_is_not_a_clean_control()
++    {
++        var w = await CreateAsync();
++        await using var _ = w.Db;
++        await Seed(w);
++        AiChange(w, w.B, Switch.AddDays(2));
++        await w.Db.SaveChangesAsync();
++        var r = await w.Svc.GetAsync(14, null, Now);
++        Assert.False(Get<bool>(Get<object>(r, "control"), "available"));
++        Assert.Contains(Get<IEnumerable<string>>(r, "caveats"), s => s.StartsWith("Left out of the control") && s.Contains("Control branch"));
++    }
++
++    [Fact]
++    public async Task A_list_price_change_moves_every_branch_so_it_cannot_make_an_AI_branch_and_it_says_so()
++    {
++        var w = await CreateAsync();
++        await using var _ = w.Db;
++        for (var i = 1; i <= 5; i++) { await Day(w, w.A, Switch.AddDays(-i), 1000m, 800m); await Day(w, w.B, Switch.AddDays(-i), 1000m, 800m); await Day(w, w.A, Switch.AddDays(i - 1), 1000m, 750m); await Day(w, w.B, Switch.AddDays(i - 1), 1000m, 750m); }
++        AiChange(w, w.A, Switch.AddHours(9), markdown: false);
++        await w.Db.SaveChangesAsync();
++        var r = await w.Svc.GetAsync(14, null, Now);
++        Assert.True(Get<bool>(r, "available"));
++        Assert.Equal(5.0m, Get<decimal?>(Get<object>(r, "change"), "marginPts"));       // the company moved
++        Assert.False(Get<bool>(Get<object>(r, "control"), "available"));                  // but no branch can be called an AI branch
++        Assert.Contains(Get<IEnumerable<string>>(r, "caveats"), s => s.Contains("same at every branch"));
++    }
++
++    [Fact]
++    public async Task A_chosen_switch_date_overrides_the_first_AI_change_and_the_window_is_capped_by_the_days_asked()
++    {
++        var w = await CreateAsync();
++        await using var _ = w.Db;
++        await Seed(w);
++        var r = await w.Svc.GetAsync(3, Switch, Now);
++        Assert.Equal(3, Get<int>(r, "windowDays"));
++        Assert.Equal("chosen", Get<string>(r, "switchSource"));
++    }
++
++    [Fact]
++    public async Task Every_comparison_carries_the_not_proof_caveat()
++    {
++        var w = await CreateAsync();
++        await using var _ = w.Db;
++        await Seed(w);
++        Assert.Contains(Get<IEnumerable<string>>(await w.Svc.GetAsync(14, null, Now), "caveats"), s => s.StartsWith("Indicative, not proof"));
++    }
++}
+diff --git a/Services/AiImpactService.cs b/Services/AiImpactService.cs
+new file mode 100644
+index 0000000..1669543
+--- /dev/null
++++ b/Services/AiImpactService.cs
+@@ -0,0 +1,173 @@
++using System.Globalization;
++using GoPosify.Data;
++using GoPosify.Models;
++using Microsoft.EntityFrameworkCore;
++
++namespace GoPosify.Services;
++
++public sealed class ImpactMetrics
++{
++    public decimal Sales { get; set; }
++    public int Transactions { get; set; }
++    public decimal Cogs { get; set; }
++    public decimal Margin { get; set; }
++    public decimal? MarginPct { get; set; }
++    public decimal WriteOff { get; set; }
++    public decimal? WastePct { get; set; }
++}
++
++public interface IAiImpactService
++{
++    // Compares equal windows before and after the day the AI started pricing (default: the first applied AI price change), for the whole company
++    // and, when some branches have the AI switched off, AI branches against those control branches (difference in differences).
++    Task<object> GetAsync(int days, DateTime? switchDate, DateTime now);
++}
++
++public static class ImpactMath
++{
++    public static ImpactMetrics Build(decimal sales, int txns, decimal cogs, decimal writeOff) => new()
++    {
++        Sales = sales, Transactions = txns, Cogs = cogs, Margin = sales - cogs, MarginPct = HubMath.MarginPct(sales, cogs),
++        WriteOff = writeOff, WastePct = cogs > 0m ? Math.Round(writeOff / cogs * 100m, 2) : null
++    };
++
++    public static ImpactMetrics Sum(IEnumerable<ImpactMetrics> rows)
++    {
++        var l = rows.ToList();
++        return Build(l.Sum(r => r.Sales), l.Sum(r => r.Transactions), l.Sum(r => r.Cogs), l.Sum(r => r.WriteOff));
++    }
++
++    // Percent change in sales, and the change in margin rate and waste rate in percentage points. Null when either side has no data.
++    public static (decimal? SalesPct, decimal? MarginPts, decimal? WastePts) Change(ImpactMetrics before, ImpactMetrics after) => (
++        before.Sales > 0m ? Math.Round((after.Sales - before.Sales) / before.Sales * 100m, 1) : null,
++        before.MarginPct.HasValue && after.MarginPct.HasValue ? Math.Round(after.MarginPct.Value - before.MarginPct.Value, 1) : null,
++        before.WastePct.HasValue && after.WastePct.HasValue ? Math.Round(after.WastePct.Value - before.WastePct.Value, 2) : null);
++
++    public static decimal? Minus(decimal? a, decimal? b) => a.HasValue && b.HasValue ? a - b : null;
++}
++
++public sealed class AiImpactService : IAiImpactService
++{
++    public const int MinDays = 3;
++    public const int MaxDays = 60;
++    private readonly AppDBContext _db;
++
++    public AiImpactService(AppDBContext db) => _db = db;
++
++    private sealed record Flow(int WarehouseId, string Type, decimal InValue, decimal OutValue);
++
++    // Per branch: sales, cost of goods sold (sold out less returned in, at the cost on the ledger row) and expired stock written off.
++    private async Task<Dictionary<int, ImpactMetrics>> WindowAsync(DateTime start, DateTime end, IEnumerable<int> warehouseIds)
++    {
++        var sales = (await _db.Sales.AsNoTracking().Where(s => s.SaleDate >= start && s.SaleDate < end)
++            .GroupBy(s => s.WarehouseId).Select(g => new { g.Key, Total = g.Sum(s => s.TotalAmount), Count = g.Count() }).ToListAsync())
++            .ToDictionary(x => x.Key, x => (x.Total, x.Count));
++        var flows = await (from t in _db.InventoryTransactions.AsNoTracking()
++                           join p in _db.Products.AsNoTracking() on t.ProductId equals p.Id
++                           where t.TransactionDate >= start && t.TransactionDate < end
++                           group new { t, p } by new { t.WarehouseId, t.TransactionType } into g
++                           select new Flow(g.Key.WarehouseId, g.Key.TransactionType,
++                               g.Sum(x => x.t.QtyIn * (x.t.UnitCost ?? x.p.Cost)), g.Sum(x => x.t.QtyOut * (x.t.UnitCost ?? x.p.Cost)))).ToListAsync();
++        var result = new Dictionary<int, ImpactMetrics>();
++        foreach (var wh in warehouseIds)
++        {
++            sales.TryGetValue(wh, out var s);
++            decimal Out(string type) => flows.Where(f => f.WarehouseId == wh && f.Type == type).Sum(f => f.OutValue);
++            decimal In(string type) => flows.Where(f => f.WarehouseId == wh && f.Type == type).Sum(f => f.InValue);
++            result[wh] = ImpactMath.Build(s.Total, s.Count, Out("SALE_OUT") - In("SALE_RETURN_IN"), Out(ExpiryTransactionTypes.WriteOff));
++        }
++        return result;
++    }
++
++    private static string Pts(decimal? v) => v.HasValue ? v.Value.ToString("+0.0;-0.0;0.0", CultureInfo.InvariantCulture) + " points" : "no data";
++    private static string Pct(decimal? v) => v.HasValue ? v.Value.ToString("+0.0;-0.0;0.0", CultureInfo.InvariantCulture) + "%" : "no data";
++
++    public async Task<object> GetAsync(int days, DateTime? switchDate, DateTime now)
++    {
++        days = Math.Clamp(days, MinDays, MaxDays);
++        var warehouses = await _db.Warehouses.AsNoTracking().OrderBy(w => w.Id).Select(w => new { w.Id, w.WarehouseName }).ToListAsync();
++        var settings = await _db.AiBranchSettings.AsNoTracking().ToListAsync();
++        var aiChanges = await _db.PriceChanges.AsNoTracking().Where(c => c.Source == PriceChangeSource.Ai && c.Status == PriceChangeStatus.Applied)
++            .Select(c => new { c.WarehouseId, c.CreatedAt, IsMarkdown = c.BatchId != null || c.EndsAt != null }).ToListAsync();
++
++        string switchSource;
++        DateTime? first = aiChanges.Count > 0 ? aiChanges.Min(c => c.CreatedAt).Date : null;
++        DateTime day;
++        if (switchDate.HasValue) { day = switchDate.Value.Date; switchSource = "chosen"; }
++        else if (first.HasValue) { day = first.Value; switchSource = "the day of the first AI price change that was applied"; }
++        else return new { available = false, message = "The AI has not changed any price yet, so there is nothing to compare. Approve some proposals in the Approval Center, or let AI markdowns run, and come back after a few days.", days };
++
++        var afterDays = (int)Math.Floor((now - day).TotalDays);
++        var n = Math.Min(days, afterDays);
++        if (n < MinDays)
++            return new { available = false, switchDate = day, switchSource, message = $"Too early: the comparison needs at least {MinDays} full days after {day:MMM d} (there are {Math.Max(afterDays, 0)} so far).", days };
++
++        var beforeFrom = day.AddDays(-n); var afterTo = day.AddDays(n);
++        var ids = warehouses.Select(w => w.Id).ToList();
++        var before = await WindowAsync(beforeFrom, day, ids);
++        var after = await WindowAsync(day, afterTo, ids);
++
++        bool PricingOn(int wh) => settings.FirstOrDefault(s => s.WarehouseId == wh)?.PricingEnabled ?? true;
++        // A markdown is decided per branch, so a branch can sit it out; a list price is the product's price for the whole company, so no branch can.
++        int AppliedAfter(int wh) => aiChanges.Count(c => c.IsMarkdown && c.WarehouseId == wh && c.CreatedAt >= day && c.CreatedAt < afterTo);
++
++        var rows = warehouses.Select(w =>
++        {
++            var c = ImpactMath.Change(before[w.Id], after[w.Id]);
++            var applied = AppliedAfter(w.Id);
++            var role = !PricingOn(w.Id) ? (applied == 0 ? "Control" : "Excluded") : (applied > 0 ? "AI" : "Idle");
++            return new { warehouseId = w.Id, name = w.WarehouseName, role, aiMarkdowns = applied, before = before[w.Id], after = after[w.Id],
++                         change = new { salesPct = c.SalesPct, marginPts = c.MarginPts, wastePts = c.WastePts } };
++        }).ToList();
++
++        var allBefore = ImpactMath.Sum(before.Values); var allAfter = ImpactMath.Sum(after.Values);
++        var all = ImpactMath.Change(allBefore, allAfter);
++        var caveats = new List<string> { "Indicative, not proof: the season, promotions, supplier prices and the weather changed too. The more branches and days, the less a coincidence can explain." };
++        var summary = $"Over {n} days after {day:MMM d} compared with the {n} days before, the company's sales changed {Pct(all.SalesPct)}, its margin rate {Pts(all.MarginPts)} and its waste rate {Pts(all.WastePts)}.";
++
++        object control;
++        var ai = rows.Where(r => r.role == "AI").ToList();
++        var ctl = rows.Where(r => r.role == "Control").ToList();
++        if (ai.Count == 0 || ctl.Count == 0)
++        {
++            var why = ctl.Count == 0
++                ? "No branch is set aside as a control. Switch the AI markdowns off for one similar branch (Intelligence Hub, AI Settings, 'AI markdowns' off) and keep the others on; after a few days this compares them fairly."
++                : "No AI markdown was applied at any branch in the period, so there are no AI branches to compare with the control.";
++            control = new { available = false, message = why };
++        }
++        else
++        {
++            var aiB = ImpactMath.Sum(ai.Select(r => r.before)); var aiA = ImpactMath.Sum(ai.Select(r => r.after));
++            var cB = ImpactMath.Sum(ctl.Select(r => r.before)); var cA = ImpactMath.Sum(ctl.Select(r => r.after));
++            var ca = ImpactMath.Change(aiB, aiA); var cc = ImpactMath.Change(cB, cA);
++            var d = (salesPts: ImpactMath.Minus(ca.SalesPct, cc.SalesPct), marginPts: ImpactMath.Minus(ca.MarginPts, cc.MarginPts), wastePts: ImpactMath.Minus(ca.WastePts, cc.WastePts));
++            var reading = $"AI branches' margin rate moved {Pts(ca.MarginPts)} while control branches' moved {Pts(cc.MarginPts)}: {Pts(d.marginPts)} relative to the control. "
++                        + $"Sales: AI {Pct(ca.SalesPct)} against control {Pct(cc.SalesPct)}. Waste rate: AI {Pts(ca.WastePts)} against control {Pts(cc.WastePts)}.";
++            if (ai.Count < 2 || ctl.Count < 2) caveats.Add("Only " + (ai.Count < 2 ? "one AI branch" : "") + (ai.Count < 2 && ctl.Count < 2 ? " and " : "") + (ctl.Count < 2 ? "one control branch" : "")
++                + ": one shop is a weak comparison. Treat it as a hint.");
++            control = new
++            {
++                available = true, reading,
++                ai = new { branches = ai.Count, before = aiB, after = aiA, change = new { salesPct = ca.SalesPct, marginPts = ca.MarginPts, wastePts = ca.WastePts } },
++                control = new { branches = ctl.Count, before = cB, after = cA, change = new { salesPct = cc.SalesPct, marginPts = cc.MarginPts, wastePts = cc.WastePts } },
++                difference = new { salesPts = d.salesPts, marginPts = d.marginPts, wastePts = d.wastePts }
++            };
++        }
++        var listChanges = aiChanges.Count(c => !c.IsMarkdown && c.CreatedAt >= day && c.CreatedAt < afterTo);
++        if (listChanges > 0)
++            caveats.Add($"{listChanges} AI list-price change(s) were applied in the period. A list price is the same at every branch, so it also moved the control branches: the AI-against-control comparison measures the AI's markdowns only, and the company's before and after includes both.");
++        if (rows.Any(r => r.role == "Excluded"))
++            caveats.Add("Left out of the control: " + string.Join(", ", rows.Where(r => r.role == "Excluded").Select(r => r.name)) + " (AI markdowns are off now, but the AI marked prices down there during the period).");
++        if (rows.Any(r => r.role == "Idle"))
++            caveats.Add("Not counted as AI branches (AI on, but no markdown was applied in the period): " + string.Join(", ", rows.Where(r => r.role == "Idle").Select(r => r.name)) + ".");
++
++        return new
++        {
++            available = true, days, windowDays = n, switchDate = day, switchSource, generatedAt = now,
++            before = new { from = beforeFrom, to = day, metrics = allBefore }, after = new { from = day, to = afterTo, metrics = allAfter },
++            change = new { salesPct = all.SalesPct, marginPts = all.MarginPts, wastePts = all.WastePts, marginPerDay = Math.Round((allAfter.Margin - allBefore.Margin) / n, 2) },
++            aiPriceChanges = aiChanges.Count(c => c.CreatedAt >= day && c.CreatedAt < afterTo),
++            summary, branches = rows, control, caveats
++        };
++    }
++}
+-- 
+2.46.0.windows.1
+

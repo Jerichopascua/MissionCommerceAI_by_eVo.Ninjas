@@ -78,7 +78,7 @@ The owner sets the guardrails the AI cannot override:
 
 ### 7a. The Intelligence Hub: monitoring, tasks, rules, reorders, missions and the AI settings
 
-The Intelligence Hub (menu: Inventory, then Intelligence Hub) is the home for monitoring and for the AI at every level. It has six tabs.
+The Intelligence Hub (menu: Inventory, then Intelligence Hub) is the home for monitoring and for the AI at every level. It has seven tabs.
 
 ![Intelligence Hub overview](screens/17-hub-overview.png)
 
@@ -95,6 +95,10 @@ The Intelligence Hub (menu: Inventory, then Intelligence Hub) is the home for mo
 ![Customer missions](screens/24-hub-missions.png)
 
 **Customer missions.** AI Customer Mission works out what shoppers were trying to get done (quick top-up, dinner run, weekly restock, late night, morning grab-and-go) from purchases only: the hour, the number of items, the value, and whether the basket held fresh food. It cannot see intent. Each mission shows its share, the typical basket, the busiest hour, and what it means for stock and staffing. On simulated shoppers it matched their real mission on about 6 baskets in 10 (59%), weakest where an evening quick stop looks just like an after-work top-up, so treat it as a hint.
+
+![AI Impact: before and after, and AI branches against a control branch](screens/25-hub-ai-impact.png)
+
+**AI Impact.** Did the AI make a difference? This tab compares equal stretches of days before and after the day the AI started changing prices (by default the day of the first applied AI price change; you can pick the day and the number of days each side): sales, gross margin rate, gross margin per day, and waste. Below it, **AI branches against the control branch**: keep one similar branch with AI markdowns switched off (AI Settings) and the others on, and the tab shows how each group moved and the difference between them, which removes most of the season and holiday noise. The page always carries a "read this before you quote it" box. One thing it will not let you overclaim: a list price is the same at every branch, so a list-price change moves the control branch as well; the AI-against-control comparison therefore counts the AI's **markdowns** only, and the screenshot above shows exactly that case (the company's margin rate is up 3.4 points, but the AI branch and the control moved together, so the AI is credited with 0.0 points relative to the control). The numbers in the screenshot are a throwaway test shop with dated-back sales, not real results; the simulated twin-world comparison (AI ahead on 10 of 10 days) is in `Docs/showcase-results.md`.
 
 ![Rules, assignees and channels](screens/23-hub-rules.png)
 

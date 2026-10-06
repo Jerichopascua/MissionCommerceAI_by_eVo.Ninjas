@@ -85,6 +85,15 @@ AI Monitoring now has a **Run now** and a second job beyond the fixed rules: it 
 
 Findings are posted to `POST /api/ai/monitor-findings` and follow the rule "Unusual activity found by AI" (Owner, Watch by default; role, severity, named person and email are editable; switching the rule off closes them). Each scan is complete: a repeat updates its alert, a finding that no longer applies closes. Limits: needs history (a new shop says nothing about sales at first); thresholds are fixed, not learned; it reads PesoWeb's sales dates, which in a simulated world all carry today's clock, so the sales check is proven by tests and not by the simulated worlds.
 
+## 5b. AI Impact (added 2026-10-06)
+
+The Intelligence Hub's **AI Impact** tab (`GET /api/ai/hub/impact?days=14&switchDate=`) answers "did the AI make a difference?" with two comparisons over equal windows:
+
+- **Before and after, whole company:** the N days before and after the AI start day (default: the day of the first applied AI price change; N is at most the days asked and at most the full days since). At least 3 full days after are needed. Sales (percent change), gross margin rate and waste rate (percentage-point change), and margin per day.
+- **AI branches against control branches (difference in differences):** control = a branch with AI markdowns switched off and no AI markdown applied in the period; AI branch = AI on with at least one applied AI markdown in the period. The effect is the AI group's change minus the control group's change, so what moved everyone cancels out.
+
+What it will not do: it is indicative, not proof (season, promotions, supplier prices); one AI branch and one control is a weak comparison and says so; a list price is the product's price for the whole company, so an AI list-price change also moves control branches and the page says that the control comparison counts markdowns only; a control branch the AI marked down during the period is left out and named. Real companies need a few weeks and several branches before the difference means much; the simulated twin worlds (equalised and A/A-checked) remain the controlled evidence.
+
 ## 6. What is not built
 
 SMS and mobile push, a connector for a specific shelf-label or e-commerce product (the webhook is the integration point), per-branch margin floors, and an export of the Overview.

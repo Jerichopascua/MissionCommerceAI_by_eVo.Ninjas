@@ -95,6 +95,7 @@ Retailo_v1_mission/
 │   ├── ApprovalQueueService.cs, ApprovalLanes.cs, ListPriceService.cs, ListPriceGuardrails.cs   (ours) approvals and margin rules
 │   ├── HubMetricsService.cs, HubRuleService.cs, HubTaskService.cs, HubInsightServices.cs,
 │   │   HubChannelService.cs, HubBackgroundService.cs, ReplenishService.cs, GroupOverviewService.cs   (ours) Intelligence Hub
+│   ├── AiImpactService.cs         (ours) AI Impact: before/after and AI branch vs control branch
 │   ├── MarkdownPricingService.cs, MarkdownGuardrails.cs, MarkdownService.cs   markdown (clearance) pricing
 │   ├── StockService, InventoryBatchService, ExpiryService, StockCountService, ReceivingService,
 │   │   CashShiftService, ExceptionService, LedgerService, TransactionService, SyncService, ...
