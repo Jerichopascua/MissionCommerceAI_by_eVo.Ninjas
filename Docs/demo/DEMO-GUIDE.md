@@ -161,6 +161,60 @@ The day report breaks one run down by group, company and branch: sales, cash, ma
 
 ---
 
+## Part C. Starting the simulation
+
+The simulation is a separate Python program (in `sim/`) that plays the shoppers, cashiers and staff through PesoWeb's real API. PesoWeb must be running first (`ui\demo\start-demo.ps1`, Part A). All commands below run from the `sim` folder:
+
+```powershell
+cd D:\git\AMD\hackathon_amd_act3\MissionCommerceAI_by_eVo.Ninjas\sim
+```
+
+**1. Run one business day in a world that already exists** (the usual way to put live data on the Overview, My tasks and AI Impact screens):
+
+```powershell
+python -m simpeso.runner day --run real2 --day 400
+```
+
+- `--run` is the world: `real2` is the demo company with the AI on, `real3` the same shop with the AI off (the control), `real1` has no AI setup; `ai1`, `ai2` and `ai3` are small generated worlds (the same command on `ai3` took 3 seconds and produced 76 sales).
+- `--day` is any number you have not used before for that world. It only picks the dice, so the same number replays the same shoppers; use a new number each time (the showcase used 201 to 213, so start at 400). PesoWeb itself stamps sales with the real clock, so they appear as today's sales.
+- Some sales fail with "Insufficient FEFO stock": that is PesoWeb refusing to sell stock it does not have, and it is counted, not hidden.
+- It prints sales, units, revenue, cost, returns, refusals and how many incidents were planted (expired stock not written off, cash differences, and so on) for the AI to find.
+
+**2. Let the AI work on it** (needs the agent runner; start it once in a second window and leave it running):
+
+```powershell
+python -m simpeso.agent_service --run real2 --company c1 --interval 30
+```
+
+Then in PesoWeb, Intelligent Hub, AI Control: **Run now** on AI Pricing, AI Replenish, AI Customer Mission and AI Monitoring. Price proposals appear in the Approval Center; alerts and reorders in My tasks; Rules alerts open by themselves. In a demo you decide the waiting proposals yourself in the Approval Center; the simulated approver (`simpeso/approver.py`, a virtual store manager) is used only inside the showcase script in step 3.
+
+**3. The AI against no AI, side by side (the controlled evidence)**
+
+```powershell
+$env:PESOWEB_ROOT_PASSWORD = "<the root password, never saved to a file>"
+python scripts\showcase_preflight.py --run real2                       # read-only: are prices still the catalog's?
+python scriptsa_check.py --run-a real2 --run-b real3 --days 214-216  # the twins must show no difference with no AI
+python scripts\showcase.py --ai-run real2 --base-run real3 --day 201   # the flow with the AI, and the same day without it
+python scripts\showcase_days.py --days-on 204-208 --days-off 209-213   # more days, to average out the noise
+```
+
+Results are written to `sim/runs/showcase*.md` and summarised in `Docs/showcase-results.md`. Run the A/A check first: if the twins are not equal, any comparison is biased.
+
+**4. Build a brand-new simulated world** (a new head company with five subsidiaries, branches, staff, products and customers, created through PesoWeb's own API; needs the root login to raise each subsidiary's plan):
+
+```powershell
+$env:PESOWEB_ROOT_PASSWORD = "<the root password>"
+python -m simpeso.runner build --seed 21 --profile smoke --run myworld --policy autonomous
+python -m simpeso.runner day   --run myworld --day 0
+python -m simpeso.runner score --run myworld        # how many planted incidents were found, missed or wrongly flagged
+```
+
+`--profile smoke` is 2 branches per company, `--profile starter` 4. Logins for every company are written to `sim/runs/myworld/world.json` and `sim/runs/CREDENTIALS.txt` (both git-ignored). Building a world adds a lot of rows to the development database, so use a throwaway name.
+
+**5. Without PesoWeb at all** (the aggregated lane, 200,000 shoppers for 28 days; runs on a laptop CPU and later on the AMD GPU): `python -m simpeso.quicksim --device auto`.
+
+**Stopping it:** each command ends by itself; stop the agent runner with Ctrl+C. A day of simulated sales cannot be un-sold: to reset, restore the database backup (recipe in `pesoweb-additions/README.md`, "Live verification environment").
+
 ## Suggested 6-minute demo order
 
 1. **Login** and the head company (screens 01, 02): "this is the platform, and these are the defaults" (45 seconds).
