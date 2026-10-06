@@ -63,7 +63,7 @@ async function setViewport(height) {
   await send('Emulation.setDeviceMetricsOverride', { width: W, height, deviceScaleFactor: 1, mobile: false });
 }
 async function go(url) {
-  const full = /^https?:/.test(url) ? url : cfg.base + '/#' + url;          // PesoWeb uses hash routes: /#/dashboard
+  const full = /^(https?|file):/.test(url) ? url : cfg.base + '/#' + url;          // PesoWeb uses hash routes: /#/dashboard
   await send('Page.navigate', { url: full });
   await waitFor('document.readyState === "complete"');
 }
@@ -110,7 +110,7 @@ for (const step of cfg.steps) {
     await evaluate(`document.querySelector(${JSON.stringify(step.click)}).click(); true`);
   }
   // PesoWeb pages (served from cfg.base) show a spinner until Angular has rendered; wait for the real content, not a fixed time.
-  const pesoPage = step.go && !/^https?:/.test(step.go);
+  const pesoPage = step.go && !/^(https?|file):/.test(step.go);
   const readyExpr = step.waitFor || (pesoPage ? '!!document.querySelector(".main-content")' : null);
   if (readyExpr) {
     const ok = await waitFor(readyExpr, 60000);

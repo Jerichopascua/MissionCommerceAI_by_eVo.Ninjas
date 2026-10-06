@@ -75,7 +75,27 @@ def main() -> int:
     ran.clear()
     check(agent.poll_once() == [] and ran == [], "the runner has nothing to do")
 
-    print("5. Bad input")
+    print("5. Per-branch AI settings")
+    branches = drv._call("GET", "/api/ai/branch-settings", a.token)
+    check(len(branches) >= 1 and all(b["pricingEnabled"] and b["clearanceStartHour"] is None for b in branches), "branches start with AI markdowns allowed at any hour")
+    wh_id = branches[0]["warehouseId"]
+    drv._call("PUT", "/api/ai/control/Pricing", a.token, json_body={"enabled": True})
+    drv._call("PUT", f"/api/ai/branch-settings/{wh_id}", a.token, json_body={"PricingEnabled": False})
+    st, o = drv._call("POST", "/api/Pricing/Markdown", a.token, json_body={"WarehouseId": wh_id, "ProductId": pid, "BatchId": 1, "NewPrice": 90, "Source": "Ai"}, raw=True)
+    check(st == 422 and o.get("code") == "AI_BRANCH_OFF", "an AI markdown at a branch that is switched off is refused AI_BRANCH_OFF")
+    drv._call("PUT", f"/api/ai/branch-settings/{wh_id}", a.token, json_body={"PricingEnabled": True, "ClearanceStartHour": 23})
+    st, o = drv._call("POST", "/api/Pricing/Markdown", a.token, json_body={"WarehouseId": wh_id, "ProductId": pid, "BatchId": 1, "NewPrice": 90, "Source": "Ai"}, raw=True)
+    check(st != 422 or o.get("code") != "AI_BRANCH_OFF", "a start hour does not report the branch as off")
+    st, _ = drv._call("PUT", f"/api/ai/branch-settings/{wh_id}", a.token, json_body={"PricingEnabled": True, "ClearanceStartHour": 24}, raw=True)
+    check(st == 400, "a start hour outside the day is refused")
+    st, _ = drv._call("PUT", "/api/ai/branch-settings/99999999", a.token, json_body={"PricingEnabled": True}, raw=True)
+    check(st == 400, "an unknown branch is refused")
+    st, _ = drv._call("GET", "/api/ai/settings-overview", a.token, raw=True)
+    check(st == 403, "the all-companies view is closed to a company owner")
+    ov = drv._call("GET", "/api/ai/hub/overview", a.token)
+    check(len(ov["tenants"]) == 1, "the hub overview shows only the owner's own company")
+
+    print("6. Bad input")
     st, _ = drv._call("PUT", "/api/ai/control/Nonsense", a.token, json_body={"enabled": True}, raw=True)
     check(st == 400, "an unknown feature is refused")
 

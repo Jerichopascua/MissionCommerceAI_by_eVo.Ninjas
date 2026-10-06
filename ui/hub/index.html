@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MissionCommerce Intelligence Hub</title>
+<style>
+:root{--bg:#f4f8ff;--card:#fff;--ink:#14213d;--muted:#5d6b82;--line:#dbe6f8;--blue:#2f6df6;--blue-soft:#e8f1ff;--green:#1a8f4d;--green-soft:#e6f6ec;--amber:#b86e00;--amber-soft:#fff3df;--hero:linear-gradient(120deg,#e3eeff 0%,#f6faff 55%,#fff4e8 100%)}
+@media (prefers-color-scheme:dark){:root{--bg:#0e1626;--card:#152036;--ink:#e8eefc;--muted:#9fb0cc;--line:#26365a;--blue:#6b9bff;--blue-soft:#1b2a4a;--green:#4cc486;--green-soft:#15302a;--amber:#f0b45a;--amber-soft:#33281a;--hero:linear-gradient(120deg,#16233f 0%,#101b30 55%,#2a2031 100%)}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+a{color:var(--blue)}
+.wrap{max-width:1120px;margin:0 auto;padding:0 20px}
+header.top{display:flex;align-items:center;justify-content:space-between;padding:16px 0}
+header.top b{font-size:18px}
+header.top nav a{margin-left:18px;text-decoration:none;color:var(--muted);font-size:14px}
+.hero{background:var(--hero);border:1px solid var(--line);border-radius:22px;padding:48px 40px;margin:8px 0 40px}
+.hero h1{font-size:clamp(28px,4.4vw,44px);line-height:1.12;margin:0 0 14px}
+.hero p{max-width:640px;color:var(--muted);font-size:18px;margin:0 0 22px}
+.btn{display:inline-block;padding:11px 20px;border-radius:12px;font-weight:600;text-decoration:none;margin-right:10px;border:1px solid var(--blue)}
+.btn.primary{background:var(--blue);color:#fff}
+.btn.ghost{color:var(--blue)}
+h2.sec{font-size:clamp(22px,3vw,30px);margin:46px 0 6px}
+.sub{color:var(--muted);margin:0 0 20px;max-width:720px}
+.grid4{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 20px}
+.card .tag{display:inline-block;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--blue);background:var(--blue-soft);padding:3px 10px;border-radius:999px;margin-bottom:8px}
+.card p{margin:0;color:var(--muted)}
+.two{display:grid;grid-template-columns:1fr 1.25fr;gap:26px;align-items:start}
+@media (max-width:860px){.two{grid-template-columns:1fr}.hero{padding:30px 22px}}
+.acc button{width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:10px;font:inherit;color:var(--ink);cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-weight:600}
+.acc button[aria-expanded="true"]{border-color:var(--blue);background:var(--blue-soft)}
+.acc .panel{display:none;padding:0 4px 12px;color:var(--muted);margin:-4px 0 6px}
+.acc button[aria-expanded="true"]+.panel{display:block}
+.shot{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:10px;position:sticky;top:12px}
+.shot img{width:100%;border-radius:10px;display:block;border:1px solid var(--line)}
+.shot .cap{font-size:13px;color:var(--muted);margin:8px 4px 2px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.kpi .v{font-size:32px;font-weight:800;color:var(--green)}
+.kpi .l{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.kpi .d{font-size:14px;color:var(--muted);margin-top:4px}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;counter-reset:s}
+.steps .card{position:relative;padding-top:44px}
+.steps .card:before{counter-increment:s;content:counter(s);position:absolute;top:12px;left:18px;width:26px;height:26px;border-radius:50%;background:var(--blue);color:#fff;font-weight:700;text-align:center;line-height:26px;font-size:14px}
+.limits{background:var(--amber-soft);border:1px solid var(--line);border-radius:16px;padding:18px 22px}
+.limits ul{margin:8px 0 0;padding-left:20px;color:var(--muted)}
+footer{padding:36px 0 50px;color:var(--muted);font-size:14px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <b>MissionCommerce AI &middot; Intelligence Hub</b>
+    <nav><a href="#problems">Problems</a><a href="#hub">The hub</a><a href="#results">Results</a><a href="#limits">Limits</a><a href="../dashboard/index.html">Full results</a></nav>
+  </header>
+
+  <section class="hero">
+    <h1>Real-time data powering smarter retail decisions</h1>
+    <p>One place to see how every branch is doing right now, what needs attention, and what the AI is allowed to do. The AI proposes. Your rules check. A person decides.</p>
+    <a class="btn primary" href="#hub">See the hub</a><a class="btn ghost" href="#results">Read the results</a>
+  </section>
+
+  <h2 class="sec" id="problems">Challenges retailers face today</h2>
+  <p class="sub">Thin margins leave little room for guesswork, and the day's problems are usually found after the day is over.</p>
+  <div class="grid4">
+    <div class="card"><span class="tag">Waste</span><p>Fresh stock reaches its date before it sells, and a markdown that comes too late or too deep costs more than it saves.</p></div>
+    <div class="card"><span class="tag">Pricing</span><p>Prices are set by habit. Nobody knows which items could carry a few more pesos, or which sell below what they cost to stock.</p></div>
+    <div class="card"><span class="tag">Benchmarking</span><p>It is hard to tell whether a branch is doing well or badly compared with the others, until the month-end report.</p></div>
+    <div class="card"><span class="tag">Anomalies</span><p>Cash differences, unrecorded deliveries and expired stock are found late, and nobody is sure whose job it is.</p></div>
+  </div>
+
+  <h2 class="sec" id="hub">The Intelligence Hub</h2>
+  <p class="sub">Built into PesoWeb, so the numbers come from the same system that rings up the sales. Every screen below is the real screen.</p>
+  <div class="two">
+    <div class="acc" id="acc">
+      <button aria-expanded="true" data-i="0">Real-time visibility of every branch <span>+</span></button>
+      <div class="panel">Sales, transactions, open exceptions, expiry at risk, active markdowns and waiting AI proposals for today, side by side by branch. A branch is flagged when something needs a look.</div>
+      <button aria-expanded="false" data-i="1">Needs attention, with the screen to fix it <span>+</span></button>
+      <div class="panel">Plain rules on today's numbers: expired stock not written off, a cash shift closed with a difference, open exceptions, AI proposals waiting. Each line links to where it is handled.</div>
+      <button aria-expanded="false" data-i="2">Decisions with the evidence beside them <span>+</span></button>
+      <div class="panel">Every AI price proposal arrives with its reason, the margin before and after, what the AI learned from this shop's own sales, a cautious profit estimate, and the rule checks. Approve, reject, or approve at a different price.</div>
+      <button aria-expanded="false" data-i="3">Roles decide how much each person can approve <span>+</span></button>
+      <div class="panel">Small, well-evidenced changes go to the store manager; larger ones to the pricing manager; changes on top sellers to the owner. The owner sets the limits, and can switch auto-approval on for small learned changes.</div>
+      <button aria-expanded="false" data-i="4">AI settings for the company, each branch and the whole group <span>+</span></button>
+      <div class="panel">Switch each AI feature on or off, set per branch whether the AI may mark prices down and from what hour, and (for the head company) see every company's AI settings in one table. PesoWeb enforces all of it.</div>
+    </div>
+    <div class="shot">
+      <img id="shotimg" src="../../Docs/demo/screens/17-hub-overview.png" alt="Intelligence Hub screenshot">
+      <div class="cap" id="shotcap">Overview: how each branch is doing today.</div>
+    </div>
+  </div>
+
+  <h2 class="sec" id="results">What it did on a real catalog</h2>
+  <p class="sub" id="resultsnote">The same shop twice, with and without the AI, same shoppers and same stock each day.</p>
+  <div class="kpis" id="kpis"></div>
+
+  <h2 class="sec">How it works</h2>
+  <div class="steps">
+    <div class="card"><b>PesoWeb enforces the rules</b><p>Margin floors, the deepest markdown, how often a price may change, who may approve what, and the on and off switches. The AI cannot override them.</p></div>
+    <div class="card"><b>The AI proposes</b><p>It reads costs, stock, expiry and sales, then proposes markdowns and price changes through PesoWeb's own API, with its reasoning and a prediction it will be scored on.</p></div>
+    <div class="card"><b>A person decides</b><p>Proposals wait in one Approval Center with the evidence. Everything is logged, and a change can be undone.</p></div>
+  </div>
+
+  <h2 class="sec" id="limits">What it does not do yet</h2>
+  <div class="limits">
+    <b>Said plainly</b>
+    <ul>
+      <li>The shoppers and their reaction to price are simulated; the catalog, PesoWeb and the AI's decisions are real.</li>
+      <li>On thin real margins the benefit is a few percent of gross margin, not a transformation. The larger waste reduction is on generated shops with normal margins.</li>
+      <li>Not built yet: AI Replenish, AI Customer Mission, a competitor price feed, and notifications that assign a task to a person.</li>
+      <li>Not yet tested on the AMD GPU; that comes last.</li>
+    </ul>
+  </div>
+
+  <footer>MissionCommerce AI &middot; Evo.Ninjas &middot; AMD Developer Hackathon Act III &middot; the design follows the narrative of retail data hubs such as DMALL's, in our own words.</footer>
+</div>
+<script>
+(function(){
+  var shots=[
+    ['17-hub-overview.png','Overview: how each branch is doing today, and what needs attention.'],
+    ['17-hub-overview.png','Needs attention: each rule is a plain check, with a link to the screen that handles it.'],
+    ['12-approval-center-owner-lane-item.png','Approval Center: the proposal, its evidence and the rule checks, with the slider to approve a different price.'],
+    ['13-approval-center-settings.png','Approval settings: margin floors, lane sizes, expiry and auto-approve, set by the owner.'],
+    ['18-hub-ai-settings.png','AI settings: the six features, and each branch.']
+  ];
+  var acc=document.getElementById('acc'),img=document.getElementById('shotimg'),cap=document.getElementById('shotcap');
+  acc.addEventListener('click',function(e){
+    var b=e.target.closest('button');if(!b)return;
+    Array.prototype.forEach.call(acc.querySelectorAll('button'),function(x){x.setAttribute('aria-expanded',x===b?'true':'false');x.lastElementChild.textContent=x===b?'-':'+'});
+    var s=shots[+b.dataset.i];img.src='../../Docs/demo/screens/'+s[0];cap.textContent=s[1];
+  });
+  acc.querySelector('button').lastElementChild.textContent='-';
+
+  function peso(n){return '₱'+Math.abs(Math.round(n)).toLocaleString()}
+  fetch('../../results/showcase-real.json').then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(d){
+    var s=d.summary,on=s.vs_base_agent_on,off=s.vs_base_agent_off,ad=s.agent_adds;
+    var better=on.net.days_better+off.net.days_better,all=on.net.of+off.net.of;
+    var margin=(on.margin.mean+off.margin.mean)/2;
+    document.getElementById('kpis').innerHTML=
+      '<div class="card kpi"><div class="l">Days ahead of no AI</div><div class="v">'+better+' of '+all+'</div><div class="d">net result, same day with and without the AI</div></div>'+
+      '<div class="card kpi"><div class="l">Gross margin</div><div class="v">+'+peso(margin)+'/day</div><div class="d">units about flat; mostly from fixing prices below the margin floor</div></div>'+
+      '<div class="card kpi"><div class="l">Markdown agent adds</div><div class="v">+'+peso(ad.net)+'/day</div><div class="d">on top of the new prices, by cutting waste about '+peso(Math.abs(ad.waste_pesos))+' a day</div></div>'+
+      '<div class="card kpi"><div class="l">List prices changed</div><div class="v">'+d.list_prices_changed+'</div><div class="d">'+d.flow.waiting+' proposals: '+d.flow.approved+' approved, '+d.flow.edited+' half-step, '+d.flow.rejected+' rejected</div></div>';
+    document.getElementById('resultsnote').textContent=d.catalog+'. The same shop twice, with and without the AI, same shoppers and same stock each day (checked: a no-AI run in both showed zero difference).';
+  }).catch(function(){document.getElementById('kpis').innerHTML='<div class="card"><p>Results file not found. Run <code>sim/scripts/export_showcase.py</code>.</p></div>'});
+})();
+</script>
+</body>
+</html>

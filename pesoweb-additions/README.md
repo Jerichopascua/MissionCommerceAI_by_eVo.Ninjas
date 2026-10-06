@@ -86,6 +86,16 @@ Simulation side: `sim/simpeso/approver.py` is a seeded virtual store manager tha
 
 Agent side: `sim/simpeso/agent_service.py` (`python -m simpeso.agent_service --run real2 --company c1 --once`, or `--interval 30` to keep polling) reads the switches, picks up run requests and runs the AI Pricing handler, which puts the best list-price changes into the Approval Center (skipping products that already have one waiting). Checked by 178 PesoWeb tests and `sim/scripts/ai_control_check.py` (16 live checks).
 
+## Plan 10 addition (Intelligence Hub, per-branch AI settings)
+
+`patches/plan10` (tag `plan10-complete`):
+- Table `AiBranchSettings` (migration `AddAiBranchSettings`, script `scripts/20261006_ai_branch_settings.sql`). No row means the defaults: AI markdowns allowed at any hour.
+- Endpoints (`AI.Control`): `GET /api/ai/branch-settings`, `PUT /api/ai/branch-settings/{warehouseId}` (`{"pricingEnabled":false,"clearanceStartHour":20}`), `GET /api/ai/hub/overview` (this company today, by branch; `?all=true` is the head company only). Head company only (`Subscription.Tenants` and root SuperAdmin): `GET /api/ai/settings-overview`.
+- Enforcement is in PesoWeb: an AI markdown at a branch that is switched off is refused (422 `AI_BRANCH_OFF`); before the branch's start hour it is refused (422 `CLEARANCE_NOT_YET`). A person's own markdowns are not affected.
+- `GroupOverviewService.GetAsync(now, onlyTenantId)` can now be limited to one company.
+- Angular screen `/ai/hub` (menu "Intelligence Hub"): Overview and AI Settings tabs. The Approval Center settings panel also gained the margin floors, deepest markdown and change-rate limit.
+- Checked by 184 PesoWeb tests and `sim/scripts/ai_control_check.py` (23 live checks, 7 of them on branches and the head-company views).
+
 ## Live verification environment (no admin rights needed)
 
 PesoWeb databases come from a backup plus SQL scripts, not from running every EF migration (an old migration has a foreign-key cycle, and the history is incomplete). To get a throwaway database on SQL Server LocalDB:

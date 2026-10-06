@@ -18,7 +18,8 @@ PesoWeb is the retail system (POS and back office). The AI is not inside it: Pes
 | 4 | Roles and users | Setting, then Roles; People, then Users | 04, 07 |
 | 5 | Products with cost and price | Inventory, then Products | 09 |
 | 6 | Margin rules and approval settings | Approval Center, then Settings | 13 |
-| 7 | AI on and off | AI Control | 10 |
+| 7 | AI settings: this company, each branch, the whole group | Intelligence Hub, AI Settings tab | 18, 19 |
+| 7b | AI on and off, and Run now | AI Control | 10 |
 | 8 | Day to day: approving the AI's proposals | Approval Center | 11, 12 |
 
 ### 0. Sign in
@@ -75,7 +76,24 @@ The owner sets the guardrails the AI cannot override:
 - **Largest single price increase** and **how long a proposal waits** before it expires.
 - **Auto-approve small, learned changes:** off by default.
 
-### 7. Switching the AI on and off
+### 7a. Where the AI settings are: the Intelligence Hub
+
+![Intelligence Hub overview](screens/17-hub-overview.png)
+
+The Intelligence Hub (menu: Inventory, then Intelligence Hub) is the home for the AI at every level. The **Overview** tab shows today for this company: headline tiles, a branch comparison table (each branch flagged OK or Check), and a "needs attention" list where every line links to the screen that handles it.
+
+![AI settings: company and branches](screens/18-hub-ai-settings.png)
+
+The **AI Settings** tab has the settings at each level:
+
+- **This company:** the six AI features, each with a switch (enforced by PesoWeb), and a link to the margin rules in the Approval Center.
+- **Each branch:** whether the AI may mark prices down at that branch, and the hour before which it may not (for example, no markdowns before 20:00). A person can still mark down by hand. PesoWeb enforces both on AI markdowns.
+
+![AI settings: every company](screens/19-hub-head-all-companies.png)
+
+- **The head company:** a read-only table of every company's AI features, pricing autonomy, margin floors, auto-approve, waiting approvals and branch count, with a filter. A company owner does not see this section.
+
+### 7b. Switching the AI on and off, and Run now
 
 ![AI Control](screens/10-ai-control.png)
 
@@ -100,6 +118,10 @@ Select a proposal to see why. This one is a +10% raise on a top-selling beer. Th
 The AI dashboard shows recorded runs of the AI against the real PesoWeb. The top card is the run on the real catalog: the AI Pricing flow (proposals into the Approval Center, a simulated approver, then the markdown agent), compared day by day with the same shop without the AI. After the two shops were made truly identical (stock and lot sizes equalised, and checked with a no-AI run that showed zero difference), the AI ended ahead on all 10 trial days: gross margin about +236 pesos a day, and the markdown agent adding about +136 pesos a day on top, mostly by cutting waste. The effect is small, and the card says so.
 
 Below it are the earlier results: the customer story (shoppers who learn when the price drops), the three-way proof (no markdown, a fixed rule, the AI agent; waste about 59% lower than doing nothing across five seeds), what the system caught and missed, and the Quick Sim scale test.
+
+![One-page explainer](screens/20-hub-explainer-page.png)
+
+There is also a one-page explainer in the style of a retail data hub's product page: the four problems retailers face, the five capabilities with screenshots of the real screens, the live results from the real-catalog run, and the honest limits. Open `ui/hub/index.html` through the dashboard server (`http://127.0.0.1:8080/ui/hub/index.html`). Design notes and what was learned from DMALL's Data Intelligence Hub are in `Docs/intelligent-hub-design.md`.
 
 ![All reports](screens/15-ai-dashboard-reports.png)
 

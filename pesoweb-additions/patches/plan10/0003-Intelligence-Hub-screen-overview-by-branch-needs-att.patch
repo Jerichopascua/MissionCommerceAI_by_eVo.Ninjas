@@ -1,0 +1,431 @@
+From 9c9899033d9370ad441936eecde0730fb463793f Mon Sep 17 00:00:00 2001
+From: unknown <jericho.pascua@gmail.com>
+Date: Tue, 6 Oct 2026 15:19:34 +0800
+Subject: [PATCH 3/3] Intelligence Hub screen: overview by branch,
+ needs-attention rules, and AI settings for company, branches and (head
+ company) every company
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+---
+ .../src/app/ai/aihub/aihub.component.html     | 185 ++++++++++++++++++
+ ClientApp/src/app/ai/aihub/aihub.component.ts | 145 ++++++++++++++
+ ClientApp/src/app/app.component.html          |   9 +
+ ClientApp/src/app/app.module.ts               |   3 +
+ .../src/app/homemenu/homemenu.component.html  |   9 +
+ 5 files changed, 351 insertions(+)
+ create mode 100644 ClientApp/src/app/ai/aihub/aihub.component.html
+ create mode 100644 ClientApp/src/app/ai/aihub/aihub.component.ts
+
+diff --git a/ClientApp/src/app/ai/aihub/aihub.component.html b/ClientApp/src/app/ai/aihub/aihub.component.html
+new file mode 100644
+index 0000000..ba7126c
+--- /dev/null
++++ b/ClientApp/src/app/ai/aihub/aihub.component.html
+@@ -0,0 +1,185 @@
++<!-- Main Content -->
++<div class="main-content">
++	<div class="page-header">
++		<div class="page-block">
++			<div class="row align-items-center">
++				<div class="col-auto">
++					<div class="page-header-title">
++						<h4>{{app.Localize('Intelligence Hub')}}</h4>
++					</div>
++					<ul class="breadcrumb">
++						<li class="breadcrumb-item">
++							<a [routerLink]="['/']">
++								<i class="fa fa-home me-1"></i>
++								{{app.Localize('Home')}}
++							</a>
++						</li>
++						<li class="breadcrumb-item">{{app.Localize('Intelligence Hub')}}</li>
++					</ul>
++				</div>
++				<div class="col">
++					<div class="float-end">
++						<button type="button" class="btn btn-outline-secondary" (click)="load()" [disabled]="loading">
++							<i class="fa fa-rotate me-1"></i>{{app.Localize('Refresh')}}
++						</button>
++					</div>
++				</div>
++			</div>
++		</div>
++	</div>
++
++	<div class="alert alert-danger" *ngIf="error">{{error}}</div>
++	<div class="alert alert-success" *ngIf="message">{{message}}</div>
++
++	<!-- Hero -->
++	<div class="hub-hero">
++		<h2>{{app.Localize('Real-time data powering smarter decisions')}}</h2>
++		<div class="hub-note">
++			{{company ? company.companyName : ''}} &middot; {{totals.branches}} {{app.Localize('branches')}} &middot;
++			{{app.Localize('Today so far, updated')}} {{overview ? (overview.generatedAt | date:'shortTime') : ''}}.
++			{{app.Localize('Performance by branch, what needs attention, and every AI setting, in one place.')}}
++		</div>
++	</div>
++
++	<ul class="nav nav-tabs mb-3">
++		<li class="nav-item"><a class="nav-link" [class.active]="tab==='overview'" style="cursor:pointer" (click)="tab='overview'">{{app.Localize('Overview')}}</a></li>
++		<li class="nav-item"><a class="nav-link" [class.active]="tab==='settings'" style="cursor:pointer" (click)="tab='settings'">{{app.Localize('AI Settings')}}</a></li>
++	</ul>
++
++	<!-- ============================ OVERVIEW ============================ -->
++	<div *ngIf="tab==='overview'">
++		<div class="row g-3 mb-3">
++			<div class="col-6 col-lg-2"><div class="hub-tile"><div class="label">{{app.Localize('Sales today')}}</div><div class="value">{{money(totals.salesToday)}}</div></div></div>
++			<div class="col-6 col-lg-2"><div class="hub-tile"><div class="label">{{app.Localize('Transactions')}}</div><div class="value">{{totals.transactionsToday}}</div></div></div>
++			<div class="col-6 col-lg-2"><div class="hub-tile" [class.alert]="totals.openExceptions>0"><div class="label">{{app.Localize('Open exceptions')}}</div><div class="value">{{totals.openExceptions}}</div></div></div>
++			<div class="col-6 col-lg-2"><div class="hub-tile"><div class="label">{{app.Localize('Expiry at risk')}}</div><div class="value">{{money(totals.expiryAtRiskPesos)}}</div></div></div>
++			<div class="col-6 col-lg-2"><div class="hub-tile good"><div class="label">{{app.Localize('Active markdowns')}}</div><div class="value">{{totals.activeMarkdowns}}</div></div></div>
++			<div class="col-6 col-lg-2"><div class="hub-tile" [class.alert]="waiting>0"><div class="label">{{app.Localize('AI proposals waiting')}}</div><div class="value">{{waiting}}</div></div></div>
++		</div>
++
++		<div class="hub-section">
++			<h5>{{app.Localize('Compare your branches')}}</h5>
++			<div class="hub-note mb-2">{{app.Localize('The same numbers for every branch, side by side. A branch is flagged when it has an open exception, expired stock not written off, or a cash difference.')}}</div>
++			<div class="table-responsive">
++				<table class="table align-middle">
++					<thead>
++						<tr>
++							<th>{{app.Localize('Branch')}}</th><th class="bar-cell">{{app.Localize('Sales today')}}</th><th class="text-end">{{app.Localize('Transactions')}}</th>
++							<th class="text-end">{{app.Localize('Cash difference')}}</th><th class="text-end">{{app.Localize('Expiry at risk')}}</th><th class="text-end">{{app.Localize('Expired, not written off')}}</th>
++							<th class="text-end">{{app.Localize('Markdowns')}}</th><th class="text-end">{{app.Localize('Exceptions')}}</th><th>{{app.Localize('Status')}}</th>
++						</tr>
++					</thead>
++					<tbody>
++						<tr *ngFor="let b of branchRows">
++							<td>{{b.name}}</td>
++							<td class="bar-cell"><div>{{money(b.salesToday)}}</div><div class="bar"><span [style.width.%]="salesShare(b)"></span></div></td>
++							<td class="text-end">{{b.transactionsToday}}</td>
++							<td class="text-end">{{money(b.cashVarianceToday)}}</td>
++							<td class="text-end">{{money(b.expiryAtRiskPesos)}}</td>
++							<td class="text-end">{{money(b.expiredUnwrittenPesos)}}</td>
++							<td class="text-end">{{b.activeMarkdowns}}</td>
++							<td class="text-end">{{b.openExceptions}}</td>
++							<td><span class="pill" [class.ok]="!branchNeedsCheck(b)" [class.check]="branchNeedsCheck(b)">{{branchNeedsCheck(b) ? app.Localize('Check') : app.Localize('OK')}}</span></td>
++						</tr>
++						<tr *ngIf="!branchRows.length"><td colspan="9" class="text-center text-muted py-4">{{app.Localize('No branch data yet.')}}</td></tr>
++					</tbody>
++				</table>
++			</div>
++		</div>
++
++		<div class="hub-section">
++			<h5>{{app.Localize('Needs attention')}}</h5>
++			<div class="hub-note mb-2">{{app.Localize('Each line is a plain rule on today\'s numbers. Click through to the screen where it is handled.')}}</div>
++			<div class="rule-row" *ngFor="let r of attention">
++				<span class="pill" [class.check]="r.bad" [class.info]="r.info" [class.ok]="!r.bad && !r.info">{{r.bad ? app.Localize('Act') : (r.info ? app.Localize('Watch') : app.Localize('Clear'))}}</span>
++				<div class="flex-grow-1">{{r.title}}</div>
++				<div class="fw-bold">{{r.count}}</div>
++				<a *ngIf="r.link" [routerLink]="[r.link]" class="small">{{r.linkText}}</a>
++			</div>
++		</div>
++	</div>
++
++	<!-- ============================ AI SETTINGS ============================ -->
++	<div *ngIf="tab==='settings'">
++		<div class="hub-section">
++			<h5>{{app.Localize('This company')}}: {{featuresOn}} {{app.Localize('of')}} {{features.length}} {{app.Localize('AI features on')}}</h5>
++			<div class="hub-note mb-2">{{app.Localize('Switching one off takes effect at once: PesoWeb refuses what that AI proposes. To run one now, or to see its last result, open AI Control.')}}
++				<a [routerLink]="['/ai/control']">{{app.Localize('AI Control')}}</a></div>
++			<div class="table-responsive">
++				<table class="table align-middle mb-0">
++					<tbody>
++						<tr *ngFor="let f of features">
++							<td style="width:260px"><b>{{f.name}}</b></td>
++							<td><span class="pill" [class.ok]="f.buildState==='Built'" [class.info]="f.buildState==='Partial'" [class.check]="f.buildState==='NotBuilt'">{{f.buildState==='Built' ? 'Built' : (f.buildState==='Partial' ? 'Partly built' : 'Not built yet')}}</span></td>
++							<td class="hub-note">{{f.description}}</td>
++							<td class="text-end">
++								<div class="form-check form-switch d-inline-block">
++									<input class="form-check-input" type="checkbox" role="switch" [checked]="f.enabled" [disabled]="busy===f.key" (change)="toggleFeature(f)">
++								</div>
++							</td>
++						</tr>
++					</tbody>
++				</table>
++			</div>
++			<div class="hub-note mt-2">{{app.Localize('Margin floors, approval lanes and auto-approve are set in')}} <a [routerLink]="['/pricing/approvals']">{{app.Localize('Approval Center, Settings')}}</a>.</div>
++		</div>
++
++		<div class="hub-section">
++			<h5>{{app.Localize('Branches')}}</h5>
++			<div class="hub-note mb-2">{{app.Localize('Per branch: whether the AI may mark prices down there, and the hour of the day before which it may not. A person can still mark down by hand. Both rules are enforced by PesoWeb.')}}</div>
++			<div class="table-responsive">
++				<table class="table align-middle mb-0">
++					<thead><tr><th>{{app.Localize('Branch')}}</th><th>{{app.Localize('AI markdowns')}}</th><th>{{app.Localize('Not before')}}</th><th></th></tr></thead>
++					<tbody>
++						<tr *ngFor="let b of branches">
++							<td>{{b.name}}</td>
++							<td>
++								<div class="form-check form-switch">
++									<input class="form-check-input" type="checkbox" role="switch" [(ngModel)]="b.pricingEnabled">
++									<label class="form-check-label small">{{b.pricingEnabled ? app.Localize('On') : app.Localize('Off')}}</label>
++								</div>
++							</td>
++							<td style="width:200px">
++								<select class="form-select form-select-sm" [(ngModel)]="b.clearanceStartHour">
++									<option [ngValue]="null">{{app.Localize('Any time')}}</option>
++									<option *ngFor="let h of hours" [ngValue]="h">{{h < 10 ? '0' + h : h}}:00</option>
++								</select>
++							</td>
++							<td class="text-end"><button type="button" class="btn btn-sm btn-primary" (click)="saveBranch(b)" [disabled]="busy==='b' + b.warehouseId">{{app.Localize('Save')}}</button></td>
++						</tr>
++						<tr *ngIf="!branches.length"><td colspan="4" class="text-center text-muted py-3">{{app.Localize('No branches.')}}</td></tr>
++					</tbody>
++				</table>
++			</div>
++		</div>
++
++		<div class="hub-section" *ngIf="isHead">
++			<h5>{{app.Localize('All companies')}} ({{allCompanies.length}})</h5>
++			<div class="hub-note mb-2">{{app.Localize('Head company only. Every company\'s AI settings in one table (read only). Type to filter by name, email or number.')}}</div>
++			<input type="text" class="form-control mb-2" style="max-width:320px" [(ngModel)]="search" placeholder="Filter companies">
++			<div class="table-responsive">
++				<table class="table align-middle mb-0">
++					<thead>
++						<tr><th>#</th><th>{{app.Localize('Company')}}</th><th>{{app.Localize('AI features on')}}</th><th>{{app.Localize('Pricing autonomy')}}</th><th class="text-end">{{app.Localize('Hard floor')}}</th><th class="text-end">{{app.Localize('Soft floor')}}</th>
++							<th>{{app.Localize('Auto-approve')}}</th><th class="text-end">{{app.Localize('Waiting')}}</th><th class="text-end">{{app.Localize('Branches')}}</th><th class="text-end">{{app.Localize('Branches AI off')}}</th></tr>
++					</thead>
++					<tbody>
++						<tr *ngFor="let c of companyRows">
++							<td>{{c.tenantId}}</td>
++							<td>{{c.company}}<div class="hub-note">{{c.email}}</div></td>
++							<td><span class="pill" [class.ok]="c.featuresOn===c.featuresTotal" [class.info]="c.featuresOn<c.featuresTotal">{{c.featuresOn}} / {{c.featuresTotal}}</span></td>
++							<td>{{c.autonomyMode}}<span class="hub-note" *ngIf="!c.policyConfigured"> ({{app.Localize('no policy')}})</span></td>
++							<td class="text-end">{{c.policyConfigured ? c.hardMarginFloorPct + '%' : '-'}}</td>
++							<td class="text-end">{{c.policyConfigured ? c.softMarginFloorPct + '%' : '-'}}</td>
++							<td>{{c.autoApprove ? app.Localize('On') : app.Localize('Off')}}</td>
++							<td class="text-end">{{c.waiting}}</td>
++							<td class="text-end">{{c.branches}}</td>
++							<td class="text-end">{{c.branchesAiOff}}</td>
++						</tr>
++					</tbody>
++				</table>
++			</div>
++			<div class="hub-note mt-2" *ngIf="allCompanies.length > 60">{{app.Localize('Showing the first 60 matches. Filter to narrow it down.')}}</div>
++		</div>
++	</div>
++</div>
+diff --git a/ClientApp/src/app/ai/aihub/aihub.component.ts b/ClientApp/src/app/ai/aihub/aihub.component.ts
+new file mode 100644
+index 0000000..fb435d2
+--- /dev/null
++++ b/ClientApp/src/app/ai/aihub/aihub.component.ts
+@@ -0,0 +1,145 @@
++import { Component, Inject, OnInit } from '@angular/core';
++import { HttpClient } from '@angular/common/http';
++import { AppService } from '../../services/app.service';
++
++// The Intelligence Hub: one place that shows how the company is doing right now (by branch), what needs attention, and the AI settings
++// at every level: this company, each branch, and (for the head company) every company.
++@Component({
++  selector: 'app-aihub',
++  templateUrl: './aihub.component.html',
++  styles: [`
++    .hub-hero { background: linear-gradient(120deg, #e8f1ff 0%, #f6faff 55%, #fff6ec 100%); border: 1px solid #dbe7fb; border-radius: 16px; padding: 22px 26px; margin-bottom: 18px; }
++    .hub-hero h2 { font-weight: 700; margin: 0 0 4px; }
++    .hub-tile { border: 1px solid #e3ebf8; border-radius: 14px; background: #fff; padding: 14px 16px; height: 100%; }
++    .hub-tile .label { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: #6b7a90; }
++    .hub-tile .value { font-size: 26px; font-weight: 700; }
++    .hub-tile.alert { border-color: #f3c6c6; background: #fff7f7; }
++    .hub-tile.good { border-color: #cfe8d8; background: #f6fcf8; }
++    .hub-section { border: 1px solid #e3ebf8; border-radius: 14px; background: #fff; padding: 16px 18px; margin-bottom: 18px; }
++    .hub-section h5 { font-weight: 700; margin-bottom: 2px; }
++    .hub-note { font-size: 13px; color: #6b7a90; }
++    .bar-cell { min-width: 120px; }
++    .bar-cell .bar { height: 8px; border-radius: 6px; background: #dce9ff; }
++    .bar-cell .bar > span { display: block; height: 8px; border-radius: 6px; background: #3b82f6; }
++    .rule-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-top: 1px solid #eef2f9; }
++    .rule-row:first-of-type { border-top: 0; }
++    .pill { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; }
++    .pill.ok { background: #e6f6ec; color: #1a7f43; }
++    .pill.check { background: #fdecec; color: #b42323; }
++    .pill.info { background: #e8f1ff; color: #1f55b5; }
++  `]
++})
++export class AiHubComponent implements OnInit {
++  public tab = 'overview';
++  public loading = false;
++  public error = '';
++  public message = '';
++
++  public overview: any = null;            // this company, today, by branch
++  public waiting = 0;                     // AI proposals waiting in the Approval Center
++  public features: any[] = [];
++  public branches: any[] = [];
++  public isHead = false;
++  public allCompanies: any[] = [];        // head company: every company's AI settings
++  public search = '';
++  public busy = '';
++  public hours = Array.from({ length: 24 }, (_, i) => i);
++
++  constructor(
++    private http: HttpClient,
++    @Inject('BASE_URL') private baseUrl: string,
++    public app: AppService
++  ) { }
++
++  ngOnInit(): void { this.load(); }
++
++  public load(): void {
++    this.loading = true;
++    this.error = '';
++    this.http.get<any>(this.baseUrl + 'api/ai/hub/overview').subscribe({
++      next: (o) => { this.overview = o; this.loading = false; },
++      error: (e) => { this.error = this.messageOf(e, 'Could not load the overview.'); this.loading = false; }
++    });
++    this.http.get<any>(this.baseUrl + 'api/pricing/approvals').subscribe({ next: (q) => (this.waiting = q.summary ? q.summary.waiting : 0), error: () => { } });
++    this.http.get<any[]>(this.baseUrl + 'api/ai/control').subscribe({ next: (f) => (this.features = f), error: () => { } });
++    this.http.get<any[]>(this.baseUrl + 'api/ai/branch-settings').subscribe({ next: (b) => (this.branches = b), error: () => { } });
++    // Only the head company is allowed this one; everyone else gets a refusal and simply does not see the section.
++    this.http.get<any[]>(this.baseUrl + 'api/ai/settings-overview').subscribe({
++      next: (rows) => { this.allCompanies = rows; this.isHead = true; },
++      error: () => { this.isHead = false; }
++    });
++  }
++
++  // ---- overview -------------------------------------------------------------------------------------------------------
++  public get company(): any {
++    return this.overview && this.overview.tenants && this.overview.tenants.length ? this.overview.tenants[0] : null;
++  }
++
++  public get totals(): any {
++    return this.company ? this.company.totals : { salesToday: 0, transactionsToday: 0, openExceptions: 0, expiryAtRiskPesos: 0, activeMarkdowns: 0, cashVarianceToday: 0, expiredUnwrittenPesos: 0, branches: 0 };
++  }
++
++  public get branchRows(): any[] {
++    const rows = this.company ? [...this.company.branches] : [];
++    return rows.sort((a, b) => b.salesToday - a.salesToday);
++  }
++
++  public salesShare(b: any): number {
++    const max = Math.max(1, ...this.branchRows.map(x => x.salesToday));
++    return Math.round(b.salesToday / max * 100);
++  }
++
++  public branchNeedsCheck(b: any): boolean {
++    return b.openExceptions > 0 || b.expiredUnwrittenPesos > 0 || Math.abs(b.cashVarianceToday) > 0.005;
++  }
++
++  // The rules behind "needs attention": each is a plain check on today's numbers, with the screen to go to.
++  public get attention(): any[] {
++    const t = this.totals;
++    const list: any[] = [];
++    list.push({ title: 'AI price proposals waiting for a decision', count: this.waiting, link: '/pricing/approvals', linkText: 'Open the Approval Center', bad: this.waiting > 0 });
++    list.push({ title: 'Open exceptions', count: t.openExceptions, link: '', linkText: '', bad: t.openExceptions > 0 });
++    list.push({ title: 'Expired stock not yet written off', count: this.money(t.expiredUnwrittenPesos), link: '/inventory/nearexpiry', linkText: 'Open near-expiry monitoring', bad: t.expiredUnwrittenPesos > 0 });
++    list.push({ title: 'Stock close to expiry (at cost)', count: this.money(t.expiryAtRiskPesos), link: '/inventory/nearexpiry', linkText: 'Open near-expiry monitoring', bad: false, info: t.expiryAtRiskPesos > 0 });
++    list.push({ title: 'Cash shifts closed with a difference today', count: this.money(t.cashVarianceToday), link: '', linkText: '', bad: Math.abs(t.cashVarianceToday) > 0.005 });
++    return list;
++  }
++
++  public money(n: number): string {
++    return '₱' + Number(n || 0).toLocaleString(undefined, { maximumFractionDigits: 0 });
++  }
++
++  // ---- AI settings: this company ---------------------------------------------------------------------------------------
++  public get featuresOn(): number { return this.features.filter(f => f.enabled).length; }
++
++  public toggleFeature(f: any): void {
++    if (this.busy) { return; }
++    this.busy = f.key; this.error = ''; this.message = '';
++    this.http.put<any[]>(this.baseUrl + 'api/ai/control/' + f.key, { enabled: !f.enabled }).subscribe({
++      next: (r) => { this.features = r; this.busy = ''; this.message = f.name + (f.enabled ? ' is now off.' : ' is now on.'); },
++      error: (e) => { this.busy = ''; this.error = this.messageOf(e, 'Could not change the switch.'); this.load(); }
++    });
++  }
++
++  // ---- AI settings: branches -------------------------------------------------------------------------------------------
++  public saveBranch(b: any): void {
++    if (this.busy) { return; }
++    this.busy = 'b' + b.warehouseId; this.error = ''; this.message = '';
++    const hour = b.clearanceStartHour === '' || b.clearanceStartHour === undefined ? null : b.clearanceStartHour;
++    this.http.put<any[]>(this.baseUrl + 'api/ai/branch-settings/' + b.warehouseId, { pricingEnabled: b.pricingEnabled, clearanceStartHour: hour }).subscribe({
++      next: (r) => { this.branches = r; this.busy = ''; this.message = 'Saved the AI settings for ' + b.name + '.'; },
++      error: (e) => { this.busy = ''; this.error = this.messageOf(e, 'Could not save the branch settings.'); }
++    });
++  }
++
++  // ---- AI settings: every company (head company) -----------------------------------------------------------------------
++  public get companyRows(): any[] {
++    const q = this.search.trim().toLowerCase();
++    return this.allCompanies.filter(c => !q || (c.company || '').toLowerCase().includes(q) || (c.email || '').toLowerCase().includes(q) || String(c.tenantId) === q)
++      .slice(0, 60);
++  }
++
++  private messageOf(e: any, fallback: string): string {
++    return (e && e.error && (e.error.message || e.error.title)) || fallback;
++  }
++}
+diff --git a/ClientApp/src/app/app.component.html b/ClientApp/src/app/app.component.html
+index 1c2806e..a326a65 100644
+--- a/ClientApp/src/app/app.component.html
++++ b/ClientApp/src/app/app.component.html
+@@ -485,6 +485,15 @@
+ 							</span>
+ 						</a>
+ 					</li>
++					<li *ngIf="app.HasPermission('AI.Control')">
++						<a [routerLinkActive]="'active'"
++							[routerLink]="['/ai/hub']">
++							<i class="fa fa-chart-line"></i>
++							<span>
++								{{app.Localize('Intelligence Hub')}}
++							</span>
++						</a>
++					</li>
+ 					<li *ngIf="app.HasPermission('AI.Control')">
+ 						<a [routerLinkActive]="'active'"
+ 							[routerLink]="['/ai/control']">
+diff --git a/ClientApp/src/app/app.module.ts b/ClientApp/src/app/app.module.ts
+index 4401d18..57a2561 100644
+--- a/ClientApp/src/app/app.module.ts
++++ b/ClientApp/src/app/app.module.ts
+@@ -59,6 +59,7 @@ import { BrandsComponent } from './inventory/brands/brands.component';
+ import { UnitsComponent } from './inventory/units/units.component';
+ import { ApprovalCenterComponent } from './pricing/approvalcenter/approvalcenter.component';
+ import { AiControlComponent } from './ai/aicontrol/aicontrol.component';
++import { AiHubComponent } from './ai/aihub/aihub.component';
+ import { VariationsComponent } from './inventory/variations/variations.component';
+ import { ProductListComponent } from './inventory/products/productlist/productlist.component';
+ import { ProductAddComponent } from './inventory/products/productadd/productadd.component';
+@@ -203,6 +204,7 @@ const routes: Routes = [
+   { path: 'inventory/units', component: UnitsComponent, canActivate: [AuthGuard], data: { permission: "Inventory.Units" } },
+   { path: 'pricing/approvals', component: ApprovalCenterComponent, canActivate: [AuthGuard], data: { permission: "Pricing.View" } },
+   { path: 'ai/control', component: AiControlComponent, canActivate: [AuthGuard], data: { permission: "AI.Control" } },
++  { path: 'ai/hub', component: AiHubComponent, canActivate: [AuthGuard], data: { permission: "AI.Control" } },
+   { path: 'inventory/variations', component: VariationsComponent, canActivate: [AuthGuard], data: { permission: "Inventory.Variations" } },
+   { path: 'inventory/products', component: ProductListComponent, canActivate: [AuthGuard], data: { permission: "Inventory.ProductList" } },
+   { path: 'inventory/products/add', component: ProductAddComponent, canActivate: [AuthGuard], data: { permission: "Inventory.ProductAdd" } },
+@@ -317,6 +319,7 @@ const routes: Routes = [
+     UnitsComponent,
+     ApprovalCenterComponent,
+     AiControlComponent,
++    AiHubComponent,
+     VariationsComponent,
+     ProductListComponent,
+     ProductAddComponent,
+diff --git a/ClientApp/src/app/homemenu/homemenu.component.html b/ClientApp/src/app/homemenu/homemenu.component.html
+index 9460456..6600813 100644
+--- a/ClientApp/src/app/homemenu/homemenu.component.html
++++ b/ClientApp/src/app/homemenu/homemenu.component.html
+@@ -320,6 +320,15 @@
+ 											</span>
+ 										</a>
+ 									</li>
++									<li *ngIf="app.HasPermission('AI.Control')">
++										<a [routerLinkActive]="'active'"
++											[routerLink]="['/ai/hub']">
++											<i class="fa fa-chart-line"></i>
++											<span>
++												{{app.Localize('Intelligence Hub')}}
++											</span>
++										</a>
++									</li>
+ 									<li *ngIf="app.HasPermission('AI.Control')">
+ 										<a [routerLinkActive]="'active'"
+ 											[routerLink]="['/ai/control']">
+-- 
+2.46.0.windows.1
+
