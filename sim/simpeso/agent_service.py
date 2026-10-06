@@ -143,6 +143,8 @@ def main(argv=None) -> int:
     ap.add_argument("--once", action="store_true")
     ap.add_argument("--interval", type=float, default=30.0)
     ap.add_argument("--limit", type=int, default=8, help="most price proposals per Pricing run")
+    ap.add_argument("--mission-source", choices=["sim", "pesoweb"], default="sim",
+                    help="where AI Customer Mission gets baskets: the simulator's visits (a simulated world's sales carry no time of day) or PesoWeb's sales")
     args = ap.parse_args(argv)
     run_dir = runner.RUNS / args.run
     state = json.loads((run_dir / "world.json").read_text(encoding="utf-8"))
@@ -151,7 +153,22 @@ def main(argv=None) -> int:
     drv = PesoWebDriver(args.base_url, "agent-service")
     acct = drv.login(comp["owner"]["email"], comp["owner"]["password"])
     whs = [b["warehouse_id"] for b in comp["branches"].values() if "warehouse_id" in b]
-    agent = AgentRunner(drv, acct, {"Pricing": pricing_handler(drv, acct, whs, model, args.limit), "Replenish": replenish_handler(drv, acct, whs, model)})
+    from . import mission_sim
+
+    def mission_source():
+        if args.mission_source == "pesoweb":
+            return mission_sim.pesoweb_baskets(drv, acct, whs)
+        import argparse as _ap
+        ctx = runner._load(_ap.Namespace(run=args.run, base_url=args.base_url, seed=21, profile="smoke", policy="off", calibration=None, calib_weight=0.5))
+        sim = mission_sim.sim_baskets(ctx, list(range(300, 314)))
+        by_wh = {}
+        for (ck, bk), rows in sim.items():
+            if ck == args.company:
+                by_wh[comp["branches"][bk]["warehouse_id"]] = [b for _, b in rows]
+        return by_wh
+
+    agent = AgentRunner(drv, acct, {"Pricing": pricing_handler(drv, acct, whs, model, args.limit), "Replenish": replenish_handler(drv, acct, whs, model),
+                                    "CustomerMission": mission_sim.mission_handler(drv, acct, whs, mission_source)})
     if args.once:
         agent.poll_once()
         return 0

@@ -76,32 +76,36 @@ The owner sets the guardrails the AI cannot override:
 - **Largest single price increase** and **how long a proposal waits** before it expires.
 - **Auto-approve small, learned changes:** off by default.
 
-### 7a. The Intelligence Hub: where the AI settings, tasks, rules and reorders are
+### 7a. The Intelligence Hub: monitoring, tasks, rules, reorders, missions and the AI settings
 
-The Intelligence Hub (menu: Inventory, then Intelligence Hub) is the home for monitoring and for the AI at every level. It has five tabs.
+The Intelligence Hub (menu: Inventory, then Intelligence Hub) is the home for monitoring and for the AI at every level. It has six tabs.
 
 ![Intelligence Hub overview](screens/17-hub-overview.png)
 
-**Overview.** Pick a period (today, yesterday, last 7 days, last 30 days, this month) and optionally one category. Eight tiles show sales, gross margin, stock turnover, days of stock, shrinkage, expiry at risk, open exceptions and waiting AI proposals, and the page refreshes itself every minute. The branch comparison flags each branch OK or Check. (On the simulated shelves the days-of-stock figure is very high because they are stocked far beyond what sells; that is the simulation, not a calculation fault.)
+**Overview.** Pick a period (today, yesterday, last 7 days, last 30 days, this month), optionally one category and, once branches have regions, one region. Eight tiles show sales, gross margin, stock turnover, days of stock, shrinkage, expiry at risk, open exceptions and waiting AI proposals, and the page refreshes itself every minute. **By region** groups the branches (click a region to filter); **Compare your branches** shows each branch against its sales target (the percentage is sales so far against the daily target for the days elapsed) and its waste against its waste target. (On the simulated shelves the days-of-stock figure is very high because they are stocked far beyond what sells; that is the simulation, not a calculation fault.)
 
 ![My tasks](screens/21-hub-my-tasks.png)
 
-**My tasks.** Everything waiting for the roles the signed-in person holds: AI price proposals to decide, alerts from the rules, and reorders to place. Urgent items first. "Got it" acknowledges an alert (it still closes by itself when the numbers recover); "Ordered" or "Dismiss" settles a reorder.
+**My tasks.** Everything waiting for the roles the signed-in person holds, plus anything assigned to them by name: AI price proposals to decide, alerts from the rules, and reorders to place. Urgent items first. "Got it" acknowledges an alert (it still closes by itself when the numbers recover); "Ordered" or "Dismiss" settles a reorder.
 
-![Reorders suggested by AI Replenish](screens/22-hub-reorders.png)
+![Reorders suggested by AI Replenish, with a draft purchase order made from three of them](screens/22-hub-reorders.png)
 
-**Reorders.** AI Replenish asks, for each product, whether the stock will last until a delivery arrives. Each suggestion shows what is on hand, how fast it sells, the days of cover left, how much to order and about what it costs, and the reasoning in words. A red cover figure means the stock runs out before a delivery could arrive. Perishables are capped at what sells before they expire (see Yakult). PesoWeb does not place the order: you order from the supplier and mark it Ordered. This demo scenario is staged: the fastest sellers at one branch were set down to about a day of stock.
+**Reorders.** AI Replenish asks, for each product, whether the stock will last until a delivery arrives. Each suggestion shows what is on hand, how fast it sells, the days of cover left, how much to order and about what it costs, and the reasoning in words. A red cover figure means the stock runs out before a delivery could arrive. Perishables are capped at what sells before they expire (see Yakult). Tick suggestions and choose **Create draft purchase order**: PesoWeb makes a **Pending** purchase order per branch and supplier (the supplier each product was last bought from), with the same accounting entry any new purchase gets, and no change to stock until it is marked Received. The green box links to the purchase. This demo scenario is staged: the fastest sellers at one branch were set down to about a day of stock.
 
-![Rules](screens/23-hub-rules.png)
+![Customer missions](screens/24-hub-missions.png)
 
-**Rules.** Eight plain rules (expired stock not written off, stock close to expiry, cash shift closed with a difference, selling below cost, shrinkage, too much stock, open exceptions, AI proposals waiting). For each: switch it on or off, set the limit, choose the responsible role and the severity, and choose whether to also email that role (through the company's own mail settings). The last column counts open alerts.
+**Customer missions.** AI Customer Mission works out what shoppers were trying to get done (quick top-up, dinner run, weekly restock, late night, morning grab-and-go) from purchases only: the hour, the number of items, the value, and whether the basket held fresh food. It cannot see intent. Each mission shows its share, the typical basket, the busiest hour, and what it means for stock and staffing. On simulated shoppers it matched their real mission on about 6 baskets in 10 (59%), weakest where an evening quick stop looks just like an after-work top-up, so treat it as a hint.
+
+![Rules, assignees and channels](screens/23-hub-rules.png)
+
+**Rules.** Eight plain rules (expired stock not written off, stock close to expiry, cash shift closed with a difference, selling below cost, shrinkage, too much stock, open exceptions, AI proposals waiting). For each: switch it on or off, set the limit, choose the responsible role, the severity, and optionally **a named person** (who then gets the alert and the email instead of the whole role), and whether to also email. PesoWeb checks the rules itself every few minutes (and when the hub opens, and when the agent runner checks in), so alerts open without anyone looking. **Notifications and channels** lets a company send alerts and price changes to another system through a webhook (a chat room, a shelf-label service, an e-commerce site): public https addresses only, with a test message, and a switch for browser desktop alerts. SMS is not available.
 
 ![AI settings: company and branches](screens/18-hub-ai-settings.png)
 
 **AI Settings.** The settings at each level:
 
 - **This company:** the six AI features, each with a switch (enforced by PesoWeb), and a link to the margin rules in the Approval Center.
-- **Each branch:** whether the AI may mark prices down at that branch, and the hour before which it may not (for example, no markdowns before 20:00). A person can still mark down by hand. PesoWeb enforces both on AI markdowns.
+- **Each branch:** whether the AI may mark prices down there and the hour before which it may not (PesoWeb enforces both on AI markdowns; a person can still mark down by hand), the **region** the branch belongs to, and its **sales target per day** and **waste target**.
 
 ![AI settings: every company](screens/19-hub-head-all-companies.png)
 
@@ -121,7 +125,7 @@ The Approval Center is one inbox for every price change that needs a person. Pro
 
 ![A proposal with its evidence](screens/12-approval-center-owner-lane-item.png)
 
-Select a proposal to see why. This one is a +10% raise on a top-selling beer. The panel shows the cost, the margin before and after, the price sensitivity the AI learned from this shop's own sales, the expected profit and the conservative profit if customers are more price-sensitive, and the rule checks (one amber warning: top sellers go to the owner). The person can approve, reject, or **approve at a different price** with the slider. Everything is logged.
+Select a proposal to see why. This one is a +10% raise on a top-selling beer. The panel shows the cost, the margin before and after, **what rivals charge** (lowest, median, and a check that flags a raise more than 5% above the lowest), the price sensitivity the AI learned from this shop's own sales, the expected profit and the conservative profit if customers are more price-sensitive, and the rule checks (one amber warning: top sellers go to the owner). The rival prices here are a simulated feed; a real company enters them, imports them, or feeds them from a monitoring service. The person can approve, reject, or **approve at a different price** with the slider. Everything is logged.
 
 ---
 

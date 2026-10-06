@@ -15,6 +15,7 @@ import math
 from dataclasses import dataclass, asdict
 
 DEFAULT_STEP_PCT = 10
+COMPETITOR_CAP_PCT = 5.0          # never suggest a raise that lands more than this far above the lowest rival price
 MIN_GAIN_PESOS_PER_DAY = 0.5
 MIN_GAIN_SHARE = 0.02
 STRESS_BETA_SHIFT = 1.0            # the no-regret scenario: customers this much more price-sensitive
@@ -72,8 +73,9 @@ def candidates(price: float, step_pct: int) -> list:
     return sorted(p for p in out if p > 0)
 
 
-def advise_one(p: dict, rate: float, beta: float, beta_source: str, policy: dict, step_pct: int = DEFAULT_STEP_PCT) -> Suggestion:
-    """p: {id, name, category, cost, price}. rate: units per day at today's price (None or 0 = no evidence)."""
+def advise_one(p: dict, rate: float, beta: float, beta_source: str, policy: dict, step_pct: int = DEFAULT_STEP_PCT, competitor_low: float = None) -> Suggestion:
+    """p: {id, name, category, cost, price}. rate: units per day at today's price (None or 0 = no evidence).
+    competitor_low: the lowest price a rival charges for this product, if known; a raise is kept within COMPETITOR_CAP_PCT of it."""
     cost, price = float(p["cost"]), float(p["price"])
     hard, soft = float(policy.get("hardMarginFloorPct", 0)), float(policy.get("softMarginFloorPct", 0))
     fl = floor_price(cost, hard)
@@ -94,8 +96,13 @@ def advise_one(p: dict, rate: float, beta: float, beta_source: str, policy: dict
         return make("no_evidence", price, 0.0, 0.0, 0.0, note)
     units_now, profit_now = _profit(price, cost, rate, price, beta)
     best = (price, units_now, profit_now, 0.0)
+    ceiling = competitor_low * (1 + COMPETITOR_CAP_PCT / 100.0) if competitor_low and competitor_low > 0 else None
+    capped = False
     for cand in candidates(price, step_pct):
         if cand < fl:
+            continue
+        if ceiling is not None and cand > price and cand > ceiling:      # a raise above the rivals' reach is not suggested
+            capped = True
             continue
         units, profit = _profit(cand, cost, rate, price, beta)
         _, worst_new = _profit(cand, cost, rate, price, beta - STRESS_BETA_SHIFT)
@@ -114,15 +121,18 @@ def advise_one(p: dict, rate: float, beta: float, beta_source: str, policy: dict
     src = "learned from this shop's sales" if beta_source == "learned" else "an assumed price sensitivity (not yet learned from sales)"
     reason = (f"{direction} {price:g} to {new_price:g} ({(new_price - price) / price * 100:+.0f}%): expected profit {profit_now:.1f} to {profit_new:.1f} pesos a day "
               f"with sensitivity {beta:.2f}, {src}; if customers are one step more price-sensitive the change still gains {gain_worst:.1f}")
+    if capped and direction == "raise":
+        reason += f"; held within {COMPETITOR_CAP_PCT:g}% of the lowest competitor price {competitor_low:g}"
     return make(direction, new_price, units_new, profit_new, gain_worst, reason, units_now, profit_now)
 
 
-def advise(products: list, rates: dict, beta_for, policy: dict, step_pct: int = DEFAULT_STEP_PCT) -> list:
-    """products: dicts {id, name, category, cost, price}. rates: {product_id: units/day}. beta_for(category) -> (beta, source)."""
+def advise(products: list, rates: dict, beta_for, policy: dict, step_pct: int = DEFAULT_STEP_PCT, competitor_low: dict = None) -> list:
+    """products: dicts {id, name, category, cost, price}. rates: {product_id: units/day}. beta_for(category) -> (beta, source).
+    competitor_low: {product_id: lowest rival price}, optional."""
     out = []
     for p in products:
         beta, src = beta_for(p["category"])
-        out.append(advise_one(p, rates.get(p["id"]), beta, src, policy, step_pct))
+        out.append(advise_one(p, rates.get(p["id"]), beta, src, policy, step_pct, (competitor_low or {}).get(p["id"])))
     return out
 
 

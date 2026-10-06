@@ -110,6 +110,21 @@ Agent side: `sim/simpeso/agent_service.py` (`python -m simpeso.agent_service --r
 
 Agent side: `ai/missionai/replenish.py` (the reorder maths, 10 tests); `sim/simpeso/agent_service.py` gained the Replenish handler and asks PesoWeb to check the rules on every poll; `sim/scripts/hub_demo_seed.py` stages the demo reorder scenario in a simulated world (test-bench housekeeping, throwaway database only).
 
+## Plan 12 addition (the remaining hub features)
+
+`patches/plan12` (tag `plan12-complete`):
+- Migration `AddHubAssigneesRegionsMissionsCompetitorsChannel` (script `scripts/20261006_hub_assignees_regions_missions_competitors_channel.sql`): `AssigneeUserId` on rules and alerts; `Region`, `SalesTargetPerDay`, `WasteTargetPct` on branch settings; `PurchaseId` on reorder suggestions; tables `MissionInsights`, `CompetitorPrices`, `HubChannelSettings`.
+- **Background check:** `HubBackgroundService` evaluates the rules and delivers price changes for companies that have used the hub, every `Hub:BackgroundMinutes` (default 5; 0 switches it off). `Hub:AllowLocalWebhooks` (default off) lets a test webhook point at this machine.
+- **Assignees:** `PUT /api/ai/hub/rules/{key}` takes `assigneeUserId`; `GET /api/ai/hub/assignees`.
+- **Regions and targets:** `PUT /api/ai/branch-settings/{id}` takes `region`, `salesTargetPerDay`, `wasteTargetPct`; `GET /api/ai/hub/metrics` takes `region` and returns a `regions` table.
+- **Draft purchase orders:** `POST /api/ai/replenish/draft-order` (`Purchases.PurchaseAdd` and the store role): Pending purchases per branch and supplier, the usual accounting entry, no stock change.
+- **AI Customer Mission:** `POST /api/ai/missions` (agent), `GET /api/ai/missions`, feed `GET /api/ai/baskets`.
+- **Competitor prices:** `POST` (agent) and `PUT` (a person, `Pricing.Manage`) `/api/ai/competitor-prices`, `GET /api/ai/competitor-prices?productId=`, `GET /api/ai/competitor-summary`; the Approval Center shows them and flags a raise more than 5% above the lowest rival.
+- **Channel:** `GET`/`PUT /api/ai/channel`, `POST /api/ai/channel/test`: a public https webhook for new alerts and price changes (outbox cursor, checked address).
+- Checked by 245 PesoWeb tests, `sim/scripts/hub_extras_check.py` (20 live checks), `hub_background_check.py` (6, run with the test switches), `hub_check.py` (22), `ai_control_check.py` (23), `approval_center_check.py` (17).
+
+Agent side: `ai/missionai/missions.py` (10 tests) and the competitor cap in `price_advisor.py`; `sim/simpeso/mission_sim.py`, `competitors.py`, `scripts/mission_run.py`, `scripts/competitor_feed.py`, and the CustomerMission handler in `agent_service.py`.
+
 ## Live verification environment (no admin rights needed)
 
 PesoWeb databases come from a backup plus SQL scripts, not from running every EF migration (an old migration has a foreign-key cycle, and the history is incomplete). To get a throwaway database on SQL Server LocalDB:

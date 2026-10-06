@@ -309,6 +309,22 @@ class PesoWebDriver:
         q = f"?type={kind}&afterId={after_id}&take=5000" + (f"&warehouseId={warehouse_id}" if warehouse_id else "") + (f"&since={since}" if since else "")
         return (self._call("GET", f"/api/ai/movements{q}", acct.token) or {}).get("movements", [])
 
+    # ---- AI Customer Mission, competitor prices, channel ------------------------------------------------------
+    def baskets(self, acct: Account, warehouse_id: int, after_id: int = 0, since: str = None, take: int = 2000) -> dict:
+        q = f"?warehouseId={warehouse_id}&afterId={after_id}&take={take}" + (f"&since={since}" if since else "")
+        return self._call("GET", f"/api/ai/baskets{q}", acct.token) or {"baskets": [], "nextAfterId": after_id}
+
+    def post_missions(self, acct: Account, warehouse_ids: list, items: list):
+        """items: dicts with WarehouseId, Mission, Baskets, SharePct, AvgItems, AvgValue, PeakHour, Insight, WindowDays. Returns (status, body)."""
+        return self._call("POST", "/api/ai/missions", acct.token, json_body={"WarehouseIds": warehouse_ids, "Items": items}, raw=True)
+
+    def missions(self, acct: Account) -> list:
+        return self._call("GET", "/api/ai/missions", acct.token) or []
+
+    def post_competitor_prices(self, acct: Account, items: list):
+        """items: dicts with ProductId, Competitor, Price (and optionally Source, ObservedAt). Returns (status, body)."""
+        return self._call("POST", "/api/ai/competitor-prices", acct.token, json_body={"Items": items}, raw=True)
+
     # ---- Intelligence Hub: rules, tasks, AI Replenish ---------------------------------------------------------
     def hub_evaluate(self, acct: Account) -> dict:
         """Ask PesoWeb to check the company's hub rules now (opens, updates and closes alerts)."""

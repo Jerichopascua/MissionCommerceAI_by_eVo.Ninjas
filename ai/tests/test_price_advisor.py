@@ -90,3 +90,33 @@ class AdviceTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class CompetitorCapTests(unittest.TestCase):
+    def test_a_raise_is_not_suggested_above_five_percent_over_the_lowest_rival(self):
+        free = pa.advise_one(prod(60, 100), rate=10, beta=-1.0, beta_source="learned", policy=POLICY)
+        capped = pa.advise_one(prod(60, 100), rate=10, beta=-1.0, beta_source="learned", policy=POLICY, competitor_low=101.0)
+        self.assertEqual(free.status, "raise")
+        self.assertLessEqual(capped.suggested_price, 101.0 * 1.05 + 1e-9)
+        self.assertLess(capped.suggested_price, free.suggested_price)
+
+    def test_a_rival_far_below_blocks_every_raise(self):
+        s = pa.advise_one(prod(60, 100), rate=10, beta=-1.0, beta_source="learned", policy=POLICY, competitor_low=80.0)
+        self.assertNotEqual(s.status, "raise")
+
+    def test_the_cap_is_mentioned_when_it_held_a_raise_back(self):
+        s = pa.advise_one(prod(60, 100), rate=10, beta=-1.0, beta_source="learned", policy=POLICY, competitor_low=104.0)
+        self.assertEqual(s.status, "raise")
+        self.assertIn("lowest competitor price", s.reason)
+
+    def test_no_rival_means_no_cap_and_a_lower_price_is_never_blocked(self):
+        a = pa.advise_one(prod(60, 100), rate=10, beta=-1.0, beta_source="learned", policy=POLICY)
+        b = pa.advise_one(prod(60, 100), rate=10, beta=-1.0, beta_source="learned", policy=POLICY, competitor_low=None)
+        self.assertEqual(a.suggested_price, b.suggested_price)
+        low = pa.advise_one(prod(60, 100), rate=10, beta=-4.0, beta_source="learned", policy=POLICY, competitor_low=70.0)
+        self.assertIn(low.status, ("lower", "hold"))
+
+    def test_advise_passes_each_product_its_own_rival_price(self):
+        out = pa.advise([prod(60, 100, pid=1), prod(60, 100, pid=2)], {1: 10, 2: 10}, lambda c: (-1.0, "learned"), POLICY, competitor_low={2: 80.0})
+        self.assertEqual(out[0].status, "raise")
+        self.assertNotEqual(out[1].status, "raise")

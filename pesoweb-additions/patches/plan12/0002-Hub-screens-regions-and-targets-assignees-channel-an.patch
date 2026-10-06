@@ -1,0 +1,461 @@
+From b9f088846ce86dfad20e034e5a93e827dc12796a Mon Sep 17 00:00:00 2001
+From: unknown <jericho.pascua@gmail.com>
+Date: Tue, 6 Oct 2026 16:08:44 +0800
+Subject: [PATCH 2/2] Hub screens: regions and targets, assignees, channel and
+ desktop alerts, draft orders, Customer missions tab; rival prices in the
+ Approval Center
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+---
+ .../src/app/ai/aihub/aihub.component.html     | 117 ++++++++++++++--
+ ClientApp/src/app/ai/aihub/aihub.component.ts | 125 +++++++++++++++++-
+ .../approvalcenter.component.html             |   6 +-
+ 3 files changed, 230 insertions(+), 18 deletions(-)
+
+diff --git a/ClientApp/src/app/ai/aihub/aihub.component.html b/ClientApp/src/app/ai/aihub/aihub.component.html
+index 8d0cd7f..0414163 100644
+--- a/ClientApp/src/app/ai/aihub/aihub.component.html
++++ b/ClientApp/src/app/ai/aihub/aihub.component.html
+@@ -46,6 +46,7 @@
+ 			<span class="badge rounded-pill ms-1" [class.bg-danger]="tasks.act>0" [class.bg-secondary]="tasks.act===0" *ngIf="tasks.total>0">{{tasks.total}}</span></a></li>
+ 		<li class="nav-item"><a class="nav-link" [class.active]="tab==='reorders'" style="cursor:pointer" (click)="tab='reorders'; loadReorders()">{{app.Localize('Reorders')}}
+ 			<span class="badge rounded-pill bg-secondary ms-1" *ngIf="reorders.length>0">{{reorders.length}}</span></a></li>
++		<li class="nav-item"><a class="nav-link" [class.active]="tab==='missions'" style="cursor:pointer" (click)="tab='missions'; loadMissions()">{{app.Localize('Customer missions')}}</a></li>
+ 		<li class="nav-item"><a class="nav-link" [class.active]="tab==='rules'" style="cursor:pointer" (click)="tab='rules'; loadRules()">{{app.Localize('Rules')}}</a></li>
+ 		<li class="nav-item"><a class="nav-link" [class.active]="tab==='settings'" style="cursor:pointer" (click)="tab='settings'">{{app.Localize('AI Settings')}}</a></li>
+ 	</ul>
+@@ -60,6 +61,10 @@
+ 				<option [ngValue]="null">{{app.Localize('All categories')}}</option>
+ 				<option *ngFor="let c of categories" [ngValue]="c.id">{{c.name}}</option>
+ 			</select>
++			<select class="form-select form-select-sm w-auto" *ngIf="regionNames.length > 1 || region" [(ngModel)]="region" (ngModelChange)="loadMetrics(false)">
++				<option value="">{{app.Localize('All regions')}}</option>
++				<option *ngFor="let r of regionNames" [value]="r">{{r}}</option>
++			</select>
+ 			<div class="form-check form-switch mb-0">
+ 				<input class="form-check-input" type="checkbox" role="switch" id="autoRefresh" [(ngModel)]="autoRefresh">
+ 				<label class="form-check-label small" for="autoRefresh">{{app.Localize('Refresh every minute')}}</label>
+@@ -79,6 +84,24 @@
+ 		</div>
+ 		<div class="hub-note mb-3" *ngIf="categoryId">{{app.Localize('Category')}}: {{categoryName}}. {{app.Localize('Sales, cost, stock, shrinkage and expiry follow the category; cash differences, exceptions and markdowns are for the whole company.')}}</div>
+ 
++		<div class="hub-section" *ngIf="showRegions">
++			<h5>{{app.Localize('By region')}}</h5>
++			<div class="hub-note mb-2">{{app.Localize('Branches grouped by the region you set for them under AI Settings.')}}</div>
++			<div class="table-responsive">
++				<table class="table align-middle mb-0">
++					<thead><tr><th>{{app.Localize('Region')}}</th><th class="text-end">{{app.Localize('Branches')}}</th><th class="text-end">{{app.Localize('Sales')}}</th><th class="text-end">{{app.Localize('Gross margin')}}</th>
++						<th class="text-end">{{app.Localize('Sales vs target')}}</th><th class="text-end">{{app.Localize('Shrinkage')}}</th><th class="text-end">{{app.Localize('Exceptions')}}</th></tr></thead>
++					<tbody>
++						<tr *ngFor="let g of metrics.regions" style="cursor:pointer" (click)="region = g.region === 'No region' ? '' : g.region; loadMetrics(false)">
++							<td><b>{{g.region}}</b></td><td class="text-end">{{g.branchCount}}</td><td class="text-end">{{money(g.sales)}}</td><td class="text-end">{{pct(g.marginPct)}}</td>
++							<td class="text-end"><span *ngIf="g.targetPct !== null && g.targetPct !== undefined" class="pill" [class.ok]="g.targetPct>=100" [class.info]="g.targetPct<100">{{num(g.targetPct, 0)}}%</span><span *ngIf="g.targetPct === null || g.targetPct === undefined" class="hub-note">-</span></td>
++							<td class="text-end">{{money(g.shrinkage)}}</td><td class="text-end">{{g.openExceptions}}</td>
++						</tr>
++					</tbody>
++				</table>
++			</div>
++		</div>
++
+ 		<div class="hub-section">
+ 			<h5>{{app.Localize('Compare your branches')}}</h5>
+ 			<div class="hub-note mb-2">{{app.Localize('The same numbers for every branch, side by side. A branch is flagged when it has an open exception, expired stock not written off, or a cash difference.')}}</div>
+@@ -89,12 +112,12 @@
+ 							<th>{{app.Localize('Branch')}}</th><th class="bar-cell">{{app.Localize('Sales')}}</th><th class="text-end">{{app.Localize('Gross margin')}}</th>
+ 							<th class="text-end">{{app.Localize('Turnover')}}</th><th class="text-end">{{app.Localize('Days of stock')}}</th><th class="text-end">{{app.Localize('Shrinkage')}}</th>
+ 							<th class="text-end">{{app.Localize('Expiry at risk')}}</th><th class="text-end">{{app.Localize('Expired, not written off')}}</th>
+-							<th class="text-end">{{app.Localize('Exceptions')}}</th><th>{{app.Localize('Status')}}</th>
++							<th class="text-end">{{app.Localize('Exceptions')}}</th><th class="text-end">{{app.Localize('Sales target')}}</th><th class="text-end">{{app.Localize('Waste / target')}}</th><th>{{app.Localize('Status')}}</th>
+ 						</tr>
+ 					</thead>
+ 					<tbody>
+ 						<tr *ngFor="let b of branchRows">
+-							<td>{{b.name}}</td>
++							<td>{{b.name}}<div class="hub-note" *ngIf="b.region">{{b.region}}</div></td>
+ 							<td class="bar-cell"><div>{{money(b.sales)}}</div><div class="bar"><span [style.width.%]="salesShare(b)"></span></div></td>
+ 							<td class="text-end">{{pct(b.marginPct)}}</td>
+ 							<td class="text-end">{{num(b.turnover, 2)}}&times;</td>
+@@ -103,9 +126,11 @@
+ 							<td class="text-end">{{money(b.expiryAtRisk)}}</td>
+ 							<td class="text-end">{{money(b.expiredUnwritten)}}</td>
+ 							<td class="text-end">{{b.openExceptions}}</td>
++							<td class="text-end"><span *ngIf="b.targetPct !== null && b.targetPct !== undefined" class="pill" [class.ok]="b.targetPct>=100" [class.info]="b.targetPct<100">{{num(b.targetPct, 0)}}%</span><span *ngIf="b.targetPct === null || b.targetPct === undefined" class="hub-note">-</span></td>
++							<td class="text-end"><span *ngIf="b.wasteTargetPct !== null && b.wasteTargetPct !== undefined" class="pill" [class.ok]="b.wastePct === null || b.wastePct <= b.wasteTargetPct" [class.check]="b.wastePct !== null && b.wastePct > b.wasteTargetPct">{{pct(b.wastePct)}} / {{pct(b.wasteTargetPct)}}</span><span *ngIf="b.wasteTargetPct === null || b.wasteTargetPct === undefined" class="hub-note">-</span></td>
+ 							<td><span class="pill" [class.ok]="!branchNeedsCheck(b)" [class.check]="branchNeedsCheck(b)">{{branchNeedsCheck(b) ? app.Localize('Check') : app.Localize('OK')}}</span></td>
+ 						</tr>
+-						<tr *ngIf="!branchRows.length"><td colspan="10" class="text-center text-muted py-4">{{app.Localize('No branch data yet.')}}</td></tr>
++						<tr *ngIf="!branchRows.length"><td colspan="12" class="text-center text-muted py-4">{{app.Localize('No branch data yet.')}}</td></tr>
+ 					</tbody>
+ 				</table>
+ 			</div>
+@@ -141,7 +166,7 @@
+ 				<span class="pill info" style="min-width:74px;text-align:center">{{kindLabel(k.kind)}}</span>
+ 				<div class="flex-grow-1">
+ 					<div>{{k.title}}</div>
+-					<div class="hub-note">{{k.branch}} &middot; {{k.detail}} &middot; {{ageText(k.openedAt)}}</div>
++					<div class="hub-note">{{k.branch}} &middot; {{k.detail}} &middot; {{ageText(k.openedAt)}}<span *ngIf="k.assignee"> &middot; {{app.Localize('assigned to')}} {{k.assignee}}<span *ngIf="k.assignedToMe"> ({{app.Localize('you')}})</span></span></div>
+ 				</div>
+ 				<a *ngIf="k.link" [routerLink]="[k.link]" class="small">{{app.Localize('Open')}}</a>
+ 				<button *ngIf="k.kind==='Alert'" type="button" class="btn btn-sm btn-outline-secondary" [disabled]="k.acknowledged || busy===k.key" (click)="acknowledge(k)">{{k.acknowledged ? app.Localize('Seen') : app.Localize('Got it')}}</button>
+@@ -161,14 +186,23 @@
+ 					<h5>{{app.Localize('Reorders suggested by AI Replenish')}}</h5>
+ 					<div class="hub-note">{{app.Localize('For each product: will the stock last until a delivery arrives, given how fast it sells? These are suggestions. Place the order with your supplier as usual, then mark it Ordered.')}}</div>
+ 				</div>
+-				<button type="button" class="btn btn-sm btn-primary" (click)="runReplenish()" [disabled]="busy==='run'"><i class="fa fa-play me-1"></i>{{app.Localize('Run AI Replenish now')}}</button>
++				<div class="d-flex gap-2 flex-wrap">
++					<button type="button" class="btn btn-sm btn-outline-primary" (click)="createDraftOrders()" [disabled]="busy==='draft' || !selectedCount"><i class="fa fa-file-invoice me-1"></i>{{app.Localize('Create draft purchase order')}} ({{selectedCount}})</button>
++					<button type="button" class="btn btn-sm btn-primary" (click)="runReplenish()" [disabled]="busy==='run'"><i class="fa fa-play me-1"></i>{{app.Localize('Run AI Replenish now')}}</button>
++				</div>
++			</div>
++			<div class="alert alert-success mt-2 mb-0" *ngIf="draftOrders.length">
++				<div *ngFor="let o of draftOrders">{{o.branch}}: {{o.lines}} line(s), about {{money(o.total)}} from {{o.supplier}} &middot;
++					<a [routerLink]="['/purchases/edit', o.purchaseId]">{{app.Localize('Open purchase')}} #{{o.purchaseId}}</a></div>
++				<div class="small">{{app.Localize('The order is Pending: PesoWeb adds stock only when it is marked Received.')}}</div>
+ 			</div>
+ 			<div class="table-responsive mt-2">
+ 				<table class="table align-middle mb-0">
+-					<thead><tr><th>{{app.Localize('Branch')}}</th><th>{{app.Localize('Product')}}</th><th class="text-end">{{app.Localize('On hand')}}</th><th class="text-end">{{app.Localize('Sells a day')}}</th>
++					<thead><tr><th style="width:34px"><input type="checkbox" class="form-check-input" (change)="toggleAllReorders($any($event.target).checked)"></th><th>{{app.Localize('Branch')}}</th><th>{{app.Localize('Product')}}</th><th class="text-end">{{app.Localize('On hand')}}</th><th class="text-end">{{app.Localize('Sells a day')}}</th>
+ 						<th class="text-end">{{app.Localize('Days of cover')}}</th><th class="text-end">{{app.Localize('Order')}}</th><th class="text-end">{{app.Localize('About')}}</th><th>{{app.Localize('Evidence')}}</th><th></th></tr></thead>
+ 					<tbody>
+ 						<tr *ngFor="let r of reorders">
++							<td><input type="checkbox" class="form-check-input" [(ngModel)]="selectedReorders[r.id]"></td>
+ 							<td>{{r.branch}}</td>
+ 							<td>{{r.product}}<div class="hub-note">{{r.reason}}</div></td>
+ 							<td class="text-end">{{num(r.onHand, 0)}}</td>
+@@ -182,7 +216,7 @@
+ 								<button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="busy==='r' + r.id" (click)="decideReorder(r.id, 'Dismissed')">{{app.Localize('Dismiss')}}</button>
+ 							</td>
+ 						</tr>
+-						<tr *ngIf="!reorders.length"><td colspan="9" class="text-center text-muted py-4">{{app.Localize('No reorders suggested right now. Run AI Replenish to check.')}}</td></tr>
++						<tr *ngIf="!reorders.length"><td colspan="10" class="text-center text-muted py-4">{{app.Localize('No reorders suggested right now. Run AI Replenish to check.')}}</td></tr>
+ 					</tbody>
+ 				</table>
+ 			</div>
+@@ -193,10 +227,10 @@
+ 	<div *ngIf="tab==='rules'">
+ 		<div class="hub-section">
+ 			<h5>{{app.Localize('Rules')}}</h5>
+-			<div class="hub-note mb-2">{{app.Localize('Each rule is a plain check on your numbers. When a branch breaks it, an alert opens for the role you choose, shows in My tasks, and closes by itself when the numbers recover. Rules are checked whenever the hub is opened and every time the agent runner checks in.')}}</div>
++			<div class="hub-note mb-2">{{app.Localize('Each rule is a plain check on your numbers. When a branch breaks it, an alert opens for the role you choose, shows in My tasks, and closes by itself when the numbers recover. Rules are checked by PesoWeb itself every few minutes, whenever the hub is opened, and every time the agent runner checks in.')}}</div>
+ 			<div class="table-responsive">
+ 				<table class="table align-middle mb-0">
+-					<thead><tr><th>{{app.Localize('On')}}</th><th>{{app.Localize('Rule')}}</th><th style="width:150px">{{app.Localize('Limit')}}</th><th style="width:170px">{{app.Localize('Responsible')}}</th><th style="width:110px">{{app.Localize('Severity')}}</th><th>{{app.Localize('Email')}}</th><th>{{app.Localize('Open')}}</th><th></th></tr></thead>
++					<thead><tr><th>{{app.Localize('On')}}</th><th>{{app.Localize('Rule')}}</th><th style="width:150px">{{app.Localize('Limit')}}</th><th style="width:170px">{{app.Localize('Responsible')}}</th><th style="width:110px">{{app.Localize('Severity')}}</th><th style="width:170px">{{app.Localize('Assigned to')}}</th><th>{{app.Localize('Email')}}</th><th>{{app.Localize('Open')}}</th><th></th></tr></thead>
+ 					<tbody>
+ 						<tr *ngFor="let r of rules">
+ 							<td><div class="form-check form-switch"><input class="form-check-input" type="checkbox" role="switch" [(ngModel)]="r.enabled"></div></td>
+@@ -210,6 +244,7 @@
+ 							</td>
+ 							<td><select class="form-select form-select-sm" [(ngModel)]="r.role"><option *ngFor="let x of roles" [value]="x">{{x}}</option></select></td>
+ 							<td><select class="form-select form-select-sm" [(ngModel)]="r.severity"><option value="Act">Act</option><option value="Watch">Watch</option></select></td>
++							<td><select class="form-select form-select-sm" [(ngModel)]="r.assigneeUserId"><option [ngValue]="null">{{app.Localize('Anyone with the role')}}</option><option *ngFor="let u of assignees" [ngValue]="u.id">{{u.name}}</option></select></td>
+ 							<td><div class="form-check form-switch"><input class="form-check-input" type="checkbox" role="switch" [(ngModel)]="r.notifyEmail"></div></td>
+ 							<td><span class="pill" [class.check]="r.openAlerts>0" [class.ok]="r.openAlerts===0">{{r.openAlerts}}</span></td>
+ 							<td class="text-end"><button type="button" class="btn btn-sm btn-primary" (click)="saveRule(r)" [disabled]="busy==='rule' + r.key">{{app.Localize('Save')}}</button></td>
+@@ -217,8 +252,63 @@
+ 					</tbody>
+ 				</table>
+ 			</div>
++			<div class="hub-note mt-2">{{app.Localize('A named person gets the alert (and the email) instead of the whole role; people who hold the role still see it in My tasks.')}}</div>
+ 			<div class="hub-note mt-2">{{app.Localize('Email goes to the people who hold the responsible role, through your mail settings (Settings, E-Mail). If no mail server is set up, nothing is sent and the alert still shows here.')}}</div>
+ 		</div>
++
++		<div class="hub-section">
++			<h5>{{app.Localize('Notifications and channels')}}</h5>
++			<div class="hub-note mb-2">{{app.Localize('Send alerts and price changes to another system: a chat room, a shelf-label service or an e-commerce site that accepts a web address (webhook). PesoWeb posts a JSON message with a readable "text" field. The address must be a public https address.')}}</div>
++			<div class="row g-2 align-items-end">
++				<div class="col-md-6">
++					<label class="form-label small mb-0">{{app.Localize('Webhook address')}}</label>
++					<input type="url" class="form-control form-control-sm" placeholder="https://" [(ngModel)]="channel.webhookUrl">
++				</div>
++				<div class="col-auto"><div class="form-check form-switch"><input class="form-check-input" type="checkbox" role="switch" id="chAlerts" [(ngModel)]="channel.sendAlerts"><label class="form-check-label small" for="chAlerts">{{app.Localize('New alerts')}}</label></div></div>
++				<div class="col-auto"><div class="form-check form-switch"><input class="form-check-input" type="checkbox" role="switch" id="chPrices" [(ngModel)]="channel.sendPriceChanges"><label class="form-check-label small" for="chPrices">{{app.Localize('Price changes')}}</label></div></div>
++				<div class="col-auto">
++					<button type="button" class="btn btn-sm btn-primary me-1" (click)="saveChannel()" [disabled]="busy==='channel'">{{app.Localize('Save')}}</button>
++					<button type="button" class="btn btn-sm btn-outline-secondary" (click)="testChannel()" [disabled]="busy==='channel' || !channel.configured">{{app.Localize('Send a test message')}}</button>
++				</div>
++			</div>
++			<div class="hub-note mt-2" *ngIf="channel.lastStatus">{{app.Localize('Last message')}}: {{channel.lastStatus}} <span *ngIf="channel.lastSentAt">&middot; {{channel.lastSentAt | date:'medium'}}</span></div>
++			<div class="mt-3">
++				<button type="button" class="btn btn-sm btn-outline-primary" (click)="enableDesktopAlerts()" [disabled]="desktopAlerts"><i class="fa fa-bell me-1"></i>{{desktopAlerts ? app.Localize('Desktop alerts are on') : app.Localize('Turn on desktop alerts')}}</button>
++				<span class="hub-note ms-2">{{app.Localize('A notification pops up in this browser when something new needs action, while this page is open. SMS is not available.')}}</span>
++			</div>
++		</div>
++	</div>
++
++	<!-- ============================ CUSTOMER MISSIONS ============================ -->
++	<div *ngIf="tab==='missions'">
++		<div class="hub-section">
++			<div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
++				<div>
++					<h5>{{app.Localize('What shoppers were trying to get done')}}</h5>
++					<div class="hub-note">{{app.Localize('AI Customer Mission reads purchases only: when a basket was bought, how many items, how much, whether it held fresh food. It cannot see intent, so each mission is an inference from the shape of the basket. On simulated shoppers it matched their real mission on about 6 baskets in 10: treat it as a hint, not a fact.')}}</div>
++				</div>
++				<button type="button" class="btn btn-sm btn-primary" (click)="runMission()" [disabled]="busy==='mission'"><i class="fa fa-play me-1"></i>{{app.Localize('Run AI Customer Mission now')}}</button>
++			</div>
++			<div *ngIf="!missionBranches.length" class="text-center text-muted py-4">{{app.Localize('Nothing yet. Run AI Customer Mission to see the picture for each branch.')}}</div>
++			<div class="mt-3" *ngFor="let g of missionBranches">
++				<div class="fw-bold">{{g.branch}} <span class="hub-note">&middot; {{g.baskets}} {{app.Localize('baskets')}}, {{app.Localize('last')}} {{g.rows[0].windowDays}} {{app.Localize('days')}}</span></div>
++				<div class="table-responsive">
++					<table class="table align-middle mb-0">
++						<thead><tr><th>{{app.Localize('Mission')}}</th><th class="bar-cell">{{app.Localize('Share')}}</th><th class="text-end">{{app.Localize('Baskets')}}</th><th class="text-end">{{app.Localize('Typical basket')}}</th><th class="text-end">{{app.Localize('Busiest hour')}}</th><th>{{app.Localize('What it means')}}</th></tr></thead>
++						<tbody>
++							<tr *ngFor="let m of g.rows">
++								<td><b>{{m.mission}}</b></td>
++								<td class="bar-cell"><div>{{num(m.sharePct, 0)}}%</div><div class="bar"><span [style.width.%]="m.sharePct"></span></div></td>
++								<td class="text-end">{{m.baskets}}</td>
++								<td class="text-end">{{num(m.avgItems, 1)}} {{app.Localize('items')}}, {{money(m.avgValue)}}</td>
++								<td class="text-end">{{m.peakHour !== null && m.peakHour !== undefined ? (m.peakHour < 10 ? '0' + m.peakHour : m.peakHour) + ':00' : '-'}}</td>
++								<td class="hub-note" style="max-width:420px">{{m.insight}}</td>
++							</tr>
++						</tbody>
++					</table>
++				</div>
++			</div>
++		</div>
+ 	</div>
+ 
+ 	<!-- ============================ AI SETTINGS ============================ -->
+@@ -248,10 +338,10 @@
+ 
+ 		<div class="hub-section">
+ 			<h5>{{app.Localize('Branches')}}</h5>
+-			<div class="hub-note mb-2">{{app.Localize('Per branch: whether the AI may mark prices down there, and the hour of the day before which it may not. A person can still mark down by hand. Both rules are enforced by PesoWeb.')}}</div>
++			<div class="hub-note mb-2">{{app.Localize('Per branch: whether the AI may mark prices down there, and the hour before which it may not (a person can still mark down by hand; PesoWeb enforces both). Also the region it belongs to and its targets, which the Overview then compares against.')}}</div>
+ 			<div class="table-responsive">
+ 				<table class="table align-middle mb-0">
+-					<thead><tr><th>{{app.Localize('Branch')}}</th><th>{{app.Localize('AI markdowns')}}</th><th>{{app.Localize('Not before')}}</th><th></th></tr></thead>
++					<thead><tr><th>{{app.Localize('Branch')}}</th><th>{{app.Localize('AI markdowns')}}</th><th>{{app.Localize('Not before')}}</th><th>{{app.Localize('Region')}}</th><th>{{app.Localize('Sales target per day')}}</th><th>{{app.Localize('Waste target (% of cost of sales)')}}</th><th></th></tr></thead>
+ 					<tbody>
+ 						<tr *ngFor="let b of branches">
+ 							<td>{{b.name}}</td>
+@@ -267,9 +357,12 @@
+ 									<option *ngFor="let h of hours" [ngValue]="h">{{h < 10 ? '0' + h : h}}:00</option>
+ 								</select>
+ 							</td>
++							<td style="width:160px"><input type="text" class="form-control form-control-sm" maxlength="60" placeholder="e.g. Metro Manila" [(ngModel)]="b.region"></td>
++							<td style="width:140px"><input type="number" min="0" class="form-control form-control-sm" [(ngModel)]="b.salesTargetPerDay"></td>
++							<td style="width:140px"><input type="number" min="0" max="100" class="form-control form-control-sm" [(ngModel)]="b.wasteTargetPct"></td>
+ 							<td class="text-end"><button type="button" class="btn btn-sm btn-primary" (click)="saveBranch(b)" [disabled]="busy==='b' + b.warehouseId">{{app.Localize('Save')}}</button></td>
+ 						</tr>
+-						<tr *ngIf="!branches.length"><td colspan="4" class="text-center text-muted py-3">{{app.Localize('No branches.')}}</td></tr>
++						<tr *ngIf="!branches.length"><td colspan="7" class="text-center text-muted py-3">{{app.Localize('No branches.')}}</td></tr>
+ 					</tbody>
+ 				</table>
+ 			</div>
+diff --git a/ClientApp/src/app/ai/aihub/aihub.component.ts b/ClientApp/src/app/ai/aihub/aihub.component.ts
+index 2dcda4d..e555808 100644
+--- a/ClientApp/src/app/ai/aihub/aihub.component.ts
++++ b/ClientApp/src/app/ai/aihub/aihub.component.ts
+@@ -54,6 +54,14 @@ export class AiHubComponent implements OnInit, OnDestroy {
+ 
+   // my tasks, reorders and rules
+   public tasks: any = { items: [], total: 0, act: 0, approvals: 0, alerts: 0, reorders: 0 };
++  public region = '';
++  public missions: any[] = [];
++  public assignees: any[] = [];
++  public channel: any = { webhookUrl: '', sendAlerts: true, sendPriceChanges: false, lastStatus: null, lastSentAt: null };
++  public selectedReorders: { [id: number]: boolean } = {};
++  public draftOrders: any[] = [];
++  public desktopAlerts = false;
++  private lastAct = -1;
+   public reorders: any[] = [];
+   public rules: any[] = [];
+   public roles = ['Store manager', 'Pricing manager', 'Owner'];
+@@ -93,6 +101,10 @@ export class AiHubComponent implements OnInit, OnDestroy {
+     this.loadTasks();
+     this.loadReorders();
+     this.loadRules();
++    this.loadMissions();
++    this.loadAssignees();
++    this.loadChannel();
++    this.desktopAlerts = typeof Notification !== 'undefined' && Notification.permission === 'granted';
+     // Only the head company is allowed this one; everyone else gets a refusal and simply does not see the section.
+     this.http.get<any[]>(this.baseUrl + 'api/ai/settings-overview').subscribe({
+       next: (rows) => { this.allCompanies = rows; this.isHead = true; },
+@@ -100,10 +112,14 @@ export class AiHubComponent implements OnInit, OnDestroy {
+     });
+   }
+ 
++  private numOrNull(v: any): number | null {
++    return v === '' || v === null || v === undefined || isNaN(Number(v)) ? null : Number(v);
++  }
++
+   public loadMetrics(quiet: boolean): void {
+     if (!quiet) { this.loading = true; }
+     this.error = '';
+-    const q = 'period=' + this.period + (this.categoryId ? '&categoryId=' + this.categoryId : '');
++    const q = 'period=' + this.period + (this.categoryId ? '&categoryId=' + this.categoryId : '') + (this.region ? '&region=' + encodeURIComponent(this.region) : '');
+     this.http.get<any>(this.baseUrl + 'api/ai/hub/metrics?' + q).subscribe({
+       next: (m) => { this.metrics = m; this.lastLoaded = new Date(); this.loading = false; },
+       error: (e) => { this.error = this.messageOf(e, 'Could not load the overview.'); this.loading = false; }
+@@ -121,6 +137,15 @@ export class AiHubComponent implements OnInit, OnDestroy {
+ 
+   public get companyName(): string { return this.metrics && this.metrics.companyName ? this.metrics.companyName : ''; }
+ 
++  public get regionNames(): string[] {
++    return this.metrics && this.metrics.regions ? this.metrics.regions.map((r: any) => r.region) : [];
++  }
++
++  public get showRegions(): boolean {
++    const r = this.metrics && this.metrics.regions ? this.metrics.regions : [];
++    return r.length > 1 || (r.length === 1 && r[0].region !== 'No region');
++  }
++
+   public get branchRows(): any[] {
+     const rows = this.metrics ? [...this.metrics.branches] : [];
+     return rows.sort((a, b) => b.sales - a.sales);
+@@ -168,7 +193,17 @@ export class AiHubComponent implements OnInit, OnDestroy {
+ 
+   // ---- my tasks ---------------------------------------------------------------------------------------------------------
+   public loadTasks(): void {
+-    this.http.get<any>(this.baseUrl + 'api/ai/hub/tasks').subscribe({ next: (t) => (this.tasks = t), error: () => { } });
++    this.http.get<any>(this.baseUrl + 'api/ai/hub/tasks').subscribe({
++      next: (t) => {
++        // a browser notification when more things need action than the last time we looked (only if the person allowed it)
++        if (this.desktopAlerts && this.lastAct >= 0 && t.act > this.lastAct && typeof Notification !== 'undefined' && Notification.permission === 'granted') {
++          new Notification('Intelligence Hub', { body: (t.act - this.lastAct) + ' new item(s) need action' });
++        }
++        this.lastAct = t.act;
++        this.tasks = t;
++      },
++      error: () => { }
++    });
+   }
+ 
+   public acknowledge(task: any): void {
+@@ -210,6 +245,88 @@ export class AiHubComponent implements OnInit, OnDestroy {
+     });
+   }
+ 
++
++  // ---- customer missions ------------------------------------------------------------------------------------------------
++  public loadMissions(): void {
++    this.http.get<any[]>(this.baseUrl + 'api/ai/missions').subscribe({ next: (m) => (this.missions = m), error: () => { } });
++  }
++
++  public get missionBranches(): any[] {
++    const by: { [k: number]: any } = {};
++    for (const m of this.missions) {
++      (by[m.warehouseId] = by[m.warehouseId] || { warehouseId: m.warehouseId, branch: m.branch, rows: [], updatedAt: m.updatedAt, baskets: 0 });
++      by[m.warehouseId].rows.push(m);
++      by[m.warehouseId].baskets += m.baskets;
++    }
++    return Object.values(by);
++  }
++
++  public runMission(): void {
++    if (this.busy) { return; }
++    this.busy = 'mission'; this.error = ''; this.message = '';
++    this.http.post<any>(this.baseUrl + 'api/ai/control/run/CustomerMission', {}).subscribe({
++      next: () => { this.busy = ''; this.message = 'AI Customer Mission was asked to run. The agent picks it up when it next checks; refresh in a minute.'; },
++      error: (e) => { this.busy = ''; this.error = this.messageOf(e, 'Could not request a run.'); }
++    });
++  }
++
++  // ---- assignees, channel, desktop alerts -------------------------------------------------------------------------------
++  public loadAssignees(): void {
++    this.http.get<any[]>(this.baseUrl + 'api/ai/hub/assignees').subscribe({ next: (a) => (this.assignees = a), error: () => { } });
++  }
++
++  public loadChannel(): void {
++    this.http.get<any>(this.baseUrl + 'api/ai/channel').subscribe({ next: (c) => (this.channel = c), error: () => { } });
++  }
++
++  public saveChannel(): void {
++    if (this.busy) { return; }
++    this.busy = 'channel'; this.error = ''; this.message = '';
++    this.http.put<any>(this.baseUrl + 'api/ai/channel', { webhookUrl: this.channel.webhookUrl, sendAlerts: this.channel.sendAlerts, sendPriceChanges: this.channel.sendPriceChanges }).subscribe({
++      next: (c) => { this.channel = c; this.busy = ''; this.message = 'Saved the notification channel.'; },
++      error: (e) => { this.busy = ''; this.error = this.messageOf(e, 'Could not save the channel.'); }
++    });
++  }
++
++  public testChannel(): void {
++    if (this.busy) { return; }
++    this.busy = 'channel'; this.error = ''; this.message = '';
++    this.http.post<any>(this.baseUrl + 'api/ai/channel/test', {}).subscribe({
++      next: (c) => { this.channel = c; this.busy = ''; this.message = 'The test message was delivered.'; },
++      error: (e) => { this.busy = ''; this.error = this.messageOf(e, 'The test message failed.'); this.loadChannel(); }
++    });
++  }
++
++  public enableDesktopAlerts(): void {
++    if (typeof Notification === 'undefined') { this.error = 'This browser cannot show desktop notifications.'; return; }
++    Notification.requestPermission().then((p) => {
++      this.desktopAlerts = p === 'granted';
++      this.message = this.desktopAlerts ? 'Desktop alerts are on while this page is open.' : 'Desktop alerts were not allowed by the browser.';
++    });
++  }
++
++  // ---- draft purchase orders ----------------------------------------------------------------------------------------------
++  public get selectedCount(): number { return Object.keys(this.selectedReorders).filter(k => this.selectedReorders[+k]).length; }
++
++  public toggleAllReorders(on: boolean): void {
++    this.selectedReorders = {};
++    if (on) { for (const r of this.reorders) { this.selectedReorders[r.id] = true; } }
++  }
++
++  public createDraftOrders(): void {
++    if (this.busy || !this.selectedCount) { return; }
++    this.busy = 'draft'; this.error = ''; this.message = '';
++    const ids = Object.keys(this.selectedReorders).filter(k => this.selectedReorders[+k]).map(k => +k);
++    this.http.post<any>(this.baseUrl + 'api/ai/replenish/draft-order', { ids }).subscribe({
++      next: (r) => {
++        this.busy = ''; this.draftOrders = r.orders || []; this.selectedReorders = {};
++        this.message = this.draftOrders.length + ' draft purchase order(s) created with status Pending. Stock does not change until you receive them.';
++        this.loadReorders(); this.loadTasks();
++      },
++      error: (e) => { this.busy = ''; this.error = this.messageOf(e, 'Could not create the draft orders.'); }
++    });
++  }
++
+   // ---- rules ------------------------------------------------------------------------------------------------------------
+   public loadRules(): void {
+     this.http.get<any[]>(this.baseUrl + 'api/ai/hub/rules').subscribe({ next: (r) => (this.rules = r), error: () => { } });
+@@ -219,7 +336,7 @@ export class AiHubComponent implements OnInit, OnDestroy {
+     if (this.busy) { return; }
+     this.busy = 'rule' + r.key; this.error = ''; this.message = '';
+     this.http.put<any[]>(this.baseUrl + 'api/ai/hub/rules/' + r.key,
+-      { enabled: r.enabled, threshold: Number(r.threshold), role: r.role, severity: r.severity, notifyEmail: r.notifyEmail }).subscribe({
++      { enabled: r.enabled, threshold: Number(r.threshold), role: r.role, severity: r.severity, notifyEmail: r.notifyEmail, assigneeUserId: r.assigneeUserId || null }).subscribe({
+       next: (list) => { this.rules = list; this.busy = ''; this.message = 'Saved the rule "' + r.name + '". It was checked again straight away.'; this.loadTasks(); },
+       error: (e) => { this.busy = ''; this.error = this.messageOf(e, 'Could not save the rule.'); }
+     });
+@@ -244,7 +361,7 @@ export class AiHubComponent implements OnInit, OnDestroy {
+     if (this.busy) { return; }
+     this.busy = 'b' + b.warehouseId; this.error = ''; this.message = '';
+     const hour = b.clearanceStartHour === '' || b.clearanceStartHour === undefined ? null : b.clearanceStartHour;
+-    this.http.put<any[]>(this.baseUrl + 'api/ai/branch-settings/' + b.warehouseId, { pricingEnabled: b.pricingEnabled, clearanceStartHour: hour }).subscribe({
++    this.http.put<any[]>(this.baseUrl + 'api/ai/branch-settings/' + b.warehouseId, { pricingEnabled: b.pricingEnabled, clearanceStartHour: hour, region: b.region || null, salesTargetPerDay: this.numOrNull(b.salesTargetPerDay), wasteTargetPct: this.numOrNull(b.wasteTargetPct) }).subscribe({
+       next: (r) => { this.branches = r; this.busy = ''; this.message = 'Saved the AI settings for ' + b.name + '.'; },
+       error: (e) => { this.busy = ''; this.error = this.messageOf(e, 'Could not save the branch settings.'); }
+     });
+diff --git a/ClientApp/src/app/pricing/approvalcenter/approvalcenter.component.html b/ClientApp/src/app/pricing/approvalcenter/approvalcenter.component.html
+index e6381c0..3464613 100644
+--- a/ClientApp/src/app/pricing/approvalcenter/approvalcenter.component.html
++++ b/ClientApp/src/app/pricing/approvalcenter/approvalcenter.component.html
+@@ -204,6 +204,8 @@
+ 					<dl class="row small mb-2">
+ 						<dt class="col-5 text-muted fw-normal">{{app.Localize('Cost')}}</dt><dd class="col-7">{{s.cost}}</dd>
+ 						<dt class="col-5 text-muted fw-normal">{{app.Localize('Margin now to after')}}</dt><dd class="col-7">{{s.marginNowPct}}% &rarr; {{s.marginAfterPct}}%</dd>
++						<dt class="col-5 text-muted fw-normal" *ngIf="s.competitorCount">{{app.Localize('Competitors')}}</dt>
++						<dd class="col-7" *ngIf="s.competitorCount">{{s.competitorCount}} {{app.Localize('rivals')}}: {{app.Localize('lowest')}} {{s.competitorLowest}} ({{s.competitorLowestName}}), {{app.Localize('median')}} {{s.competitorMedian}}</dd>
+ 						<dt class="col-5 text-muted fw-normal" *ngIf="s.evidence">{{app.Localize('Price sensitivity')}}</dt><dd class="col-7" *ngIf="s.evidence">{{s.evidence}}</dd>
+ 						<dt class="col-5 text-muted fw-normal" *ngIf="s.gainPerDay">{{app.Localize('Profit per day')}}</dt>
+ 						<dd class="col-7" *ngIf="s.gainPerDay">+{{money(s.gainPerDay)}} expected, +{{money(s.gainConservativePerDay)}} if customers are more price-sensitive</dd>
+@@ -215,8 +217,8 @@
+ 						<span [class.text-success]="c.ok" [class.text-warning]="!c.ok"><i class="fa" [class.fa-check]="c.ok" [class.fa-triangle-exclamation]="!c.ok"></i></span>
+ 						<span>{{c.text}}</span>
+ 					</div>
+-					<div class="small text-muted mt-2" *ngIf="s.confidence !== 'learned' && s.type === 'Price'">
+-						No competitor price feed yet: check what rivals charge before approving a raise on a thin-margin staple.
++					<div class="small text-muted mt-2" *ngIf="!s.competitorCount && s.type === 'Price'">
++						No competitor prices for this product yet: check what rivals charge before approving a raise on a thin-margin staple.
+ 					</div>
+ 
+ 					<div *ngIf="s.type === 'Price' && s.canApprove" class="mt-3">
+-- 
+2.46.0.windows.1
+

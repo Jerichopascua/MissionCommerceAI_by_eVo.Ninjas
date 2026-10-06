@@ -91,16 +91,16 @@ The full flow (AI Pricing run, Approval Center, simulated approver, markdown age
 |---|---|---|
 | Ingest product expiry timelines | **Yes** | expiry risk and all-batches feeds; the agent reads days left per batch |
 | Ingest inventory and rate of sale per SKU and store | **Yes** | stock, batch and sales-ledger feeds; learned sales rate and hour pattern |
-| Ingest **competitor prices** at store level | **No** | the design called for a simulated competitor feed; not built |
+| Ingest **competitor prices** at store level | **Yes** | a competitor-price table fed by a person, a file or an agent (the demo uses a simulated feed); shown in the Approval Center; the price advisor keeps raises within 5% of the lowest rival |
 | Agents decide and execute continuously through the day | **Yes** | hourly (or 15-minute) ticks through the real pricing API |
 | Hard and soft margin thresholds | **Yes** | enforced inside PesoWeb on every markdown |
-| Store-level **waste reduction targets** | **No** | there is no waste-target setting; waste is reported, not targeted |
+| Store-level **waste reduction targets** | **Yes** | a waste target per branch (share of cost of sales) next to actual waste on the Intelligence Hub |
 | Alignment with strategic trading priorities | **No** | not modelled |
 | Price change store by store, SKU by SKU, moment by moment | **Yes** | per batch, per branch; the POS charges it at sale time |
-| Push to **electronic shelf labels, e-commerce, picker systems** | **No** | PesoWeb emits a `PriceChanged` event, but no shelf-label, e-commerce or picker channel exists (the design's `channels` module was never built) |
+| Push to **electronic shelf labels, e-commerce, picker systems** | **Partly** | a webhook channel pushes price changes (and alerts) to any public https address, once each; it is generic, not a connector for a particular shelf-label or e-commerce product |
 | Reduced shrink and waste | **Measured** | -58% waste against doing nothing over 5 seeds; tied with a fixed 30%-off rule |
 | Protected margins | **Yes** | floors enforced; thin real margins limit what is allowed |
-| Real-time agility | **Partly** | intra-day ticks work; reaction to competitors does not exist |
+| Real-time agility | **Yes, within limits** | intra-day ticks work; raises are held within reach of rival prices; the hub refreshes every minute |
 
 ## 4. Proposed showcase order, "PesoProfit: Agentic Retail in Action"
 

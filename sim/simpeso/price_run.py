@@ -36,8 +36,18 @@ def demand_model(model: dict) -> DemandModel:
     return dm
 
 
+def competitor_lows(drv, acct) -> dict:
+    """{product id: lowest rival price} from PesoWeb's competitor prices (empty when the company has none)."""
+    try:
+        rows = drv._call("GET", "/api/ai/competitor-summary", acct.token) or []
+    except Exception:
+        return {}
+    return {r["productId"]: float(r["lowest"]) for r in rows}
+
+
 def suggestions_for(drv, acct, warehouse_ids: list, model: dict, step_pct: int = pa.DEFAULT_STEP_PCT):
-    """Returns (products, suggestions, policy). Sales rates and the learned price sensitivity come from the saved model."""
+    """Returns (products, suggestions, policy). Sales rates and the learned price sensitivity come from the saved model;
+    rival prices, when the company has them, keep raises within reach of the lowest rival."""
     products = browse(drv, acct, warehouse_ids[0])
     policy = drv.pricing_policy(acct)
     rates = {}
@@ -51,7 +61,7 @@ def suggestions_for(drv, acct, warehouse_ids: list, model: dict, step_pct: int =
         learned = len(dm._obs.get(cat, [])) >= MIN_OBSERVATIONS_TO_CALL_LEARNED or bool(dm._estimates.get(cat))
         return (dm.beta(cat), "learned") if learned else (PRIOR_BETA, "assumed")
 
-    return products, pa.advise(products, rates, beta_for, policy, step_pct), policy
+    return products, pa.advise(products, rates, beta_for, policy, step_pct, competitor_lows(drv, acct)), policy
 
 
 def propose_top(drv, acct, warehouse_id: int, suggestions: list, limit: int, fix_limit: int = 0) -> list:
