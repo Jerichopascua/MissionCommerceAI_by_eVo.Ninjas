@@ -73,6 +73,26 @@ code{background:var(--soft);padding:1px 6px;border-radius:6px;font-size:12px}
   function kpi(l,v,d,cls){return '<div class="card kpi"><div class="l">'+esc(l)+'</div><div class="v '+(cls||'')+'">'+v+'</div><div class="d">'+d+'</div></div>'}
   function pct(a,b){return b?((a-b)/b*100):0}
 
+  function showcaseSection(d){
+    if(!d)return '';
+    var s=d.summary,on=s.vs_base_agent_on,off=s.vs_base_agent_off,ad=s.agent_adds,f=d.flow;
+    var sign=function(n){return (n>=0?'+':'-')+peso(Math.abs(n))};
+    var daysBetter=on.net.days_better+off.net.days_better,daysAll=on.net.of+off.net.of;
+    var marginMean=(on.margin.mean+off.margin.mean)/2;
+    var h='<div class="card"><h2>Real catalog run: AI Pricing, Approval Center and markdown agent</h2>'
+      +'<div class="note">'+esc(d.catalog)+'. Margin floors '+d.floors.hard+'% hard / '+d.floors.soft+'% soft. The same shop twice, with and without the AI, same shoppers and the same stock each day. '+esc(d.checks)+'</div>'
+      +'<div class="grid g4" style="margin-top:10px">'
+      +kpi('Days ahead of no AI',daysBetter+' of '+daysAll,'net result, trial days with the AI against the same day without it',daysBetter===daysAll?'good':'')
+      +kpi('Gross margin',sign(marginMean)+'/day','mean over both markdown settings, units about flat','good')
+      +kpi('Markdown agent adds',sign(ad.net)+'/day','waste '+sign(ad.waste_pesos)+'/day on top of the new prices',ad.net>=0?'good':'bad')
+      +kpi('List prices changed',fmt(d.list_prices_changed),fmt(f.waiting)+' proposals: '+fmt(f.approved)+' approved, '+fmt(f.edited)+' half-step, '+fmt(f.rejected)+' rejected')
+      +'</div>';
+    var rows=d.days.map(function(x){var diff=x.ai.net-x.base.net;return '<tr><td>'+x.day+'</td><td>'+(x.agent_on?'on':'off')+'</td><td class="n">'+peso(x.base.net)+'</td><td class="n">'+peso(x.ai.net)+'</td><td class="n">'+sign(diff)+'</td><td class="n">'+sign(x.ai.margin-x.base.margin)+'</td><td class="n">'+sign(x.ai.waste_pesos-x.base.waste_pesos)+'</td></tr>'}).join('');
+    h+='<div class="scroll" style="margin-top:12px"><table><thead><tr><th>Day</th><th>Markdown agent</th><th class="n">No-AI net</th><th class="n">AI net</th><th class="n">Net difference</th><th class="n">Margin difference</th><th class="n">Waste difference</th></tr></thead><tbody>'+rows+'</tbody></table></div>'
+      +'<div class="note" style="margin-top:8px">Net is margin minus the cost of unsold short-dated stock; it is negative in both worlds because the trial lots are deliberately oversized. The difference is what matters. '+d.caveats.map(esc).join(' ')+'</div></div>';
+    return h;
+  }
+
   function proofSection(p){
     if(!p)return '<div class="card"><h2>Three-way proof</h2><div class="empty">No <code>proof-smoke.json</code> yet. Run <code>python -m simpeso.proof --seeds 1-5 --out ../results/proof-smoke.json</code>.</div></div>';
     var s=p.summary,a=s.arms,vn=s.paired.ai_vs_none,vf=s.paired.ai_vs_fixed;
@@ -148,8 +168,8 @@ code{background:var(--soft);padding:1px 6px;border-radius:6px;font-size:12px}
       +'<li>The agent\'s predictions are optimistic when realized waste exceeds predicted waste; that gap is reported, not hidden.</li></ul></div>';
   }
 
-  Promise.all([get('proof-smoke.json'),get('incident-demo.json'),get('quicksim.json'),get('ai-actions-sample.json'),get('story.json')]).then(function(r){
-    $('app').innerHTML=storySection(r[4])+proofSection(r[0])+actionsSection(r[3])+incidentSection(r[1])+quickSection(r[2])+limits(r[0]);
+  Promise.all([get('proof-smoke.json'),get('incident-demo.json'),get('quicksim.json'),get('ai-actions-sample.json'),get('story.json'),get('showcase-real.json')]).then(function(r){
+    $('app').innerHTML=showcaseSection(r[5])+storySection(r[4])+proofSection(r[0])+actionsSection(r[3])+incidentSection(r[1])+quickSection(r[2])+limits(r[0]);
   });
 })();
 </script>

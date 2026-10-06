@@ -1,0 +1,480 @@
+{
+ "catalog": "Alma Store real catalog: 493 products with real cost and price, 21 perishables, 5 companies x 2 branches",
+ "floors": {
+  "hard": 5.0,
+  "soft": 10.0
+ },
+ "flow": {
+  "proposed": 0,
+  "waiting": 301,
+  "refused": 0,
+  "margin_fixes": 165,
+  "approved": 157,
+  "edited": 42,
+  "rejected": 102,
+  "stale": 0,
+  "failed": 0
+ },
+ "list_prices_changed": 199,
+ "first_day": {
+  "day": 225,
+  "base": {
+   "waste_pesos": 7566.0,
+   "revenue": 23872.0,
+   "margin": 2748.2999999999993,
+   "net": -4817.700000000001,
+   "units": 399,
+   "markdowns_applied": 0,
+   "markdowns_refused": 0
+  },
+  "ai": {
+   "waste_pesos": 7692.0,
+   "revenue": 24472.609999999997,
+   "margin": 2988.909999999996,
+   "net": -4703.090000000004,
+   "units": 416,
+   "markdowns_applied": 95,
+   "markdowns_refused": 0
+  }
+ },
+ "summary": {
+  "days_on": 5,
+  "days_off": 5,
+  "vs_base_agent_on": {
+   "revenue": {
+    "mean": -55.137999999999735,
+    "min": -626.7000000000007,
+    "max": 457.7099999999991,
+    "days_better": 3,
+    "of": 5
+   },
+   "margin": {
+    "mean": 223.34200000000055,
+    "min": 161.10000000000218,
+    "max": 356.7000000000007,
+    "days_better": 5,
+    "of": 5
+   },
+   "waste_pesos": {
+    "mean": -85.6,
+    "min": -230.0,
+    "max": 102.0,
+    "days_better": 3,
+    "of": 5
+   },
+   "net": {
+    "mean": 308.9420000000006,
+    "min": 93.0,
+    "max": 507.7000000000007,
+    "days_better": 5,
+    "of": 5
+   },
+   "units": {
+    "mean": 13.6,
+    "min": 6,
+    "max": 22,
+    "days_better": 5,
+    "of": 5
+   }
+  },
+  "vs_base_agent_off": {
+   "revenue": {
+    "mean": 40.2,
+    "min": -587.5,
+    "max": 270.0,
+    "days_better": 4,
+    "of": 5
+   },
+   "margin": {
+    "mean": 248.5699999999997,
+    "min": 188.5,
+    "max": 330.0,
+    "days_better": 5,
+    "of": 5
+   },
+   "waste_pesos": {
+    "mean": 76.0,
+    "min": 0.0,
+    "max": 209.0,
+    "days_better": 0,
+    "of": 5
+   },
+   "net": {
+    "mean": 172.5699999999997,
+    "min": 23.94999999999709,
+    "max": 270.0,
+    "days_better": 5,
+    "of": 5
+   },
+   "units": {
+    "mean": -0.4,
+    "min": -2,
+    "max": 1,
+    "days_better": 1,
+    "of": 5
+   }
+  },
+  "agent_adds": {
+   "revenue": -95.33799999999974,
+   "margin": -25.227999999999156,
+   "waste_pesos": -161.6,
+   "net": 136.37200000000087,
+   "units": 14.0
+  }
+ },
+ "days": [
+  {
+   "day": 226,
+   "agent_on": true,
+   "base": {
+    "net": -5381.1500000000015,
+    "margin": 2887.8499999999985,
+    "waste_pesos": 8269.0,
+    "revenue": 26045.0,
+    "units": 444
+   },
+   "ai": {
+    "net": -5201.450000000001,
+    "margin": 3096.5499999999993,
+    "waste_pesos": 8298.0,
+    "revenue": 26135.7,
+    "units": 456
+   }
+  },
+  {
+   "day": 227,
+   "agent_on": true,
+   "base": {
+    "net": -6129.549999999999,
+    "margin": 2557.4500000000007,
+    "waste_pesos": 8687.0,
+    "revenue": 24167.0,
+    "units": 382
+   },
+   "ai": {
+    "net": -5790.449999999997,
+    "margin": 2718.550000000003,
+    "waste_pesos": 8509.0,
+    "revenue": 23954.600000000002,
+    "units": 388
+   }
+  },
+  {
+   "day": 228,
+   "agent_on": true,
+   "base": {
+    "net": -7061.6500000000015,
+    "margin": 2285.3499999999985,
+    "waste_pesos": 9347.0,
+    "revenue": 21388.0,
+    "units": 370
+   },
+   "ai": {
+    "net": -6636.440000000002,
+    "margin": 2480.5599999999977,
+    "waste_pesos": 9117.0,
+    "revenue": 21845.71,
+    "units": 384
+   }
+  },
+  {
+   "day": 229,
+   "agent_on": true,
+   "base": {
+    "net": -3081.0,
+    "margin": 3516.0,
+    "waste_pesos": 6597.0,
+    "revenue": 30343.0,
+    "units": 501
+   },
+   "ai": {
+    "net": -2988.0,
+    "margin": 3711.0,
+    "waste_pesos": 6699.0,
+    "revenue": 30358.0,
+    "units": 515
+   }
+  },
+  {
+   "day": 230,
+   "agent_on": true,
+   "base": {
+    "net": -4713.300000000003,
+    "margin": 3231.699999999997,
+    "waste_pesos": 7945.0,
+    "revenue": 30310.0,
+    "units": 491
+   },
+   "ai": {
+    "net": -4205.600000000002,
+    "margin": 3588.399999999998,
+    "waste_pesos": 7794.0,
+    "revenue": 29683.3,
+    "units": 513
+   }
+  },
+  {
+   "day": 231,
+   "agent_on": false,
+   "base": {
+    "net": -3759.2500000000036,
+    "margin": 3493.7499999999964,
+    "waste_pesos": 7253.0,
+    "revenue": 33861.0,
+    "units": 531
+   },
+   "ai": {
+    "net": -3524.2500000000036,
+    "margin": 3823.7499999999964,
+    "waste_pesos": 7348.0,
+    "revenue": 33998.0,
+    "units": 532
+   }
+  },
+  {
+   "day": 232,
+   "agent_on": false,
+   "base": {
+    "net": -5720.649999999998,
+    "margin": 2495.350000000002,
+    "waste_pesos": 8216.0,
+    "revenue": 23554.0,
+    "units": 389
+   },
+   "ai": {
+    "net": -5696.700000000001,
+    "margin": 2728.2999999999993,
+    "waste_pesos": 8425.0,
+    "revenue": 23728.0,
+    "units": 387
+   }
+  },
+  {
+   "day": 233,
+   "agent_on": false,
+   "base": {
+    "net": -4322.049999999996,
+    "margin": 3039.9500000000044,
+    "waste_pesos": 7362.0,
+    "revenue": 27898.0,
+    "units": 467
+   },
+   "ai": {
+    "net": -4209.549999999996,
+    "margin": 3228.4500000000044,
+    "waste_pesos": 7438.0,
+    "revenue": 27310.5,
+    "units": 466
+   }
+  },
+  {
+   "day": 234,
+   "agent_on": false,
+   "base": {
+    "net": -7050.1500000000015,
+    "margin": 2257.8499999999985,
+    "waste_pesos": 9308.0,
+    "revenue": 20988.0,
+    "units": 347
+   },
+   "ai": {
+    "net": -6780.1500000000015,
+    "margin": 2527.8499999999985,
+    "waste_pesos": 9308.0,
+    "revenue": 21258.0,
+    "units": 347
+   }
+  },
+  {
+   "day": 235,
+   "agent_on": false,
+   "base": {
+    "net": -6943.0,
+    "margin": 2262.0,
+    "waste_pesos": 9205.0,
+    "revenue": 21335.0,
+    "units": 352
+   },
+   "ai": {
+    "net": -6721.5999999999985,
+    "margin": 2483.4000000000015,
+    "waste_pesos": 9205.0,
+    "revenue": 21542.5,
+    "units": 352
+   }
+  }
+ ],
+ "largest_changes": [
+  {
+   "company": "c3",
+   "name": "RED HORSE BEER CAN 330ML",
+   "from": 55.0,
+   "to": 58.0,
+   "cost": 50.0,
+   "pct": 5.5,
+   "perishable": false,
+   "margin_before_pct": 9.1,
+   "margin_after_pct": 13.8
+  },
+  {
+   "company": "c3",
+   "name": "REBISCO HANSEL CHOCO 10S(31G)",
+   "from": 65.0,
+   "to": 68.5,
+   "cost": 56.5,
+   "pct": 5.4,
+   "perishable": false,
+   "margin_before_pct": 13.1,
+   "margin_after_pct": 17.5
+  },
+  {
+   "company": "c1",
+   "name": "SANMIG COFFEE STRONG SFREE 9G",
+   "from": 85.0,
+   "to": 89.5,
+   "cost": 78.0,
+   "pct": 5.3,
+   "perishable": false,
+   "margin_before_pct": 8.2,
+   "margin_after_pct": 12.8
+  },
+  {
+   "company": "c1",
+   "name": "PRIDE PWD W.MACHINE 1KG",
+   "from": 95.0,
+   "to": 100.0,
+   "cost": 88.0,
+   "pct": 5.3,
+   "perishable": false,
+   "margin_before_pct": 7.4,
+   "margin_after_pct": 12.0
+  },
+  {
+   "company": "c1",
+   "name": "PRIDE DET PWD KALAMANSI 1000G",
+   "from": 95.0,
+   "to": 100.0,
+   "cost": 90.0,
+   "pct": 5.3,
+   "perishable": false,
+   "margin_before_pct": 5.3,
+   "margin_after_pct": 10.0
+  },
+  {
+   "company": "c1",
+   "name": "RED HORSE BEER LITRO",
+   "from": 125.0,
+   "to": 131.5,
+   "cost": 100.0,
+   "pct": 5.2,
+   "perishable": false,
+   "margin_before_pct": 20.0,
+   "margin_after_pct": 24.0
+  },
+  {
+   "company": "c1",
+   "name": "PUREFOODS LMEAT CHINESE 350G",
+   "from": 87.0,
+   "to": 91.5,
+   "cost": 82.0,
+   "pct": 5.2,
+   "perishable": false,
+   "margin_before_pct": 5.7,
+   "margin_after_pct": 10.4
+  },
+  {
+   "company": "c2",
+   "name": "VIDA BACON 250G",
+   "from": 105.0,
+   "to": 110.5,
+   "cost": 95.0,
+   "pct": 5.2,
+   "perishable": true,
+   "margin_before_pct": 9.5,
+   "margin_after_pct": 14.0
+  },
+  {
+   "company": "c3",
+   "name": "RENO LIVER SPREAD 230G",
+   "from": 58.0,
+   "to": 61.0,
+   "cost": 53.0,
+   "pct": 5.2,
+   "perishable": false,
+   "margin_before_pct": 8.6,
+   "margin_after_pct": 13.1
+  },
+  {
+   "company": "c4",
+   "name": "REBISCO DOOWEE DONUT STRAWBERRY 420G",
+   "from": 105.0,
+   "to": 110.5,
+   "cost": 98.0,
+   "pct": 5.2,
+   "perishable": true,
+   "margin_before_pct": 6.7,
+   "margin_after_pct": 11.3
+  },
+  {
+   "company": "c3",
+   "name": "REBISCO COMBI TRPLE CHOC(B)10S(30G)",
+   "from": 68.0,
+   "to": 71.5,
+   "cost": 59.0,
+   "pct": 5.1,
+   "perishable": false,
+   "margin_before_pct": 13.2,
+   "margin_after_pct": 17.5
+  },
+  {
+   "company": "c4",
+   "name": "SURF FBCN LUXE PRFM R BOT 800ML",
+   "from": 137.0,
+   "to": 144.0,
+   "cost": 127.0,
+   "pct": 5.1,
+   "perishable": false,
+   "margin_before_pct": 7.3,
+   "margin_after_pct": 11.8
+  },
+  {
+   "company": "c4",
+   "name": "PRIDE PWD FBCN SAKURA 1KG",
+   "from": 99.0,
+   "to": 104.0,
+   "cost": 91.0,
+   "pct": 5.1,
+   "perishable": false,
+   "margin_before_pct": 8.1,
+   "margin_after_pct": 12.5
+  },
+  {
+   "company": "c1",
+   "name": "SSK SHMP SMTH&MNGABLE P 2/180ML-P",
+   "from": 210.0,
+   "to": 220.5,
+   "cost": 190.0,
+   "pct": 5.0,
+   "perishable": false,
+   "margin_before_pct": 9.5,
+   "margin_after_pct": 13.8
+  },
+  {
+   "company": "c1",
+   "name": "SSK SHMP STRNG&LNG G 2/180ML-P",
+   "from": 210.0,
+   "to": 220.5,
+   "cost": 190.0,
+   "pct": 5.0,
+   "perishable": false,
+   "margin_before_pct": 9.5,
+   "margin_after_pct": 13.8
+  }
+ ],
+ "checks": "An A/A run (same day in both worlds, no AI, no price change) shows zero difference over 5 days, after stock and lot sizes are equalised.",
+ "caveats": [
+  "Shopper price response is the simulator's own hidden assumption.",
+  "The markdown agent ran on different days than the agent-off setting, so their difference is an estimate.",
+  "One trial day is not a month of trading; there is no competitor price feed; the approver's waiting time is not simulated."
+ ]
+}

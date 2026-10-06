@@ -1,0 +1,82 @@
+[
+  {
+    "name": "01-login",
+    "caption": "login",
+    "url": "/auth/login"
+  },
+  {
+    "name": "02-head-company-settings",
+    "caption": "head company settings",
+    "url": "/settings/appsetting"
+  },
+  {
+    "name": "03-tenants-sub-companies",
+    "caption": "tenants",
+    "url": "/subscription/tenants"
+  },
+  {
+    "name": "04-roles",
+    "caption": "roles",
+    "url": "/settings/roles"
+  },
+  {
+    "name": "05-company-dashboard",
+    "caption": "sub company dashboard",
+    "url": "/dashboard"
+  },
+  {
+    "name": "06-company-branches",
+    "caption": "branches",
+    "url": "/settings/warehouses"
+  },
+  {
+    "name": "07-company-users",
+    "caption": "users",
+    "url": "/people/users"
+  },
+  {
+    "name": "08-company-roles",
+    "caption": "roles",
+    "url": "/settings/roles"
+  },
+  {
+    "name": "09-products-with-cost",
+    "caption": "products",
+    "url": "/inventory/products"
+  },
+  {
+    "name": "10-ai-control",
+    "caption": "ai control",
+    "url": "/ai/control"
+  },
+  {
+    "name": "11-approval-center-queue",
+    "caption": "approval center",
+    "url": "/pricing/approvals"
+  },
+  {
+    "name": "12-approval-center-owner-lane-item",
+    "caption": "owner lane item",
+    "url": ""
+  },
+  {
+    "name": "13-approval-center-settings",
+    "caption": "approval settings",
+    "url": "/pricing/approvals"
+  },
+  {
+    "name": "14-ai-dashboard-real-run",
+    "caption": "ai dashboard",
+    "url": "http://127.0.0.1:8080/ui/dashboard/index.html"
+  },
+  {
+    "name": "15-ai-dashboard-reports",
+    "caption": "reports",
+    "url": "http://127.0.0.1:8080/ui/dashboard/reports.html"
+  },
+  {
+    "name": "16-ai-dashboard-day-report",
+    "caption": "day report",
+    "url": "http://127.0.0.1:8080/ui/dashboard/day.html"
+  }
+]
