@@ -70,7 +70,7 @@ Also verified live as the root `SuperAdmin` (user 1) on the restored database: `
 
 `patches/plan8` (2 patches, tag `plan8-complete`):
 - Back end: one migration `AddApprovalCenter` (new `PricingPolicy` settings and `PriceChange` evidence columns) and `GrantApprovalLanePermissions` (SQL grant to SuperAdmin roles; script in `scripts/20261005_approval_center.sql`). New permissions `Pricing.Approve.Store`, `.Pricing`, `.Owner`. Endpoints: `GET /api/Pricing/Approvals?lane=&type=`, `POST ApproveBulk`, `POST UndoListPrice`; `ApproveListPrice` accepts `NewPrice`. Lanes by size and evidence; auto-approve is off by default; no self-approval unless the tenant has one user; proposals expire.
-- Angular screen at `/pricing/approvals` (menu entry under Inventory, needs `Pricing.View`): queue by lane, evidence and rule checks, approve, reject, approve at an edited price, bulk approve low-risk, undo, owner settings, keys j/k/a/r.
+- Angular screen at `/pricing/approvals` (menu: the Intelligent Hub group, needs `Pricing.View`): queue by lane, evidence and rule checks, approve, reject, approve at an edited price, bulk approve low-risk, undo, owner settings, keys j/k/a/r.
 - Checked by 171 PesoWeb tests, `sim/scripts/approval_center_check.py` (17 live checks, including the simulated approver) and an Angular template compile (`ngc`). The screen has not been clicked through in a browser (screenshot tooling timed out).
 
 Simulation side: `sim/simpeso/approver.py` is a seeded virtual store manager that works the same queue through the normal endpoints (so the audit log, rules and undo apply). Its choices are an assumption about people, not a measurement.
@@ -132,6 +132,10 @@ Agent side: `ai/missionai/missions.py` (10 tests) and the competitor cap in `pri
 ## Plan 14 addition (AI Impact)
 
 `patches/plan14`: `Services/AiImpactService.cs` (`ImpactMath`, `AiImpactService`), `GET /api/ai/hub/impact?days=&switchDate=` (policy AI.Control), the "AI Impact" tab and a control-branch hint in AI Settings. No migration. Tests: `AiImpactTests` (11); PesoWeb total 261. Live: `sim/scripts/impact_check.py` (11 checks; it backdates a throwaway shop's sales with SQL and, to allow two branches, raises its owner's plan with SQL: test bench only) and leaves a demo shop behind.
+
+## Menu: the Intelligent Hub group
+
+A top-level menu group "Intelligent Hub" (under Dashboard, in the side menu and the home menu) replaces the three single entries that sat under Inventory: Overview, My tasks, Approval Center, Reorders, Customer missions, AI Impact, Alert rules, AI Control, AI Settings. The hub items open `/ai/hub?tab=<name>` (the page reads the `tab` query parameter, also while already open); Approval Center needs `Pricing.View`, the rest `AI.Control`.
 
 ## Live verification environment (no admin rights needed)
 

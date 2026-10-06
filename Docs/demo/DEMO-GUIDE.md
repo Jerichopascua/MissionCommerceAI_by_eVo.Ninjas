@@ -78,7 +78,11 @@ The owner sets the guardrails the AI cannot override:
 
 ### 7a. The Intelligence Hub: monitoring, tasks, rules, reorders, missions and the AI settings
 
-The Intelligence Hub (menu: Inventory, then Intelligence Hub) is the home for monitoring and for the AI at every level. It has seven tabs.
+The **Intelligent Hub** has its own group in the left menu, right under Dashboard. It gathers everything about monitoring and the AI in one place: Overview, My tasks, Approval Center, Reorders, Customer missions, AI Impact, Alert rules, AI Control and AI Settings. Each item opens the matching screen or tab directly (so a store manager can go straight to My tasks, and an owner to AI Impact).
+
+![The Intelligent Hub menu group](screens/26-menu-intelligent-hub.png)
+
+The hub page itself (Overview, My tasks, Reorders, Customer missions, AI Impact, Rules, AI Settings) is the home for monitoring and for the AI at every level. It has seven tabs.
 
 ![Intelligence Hub overview](screens/17-hub-overview.png)
 
