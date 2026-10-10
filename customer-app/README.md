@@ -24,10 +24,23 @@ A very small web app a customer can put on a phone. It is a separate folder and 
 - **Same Wi-Fi:** run `SERVE.cmd`, open `http://<this PC's IPv4 address>:8090` in the phone browser, then browser menu, **Add to Home screen**.
 - **Real install (works like an app, offline):** host the folder on any HTTPS site (GitHub Pages, Netlify, the store's server). Android Chrome then offers **Install app**; on iPhone use Safari, Share, **Add to Home Screen**.
 
+## The one-minute demo (customer app, then the cashier)
+
+PesoWeb must be running with the demo feed on for company 520 Minimart (`CustomerApp__TenantId=6`, set in `appsettings.Development.json`).
+
+1. **Phone:** open the app, log in as `juan` / `demo123`. It opens on **Sale**, clearance items first. The line under the banner says "Prices from the store system", which means the prices were downloaded from PesoWeb.
+2. Press **Reserve it** on the demo basket (4 clearance and sale items). The app shows reference **R4821** and a QR code.
+3. **Cashier:** in PesoWeb open **POS**, press the phone icon (**Online order**), key in `R4821`, press **Find order**. It shows **Juan Dela Cruz** and the 4 items at the clearance prices (total 377.40).
+4. Press **Load into this sale**. The customer and the items are in the sale like any other, and the cashier takes payment as usual.
+
+Any other reference gives "No online order with that reference". Prices are never typed in the app: they are live PesoWeb prices, with the fixed demo markdowns on 11 products (30% and over show as clearance).
+
 ## What is demo and what is real
 
-- The product list, prices, offers and customers come from `data.json`, built by `make_demo_data.py` from real 520 Minimart product names. **It is demo data.**
-- Reservations are saved on the phone only. The cashier does not receive them yet.
+- **Real:** the product list and prices are downloaded from PesoWeb (`/api/customer-app/offers`). Any approved AI markdown shows as an offer. The cashier lookup is a real PesoWeb screen and API.
+- **Demo:** the 11 sale and clearance offers are fixed demo markdowns on live prices, the customer (Juan) and his reservation R4821 are fixed, and the customers and balances in `data.json` are fake.
+- Reservations are saved on the phone only; PesoWeb knows only the fixed demo reference R4821.
+- With no connection to PesoWeb the app shows the saved prices from `data.json`.
 - Passwords in `data.json` are plain demo values. The real app must never ship passwords in a file.
 - Text-message alerts (SMS) and pay online are not in this prototype. They need the server side.
 

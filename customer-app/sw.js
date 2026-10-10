@@ -1,5 +1,5 @@
 // Keeps the app shell available offline; data.json is fetched fresh when online so prices stay current.
-var CACHE = 'mm-shell-v1';
+var CACHE = 'mm-shell-v2';
 var SHELL = ['./', 'index.html', 'style.css', 'app.js', 'vendor/qrcode.js', 'manifest.webmanifest',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-diamond.png', 'icons/hub-banner-clearance.png', 'data.json'];
 
@@ -15,6 +15,7 @@ self.addEventListener('activate', function (e) {
 
 self.addEventListener('fetch', function (e) {
   if (e.request.method !== 'GET') { return; }
+  if (new URL(e.request.url).origin !== self.location.origin) { return; }   // the store's price feed is never cached here
   var isData = e.request.url.indexOf('data.json') >= 0;
   e.respondWith(isData
     ? fetch(e.request).then(function (r) { var c = r.clone(); caches.open(CACHE).then(function (ch) { ch.put(e.request, c); }); return r; })

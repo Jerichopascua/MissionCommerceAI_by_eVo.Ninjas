@@ -4,7 +4,7 @@
   'use strict';
   var KEY = 'mm-customer-v1';
   var data = null;
-  var ui = { tab: 'sale', search: '', cart: {}, msg: '', err: '' };
+  var ui = { tab: 'sale', search: '', cart: {}, msg: '', err: '', source: '' };
 
   function load() { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; } }
   function save(s) { try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) { /* private mode */ } }
@@ -15,7 +15,19 @@
   function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
   function peso(n) { return '₱' + Number(n).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
   function digits(s) { return String(s || '').replace(/\D/g, ''); }
-  function salePrice(p) { return p.offer ? Math.round(p.price * (100 - p.offer.percentOff)) / 100 : p.price; }
+  function salePrice(p) {
+    if (!p.offer) { return p.price; }
+    return p.offer.price !== undefined ? p.offer.price : Math.round(p.price * (100 - p.offer.percentOff)) / 100;
+  }
+  function titleCase(s) { return String(s).toLowerCase().replace(/(^|[\s(\-\/])([a-z])/g, function (m, a, b) { return a + b.toUpperCase(); }); }
+
+  // The demo basket: exactly what the cashier's lookup of R4821 returns in PesoWeb (product id -> quantity).
+  var DEMO_REF = 'R4821';
+  var DEMO_BASKET = { '1362': 2, '1421': 1, '1406': 2, '1385': 1 };
+  function api() {
+    try { var o = localStorage.getItem('mm-api'); if (o) { return o; } } catch (e) { /* ignore */ }
+    return location.protocol + '//' + location.hostname + ':5071';
+  }
   function dayText(n) { return n < 0 ? Math.abs(n) + ' day(s) overdue' : n === 0 ? 'due today' : 'due in ' + n + ' day(s)'; }
   function dueDate(n) { var d = new Date(); d.setDate(d.getDate() + n); return d.toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' }); }
 
@@ -73,6 +85,9 @@
     var clr = list.filter(function (p) { return p.offer.kind === 'clearance'; });
     return '<div class="banner"><img src="icons/hub-banner-clearance.png" alt=""></div>' +
       '<div class="note">Rush to the store: clearance items are limited and end soon. Reserve them here, then pay at the cashier.</div>' +
+      '<div class="card"><div class="row"><div class="grow"><b>Demo basket</b><div class="muted">Four clearance and sale items, ready to reserve</div></div>' +
+      '<button class="btn small" id="demoBasket">Reserve it</button></div></div>' +
+      '<div class="muted" style="margin:-4px 0 10px">' + esc(ui.source) + '</div>' +
       (clr.length ? '<h3 style="margin:6px 0 8px">Clearance (super discount)</h3>' + clr.map(function (p) { return productCard(p, true); }).join('') : '') +
       '<h3 style="margin:6px 0 8px">On sale</h3>' +
       list.filter(function (p) { return p.offer.kind !== 'clearance'; }).map(function (p) { return productCard(p, true); }).join('');
@@ -119,7 +134,8 @@
     if (!o) { return viewOrder(); }
     return '<div class="card"><p class="muted" style="text-align:center">Show this to the cashier</p>' +
       '<div class="big">' + esc(o.code) + '</div><div class="qr" id="qr"></div>' +
-      '<p class="muted" style="text-align:center">' + esc(data.store.name) + ' · ' + o.items.length + ' item(s) · ' + peso(o.total) + '</p></div>' +
+      '<p class="muted" style="text-align:center">' + esc(data.store.name) + ' · ' + o.items.length + ' item(s) · ' + peso(o.total) + '</p>' +
+      '<p class="muted" style="text-align:center">Cashier: key in <b>' + esc(o.code) + '</b> at the POS (Online order)</p></div>' +
       '<div class="card">' + o.items.map(function (i) { return '<div class="row"><div class="grow">' + esc(i.name) + ' × ' + i.qty + '</div><div>' + peso(i.price * i.qty) + '</div></div>'; }).join('') + '</div>' +
       '<p><button class="btn ghost" style="width:100%" id="back">Back</button></p>';
   }
@@ -194,6 +210,8 @@
     Array.prototype.forEach.call(app.querySelectorAll('[data-show]'), function (b) { b.onclick = function () { ui.ticket = b.dataset.show; render(); }; });
     var s = document.getElementById('search');
     if (s) { s.oninput = function () { ui.search = s.value; var pos = s.selectionStart; render(); var n = document.getElementById('search'); n.focus(); n.setSelectionRange(pos, pos); }; }
+    var db = document.getElementById('demoBasket');
+    if (db) { db.onclick = function () { ui.cart = Object.assign({}, DEMO_BASKET); reserve(); }; }
     var r = document.getElementById('reserve');
     if (r) { r.onclick = reserve; }
     var bk = document.getElementById('back');
@@ -220,7 +238,10 @@
   function reserve() {
     var lines = cartLines(); if (!lines.length) { return; }
     var code;
-    do { code = 'R' + String(Math.floor(1000 + Math.random() * 9000)); } while (store.orders.some(function (o) { return o.code === code; }));
+    var isDemo = Object.keys(DEMO_BASKET).length === Object.keys(ui.cart).length &&
+      Object.keys(DEMO_BASKET).every(function (k) { return ui.cart[k] === DEMO_BASKET[k]; });
+    if (isDemo) { code = DEMO_REF; store.orders = store.orders.filter(function (o) { return o.code !== DEMO_REF; }); }
+    else { do { code = 'R' + String(Math.floor(1000 + Math.random() * 9000)); } while (code === DEMO_REF || store.orders.some(function (o) { return o.code === code; })); }
     store.orders.push({
       code: code, userId: store.session, createdAt: new Date().toISOString(),
       total: lines.reduce(function (s, l) { return s + l.q * l.price; }, 0),
@@ -230,8 +251,27 @@
   }
 
   // ---------- start
+  function liveProducts(feed) {
+    return feed.products.map(function (p) {
+      var o = p.offer;
+      return { id: p.id, name: titleCase(p.name), price: p.price,
+        offer: o ? { kind: o.kind, percentOff: o.percentOff, price: o.price, daysLeft: o.daysLeft, note: o.note } : undefined };
+    });
+  }
+
+  // Saved file first (works offline), then the store's live prices replace it when PesoWeb answers.
   fetch('data.json', { cache: 'no-cache' }).then(function (r) { return r.json(); })
-    .then(function (d) { data = d; render(); })
+    .then(function (d) {
+      data = d; ui.source = 'Saved prices (not connected to the store)';
+      return fetch(api() + '/api/customer-app/offers', { cache: 'no-cache' })
+        .then(function (r) { if (!r.ok) { throw new Error('feed'); } return r.json(); })
+        .then(function (feed) {
+          data.products = liveProducts(feed);
+          ui.source = 'Prices from the store system, updated ' + new Date(feed.generatedAt).toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit' });
+        })
+        .catch(function () { /* keep the saved prices */ });
+    })
+    .then(function () { render(); })
     .catch(function () { document.getElementById('app').innerHTML = '<div class="wrap"><div class="card">Could not load the store data. Check your connection and try again.</div></div>'; });
 
   if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js').catch(function () { /* optional */ }); }
