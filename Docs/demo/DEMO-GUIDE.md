@@ -205,7 +205,7 @@ python -m simpeso.datasets
 python scripts\export_receipts.py --tenant 6        # company 6 from PesoWeb_MissionDev; add --database PesoWeb_V2_Real for the other copy
 ```
 
-It reads (SELECT only) the completed sales of one company and writes `sim\customer_data\store-poseceipts.csv`: an anonymous receipt id, date and time, product code, quantity, price and category. No customer, cashier, name, phone or payment detail is exported. Today the real companies hold little: 520 Minimart (company 6) has 50 completed receipts over 14 trading days (119 lines, 39 products, mostly sold between 10 PM and 1 AM), which is enough to replay real basket shapes but not enough for the demand check (that needs at least 40 days of history per product and visible price changes). More real sales, or a public data set, will fix that.
+It reads (SELECT only) the completed sales of one company and writes `sim\customer_data\store-pos\receipts.csv`: an anonymous receipt id, date and time, product code, quantity, price and category. No customer, cashier, name, phone or payment detail is exported. Today the real companies hold little: 520 Minimart (company 6) has 50 completed receipts over 14 trading days (119 lines, 39 products, mostly sold between 10 PM and 1 AM), which is enough to replay real basket shapes but not enough for the demand check (that needs at least 40 days of history per product and visible price changes). More real sales, or a public data set, will fix that.
 
 Real files go in `sim\customer_data\<id>\` (git-ignored; check each licence, and keep personal data out). Choose one, or a mix with weights:
 
