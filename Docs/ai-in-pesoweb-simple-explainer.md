@@ -114,10 +114,10 @@ Running tests changes the database. We added a **Test snapshots** screen: save t
 | **PesoWeb** | The shop system: sales, stock, cash, reports. Built with .NET (the engine), a SQL Server database (the memory) and Angular (the screens) | It was already there |
 | **Python** | The language the helper is written in | Good for math and for pretend shoppers |
 | **Statistics (numpy)** | Counting and curve-fitting: "when the price goes up 10%, how many fewer do we sell?" | Checkable, honest, fast |
-| **A small language model (Qwen, running on an AMD GPU)** | A chatbot-style program | It only **writes the explanations** and invents pretend shoppers. **It never decides anything** |
+| **A language model, through an AI API** (Anthropic's Claude, or Qwen running on an AMD GPU) | A chatbot-style program | It only **writes the explanations** and can **play a few pretend shoppers** (they get a made-up person and a mission). **It never decides anything for the shop** |
 | **PyTorch on AMD ROCm** | Lets the AMD graphics chip do the heavy work, like simulating 200,000 shoppers | Fast. The AMD GPU test is the last thing we will run |
 
-**Important:** if the chatbot is switched off or broken, the helper still works, because the decisions come from math.
+**Important:** the chatbot is not needed for the helper to work. If it is switched off, or the internet is down, the helper still works, because the decisions come from math. Today the demo runs without it; it is an extra you can switch on.
 
 ---
 

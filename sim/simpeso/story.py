@@ -205,8 +205,12 @@ class _Client:
 
 
 # ---- arms ----------------------------------------------------------------------------------------------------
-def run_arm(base_url: str, arm: str, days: int, seed: int, log=print) -> dict:
+def run_arm(base_url: str, arm: str, days: int, seed: int, log=print, heroes=None, llm=None) -> dict:
     people = cu.build_population(seed, adaptive=(arm == "learning"))
+    hero_list = []
+    if heroes:                                   # a few shoppers whose judgement comes from an AI API (simpeso/llm_hero.py)
+        from . import llm_hero
+        hero_list = llm_hero.add_heroes(people, heroes, llm)
     shop = PesoShop(base_url, f"story-s{seed}-{arm}-{uuid.uuid4().hex[:4]}", arm)
     per_day, events, nights = [], [], []
     for day in range(days):
@@ -222,6 +226,10 @@ def run_arm(base_url: str, arm: str, days: int, seed: int, log=print) -> dict:
     result = {"arm": arm, "seed": seed, "days": per_day,
               "shift": behavior_shift.detect_shift(events, range(BASELINE_DAYS), after, seed=seed) if arm != "none" else None,
               "calibration": shop.recorder.calibration(), "marco": [(d, cu.clock(h), t) for d, h, t in people[0].diary]}
+    if hero_list:
+        result["heroes"] = {"summary": llm_hero.summary(hero_list, llm),
+                            "diaries": {h.name: {"persona": h.hero.persona, "mission": h.hero.mission,
+                                                 "diary": [(d, cu.clock(hh), tx) for d, hh, tx in h.diary]} for h in hero_list}}
     late = per_day[BASELINE_DAYS:]
     for k in ("waste_pesos", "revenue", "margin", "net", "full_price_units", "discount_units"):
         result[k] = statistics.mean(d[k] for d in late)
@@ -253,7 +261,22 @@ def main(argv=None) -> int:
     ap.add_argument("--seeds", default="1-3")
     ap.add_argument("--base-url", default=os.environ.get("PESOWEB_URL", "http://localhost:5071"))
     ap.add_argument("--out", default=None)
+    ap.add_argument("--heroes", type=int, default=0, help="this many shoppers get their judgement from an AI API instead of the rules")
+    ap.add_argument("--personas", default=None, help="a JSONL file of synthetic personas (for example a Nemotron-Personas sample); default: four built in")
+    ap.add_argument("--llm", choices=["env", "stub"], default="env",
+                    help="env: the AI API named by ANTHROPIC_API_KEY or LLM_BASE_URL/LLM_MODEL (see simpeso/llm_hero.py); stub: an offline stand-in, no key, no network")
+    ap.add_argument("--max-llm-calls", type=int, default=300, help="the most real AI API calls a run may make (cached answers are free)")
     args = ap.parse_args(argv)
+    heroes = llm = None
+    if args.heroes:
+        from . import llm_hero
+        specs = llm_hero.load_personas(args.personas, args.heroes, args.seed) if args.personas else llm_hero.BUILT_IN[:args.heroes]
+        if args.llm == "stub":
+            llm = llm_hero.LlmClient("openai", "stub", "http://stub", transport=llm_hero.stub_transport, max_calls=10 ** 9)
+        else:
+            llm = llm_hero.LlmClient.from_env(cache_path=llm_hero.RUNS / "llm_cache.jsonl", max_calls=args.max_llm_calls)
+        heroes = specs
+        print(f"hero shoppers: {len(specs)} using {llm}")
     if args.compare:
         res = compare(args.base_url, args.days, parse_seeds(args.seeds))
         text = json.dumps(res, indent=1, default=float)
@@ -262,10 +285,16 @@ def main(argv=None) -> int:
             Path(args.out).write_text(text, encoding="utf-8")
         print(json.dumps(res["summary"], indent=1, default=float))
         return 0
-    res = run_arm(args.base_url, args.arm, args.days, args.seed)
+    res = run_arm(args.base_url, args.arm, args.days, args.seed, heroes=heroes, llm=llm)
     print("\nMarco's diary:")
     for d, h, t in res["marco"]:
         print(f"  day {d:2d} {h}  {t}")
+    for name, h in (res.get("heroes", {}).get("diaries") or {}).items():
+        print(f"\n{name}: {h['persona']}\n  mission: {h['mission']}")
+        for d, hh, tx in h["diary"][-8:]:
+            print(f"  day {d:2d} {hh}  {tx}")
+    if res.get("heroes"):
+        print("\nHero shoppers:", res["heroes"]["summary"])
     if res["shift"]:
         print("\nWhat the system saw:", res["shift"]["verdict"])
     return 0

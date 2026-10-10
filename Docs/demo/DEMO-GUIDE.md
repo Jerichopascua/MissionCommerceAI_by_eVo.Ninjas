@@ -188,6 +188,16 @@ python -m simpeso.agent_service --run real2 --company c1 --interval 30
 
 Then in PesoWeb, Intelligent Hub, AI Control: **Run now** on AI Pricing, AI Replenish, AI Customer Mission and AI Monitoring. Price proposals appear in the Approval Center; alerts and reorders in My tasks; Rules alerts open by themselves. In a demo you decide the waiting proposals yourself in the Approval Center; the simulated approver (`simpeso/approver.py`, a virtual store manager) is used only inside the showcase script in step 3.
 
+**2b. Shoppers whose judgement comes from an AI API (optional "hero shoppers")**
+
+```powershell
+python -m simpeso.story --arm learning --days 6 --seed 3 --heroes 4 --llm stub     # no key, offline stand-in
+$env:ANTHROPIC_API_KEY = "<your key, typed in this window only>"                     # or LLM_BASE_URL + LLM_MODEL for a vLLM / OpenAI-compatible server
+python -m simpeso.story --arm learning --days 6 --seed 3 --heroes 4                 # real AI API
+```
+
+Four shoppers get a persona and a mission and the model chooses what they do each step; the rest of the neighbourhood stays rule-based. The key is read from the environment and never saved. Only the synthetic persona and what a shopper could see are sent. Answers are cached, so a repeat run is free, and `--max-llm-calls` caps the spend. Details and limits: `Docs/customer-actors.md`, section 5.
+
 **3. The AI against no AI, side by side (the controlled evidence)**
 
 ```powershell

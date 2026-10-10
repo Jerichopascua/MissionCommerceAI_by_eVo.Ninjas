@@ -36,7 +36,7 @@ Some comfortable customers are bargain hunters too: they can afford full price b
 
 **It is not an LLM and not a trained model.** It is a transparent rule-based decision model (what can I afford, what do I believe, how long will I wait) with small bounded noise. We chose that so every decision can be explained and tested (23 unit tests on these rules). It does produce human-like arcs, like Marco's, but it is our simulation of behavior, not measured human behavior.
 
-`Customer.decide()` is the place where an LLM could supply the judgement for a few "hero" customers (the design allows about 100 to 300 such actors); **that is not built**, so we do not claim it. Customers with `adaptive=False` never learn; they stand for the older statistical shopper and let us measure what learning changes.
+`Customer.decide()` is the place where a language model can supply the judgement for a few "hero" customers. **That is now built as an option** (`sim/simpeso/llm_hero.py`, section 5 below); by default no shopper uses a language model. Customers with `adaptive=False` never learn; they stand for the older statistical shopper and let us measure what learning changes.
 
 ## 4. What the system saw, and the numbers
 
@@ -80,3 +80,15 @@ PesoWeb must be running on port 5071 (see `concept-demo-guide.md`, Step 1).
 - One product, one shop, 40 customers, 14 evenings, 5 seeds. Word of mouth is a simple tip passed to friends.
 - The shop's lot size (12) is large compared with full-price demand, so waste without clearance is high by construction.
 - Mission detection (why a customer shops) is still not built.
+
+## 5. Hero shoppers: a few shoppers whose judgement comes from an AI API (optional)
+
+A hero shopper has a **persona** (who they are) and a **mission** (what they came for tonight). At each 15-minute step the language model chooses buy (how many), ask the cashier, wait or leave, in character. Their memory, belief and learning stay in the same `Customer` object, so the model is shown their diary and what they believe.
+
+- **Which AI API:** any of these, picked from environment variables (the key is never written to a file or printed): `ANTHROPIC_API_KEY` (Anthropic Messages API; model `LLM_MODEL`, default `claude-haiku-4-5-20251001`); or `LLM_BASE_URL` + `LLM_MODEL` for any OpenAI-compatible server (vLLM on the AMD GPU, or a hosted one; `LLM_API_KEY` optional); or `OPENAI_API_KEY`.
+- **What is sent:** only the synthetic persona and what a shopper could see (time, the shelf price and the usual price, stock left, their own belief and diary). Nothing from PesoWeb's data and nothing about the shop's AI.
+- **Safety:** every answer is validated (a known action, a sensible quantity, within the stock, something the shopper could afford). Anything else, a network error or a spent budget falls back to the rule-based decision, so a bad call never stops a run. `--max-llm-calls` (default 300) is a hard cap on real calls. Answers are cached in `sim/runs/llm_cache.jsonl`, so repeating a run replays it identically and costs nothing.
+- **Personas:** four are built in. For more variety use a JSONL file of synthetic personas, for example a sample of NVIDIA's Nemotron-Personas (`--personas file.jsonl`; each line `persona` or `occupation`/`age`/`city`, and optionally `mission`).
+- **Try it without a key:** `python -m simpeso.story --arm learning --days 6 --seed 3 --heroes 4 --llm stub` runs the whole flow against PesoWeb with an offline stand-in that behaves plausibly.
+- **With a real API:** set the key in the same window, then `python -m simpeso.story --arm learning --days 6 --seed 3 --heroes 4`. Start with a small number of heroes and days; each decision is one short call.
+- **Honest limit:** a model playing a person is still a simulation. It adds human-like variety, but it carries the model's own biases and is not measured behaviour. It is validated, as everything else here is, only against real sales data.
