@@ -166,7 +166,7 @@ Why it looks at "28 days to 2026-05-30": the real sales are from April and May. 
 ![AI Control with each feature's last run](demo/screens/32-real-ai-control.png)
 
 1. In Chrome, left menu: **Intelligent Hub**, then **AI Control**.
-2. You will see six cards. Press the orange **Run now** on each of these four, one after another: **AI Monitoring**, **AI Pricing**, **AI Replenish**, **AI Customer Mission**. (AI Product Loss Prevention and AI Insight have no Run now.)
+2. You will see six cards. Press the orange **Run now** on each of these five, one after another: **AI Monitoring**, **AI Pricing**, **AI Product Loss Prevention**, **AI Replenish**, **AI Customer Mission**. (Only AI Insight has no Run now.)
 3. Wait up to 20 seconds (the AGENT-REAL window shows a line for each run) and click **Refresh**. Each card shows **Last run: Done** with a sentence.
 
 What the real run showed on 520 Minimart:
@@ -175,6 +175,7 @@ What the real run showed on 520 Minimart:
 |---|---|---|
 | AI Monitoring | "2 unusual (Ledger); 2 new" | At the main branch 488 products, and at branch 2 two products, have a shelf quantity that doesn't match the stock ledger. Most likely the opening stock was entered without ledger entries; a stock count would settle it |
 | AI Pricing | "proposed 33 price changes (25 margin fixes): 31 waiting in the Approval Center, 2 refused by a rule" | 25 products are priced less than 5% above their cost |
+| AI Product Loss Prevention | "8 products to count first at 2 branch(es) (1 with an unreported delivery)" | The stock most worth counting: a delivery that has no receiving report, then high-value fast sellers. See "Count first" below |
 | AI Replenish | "0 reorder suggestions" | Nothing will run out soon: the shelves hold a lot of stock compared with the sales rate |
 | AI Customer Mission | "6 mission rows from 65 baskets at 2 branches" | A picture of why shoppers came |
 
@@ -195,6 +196,14 @@ Left menu: **Intelligent Hub**. Click each item below.
 - The two branches show a green **AI** chip each (AI markdowns are on).
 
 **8.3 My tasks** (35 items on the real run): the 31 proposals plus 3 alerts (expired stock; the two ledger differences) and anything assigned to you. Each has the button or link that settles it. Click **Got it** on an alert to acknowledge it.
+
+**8.3b Count first (AI Product Loss Prevention)**
+
+![Count first](demo/screens/37-real-count-first.png)
+
+- Open the **Count first** tab (or Intelligent Hub, then **Count first**). On the real run it listed 8 products at the main branch. The top one: **BIOGESIC, 390 on the shelf, about ₱15,600 at cost, "stock was delivered with no receiving report, so nothing can say how much really arrived"**. The others are fast sellers with a lot of value on the shelf.
+- What to do: count that product on the shelf. If the shelf differs from the system, correct it on **Stock Adjustments**. Then press **Counted** (or **Dismiss** if you will not count it). Either answer removes it, and it won't be suggested again for 14 days.
+- It never counts or changes stock by itself, and it never says anyone took anything: only "the count differs from the system".
 
 **8.4 Reorders:** empty on this data (see the AI Replenish note above). To see it work you need stock that is running low.
 
@@ -254,7 +263,7 @@ When you are done testing:
 
 ## Part 6. What this test shows and doesn't
 
-- **It shows:** the AI reading a real company's own sales, stock and cash; real findings (₱3,600 of expired stock not written off; 25 products priced under 5% above cost; ledger differences; a late-night shopper pattern); price proposals with reasons, behind rules and approval.
+- **It shows:** the AI reading a real company's own sales, stock and cash; real findings (₱3,600 of expired stock not written off; 25 products priced under 5% above cost; ledger differences; a late-night shopper pattern; stock worth counting first, led by a delivery with no receiving report); price proposals with reasons, behind rules and approval.
 - **It doesn't show yet:** that the AI raises profit. That needs real days of sales after real approved changes, with a control branch (Step 10).
 - **Thin data:** 14 trading days is enough to see the system work. Treat the price proposals as examples, not as advice, until there is more history. Their price-sensitivity is labelled "assumed".
-- **Fixed during this test:** the first real run crashed the pricing feature on a product with no price and no cost ("1PC KN95 MASK"). It now says "set the price first" and carries on. That is a bug only real data could find.
+- **Fixed during this test:** a real delivery recorded through a purchase could not be matched to its receiving report, so every delivery looked unreported; it is now matched to its purchase line by order where the counts and quantities agree. The first real run also crashed the pricing feature on a product with no price and no cost ("1PC KN95 MASK"). It now says "set the price first" and carries on. That is a bug only real data could find.

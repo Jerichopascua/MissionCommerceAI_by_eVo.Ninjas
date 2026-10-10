@@ -110,3 +110,7 @@ The full flow (AI Pricing run, Approval Center, simulated approver, markdown age
 4. **Group view:** the day report by company and branch, then the results dashboard (three-way proof, caught vs missed).
 
 Gaps to say out loud on stage: no competitor feed, no shelf-label or e-commerce sync, no waste-target setting, and the AI ties a simple fixed rule in the measured proof.
+
+## Update 2026-10-11: AI Product Loss Prevention can be run on a real company
+
+It now has a Run now, a **Count first** tab and a task in My tasks. The full mapping of the PesoProfit brief to the four AI features is in `Docs/pesoprofit-capability-map.md`.

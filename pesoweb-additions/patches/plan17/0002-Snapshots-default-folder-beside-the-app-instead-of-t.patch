@@ -1,0 +1,101 @@
+From 437511699b955e6f6ebcc5bb9d8f73ddcd40b878 Mon Sep 17 00:00:00 2001
+From: unknown <jericho.pascua@gmail.com>
+Date: Sat, 10 Oct 2026 20:08:59 +0800
+Subject: [PATCH 2/3] Snapshots: default folder beside the app instead of the
+ user profile, and refuse a snapshot when the drive is too full
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+---
+ Retailo.Tests/SnapshotRulesTests.cs | 12 +++++++++++
+ Services/SnapshotService.cs         | 31 ++++++++++++++++++++++++++++-
+ 2 files changed, 42 insertions(+), 1 deletion(-)
+
+diff --git a/Retailo.Tests/SnapshotRulesTests.cs b/Retailo.Tests/SnapshotRulesTests.cs
+index fec42a6..2be40f8 100644
+--- a/Retailo.Tests/SnapshotRulesTests.cs
++++ b/Retailo.Tests/SnapshotRulesTests.cs
+@@ -62,6 +62,18 @@ public class SnapshotRulesTests
+     public void Names_are_letters_digits_spaces_dots_dashes_and_underscores_only(string name, bool valid) =>
+         Assert.Equal(valid, SnapshotRules.ValidName(SnapshotRules.CleanName(name)));
+ 
++    [Fact]
++    public void A_snapshot_is_refused_when_the_drive_is_too_full_and_the_message_says_how_much_it_needs()
++    {
++        var mb = 1024L * 1024;
++        Assert.True(SnapshotRules.EnoughSpace(1000 * mb, 200 * mb, "D:").Ok);          // needs 1.5 x 200 + 100 = 400 MB
++        var (ok, message) = SnapshotRules.EnoughSpace(300 * mb, 200 * mb, "C:");
++        Assert.False(ok);
++        Assert.Contains("C:", message);
++        Assert.Contains("400 MB", message);
++        Assert.Contains("300 MB is free", message);
++    }
++
+     [Fact]
+     public void A_file_name_can_never_leave_the_snapshot_folder()
+     {
+diff --git a/Services/SnapshotService.cs b/Services/SnapshotService.cs
+index a7d236c..5d1b49c 100644
+--- a/Services/SnapshotService.cs
++++ b/Services/SnapshotService.cs
+@@ -22,7 +22,8 @@ public sealed class SnapshotOptions
+     {
+         var folder = c["Snapshots:Folder"];
+         if (string.IsNullOrWhiteSpace(folder))
+-            folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "PesoWeb_Snapshots");
++            // beside the app's own folder, so snapshots land on the same drive as the project and never fill the user profile on drive C by surprise
++            folder = Path.Combine(Directory.GetParent(Directory.GetCurrentDirectory())?.FullName ?? Directory.GetCurrentDirectory(), "PesoWeb_Snapshots");
+         return new SnapshotOptions
+         {
+             Enabled = c.GetValue<bool?>("Snapshots:Enabled") ?? false,
+@@ -97,6 +98,14 @@ public static class SnapshotRules
+         return (true, null);
+     }
+ 
++    // A backup is about as big as the database. Refuse unless the drive has room for it with some to spare, so a snapshot can never fill a drive.
++    public static (bool Ok, string Message) EnoughSpace(long freeBytes, long databaseBytes, string drive)
++    {
++        var need = (long)(databaseBytes * 1.5) + 100L * 1024 * 1024;
++        return freeBytes >= need ? (true, null)
++            : (false, $"Not enough free space on {drive}: a snapshot needs about {need / 1024 / 1024} MB and {freeBytes / 1024 / 1024} MB is free. Nothing was saved. Free some space or set Snapshots:Folder to a roomier drive.");
++    }
++
+     private static string Short(List<string> ids) => string.Join(", ", ids.Take(3)) + (ids.Count > 3 ? ", ..." : "");
+ }
+ 
+@@ -235,6 +244,8 @@ public sealed class SnapshotService : ISnapshotService
+     {
+         Directory.CreateDirectory(Options.Folder);
+         if (File.Exists(Bak(name)) || File.Exists(Json(name))) return (false, $"A snapshot named '{name}' already exists. Choose another name, or delete it first.", null);
++        var space = await SpaceCheckAsync();
++        if (!space.Ok) return (false, space.Message, null);
+         var schema = await SchemaAsync();
+         var counts = await CountsAsync();
+         var bak = Bak(name);
+@@ -258,6 +269,24 @@ public sealed class SnapshotService : ISnapshotService
+         return (true, null, meta);
+     }
+ 
++    private async Task<(bool Ok, string Message)> SpaceCheckAsync()
++    {
++        long databaseBytes;
++        await using (var c = new SqlConnection(ConnectionString))
++        {
++            await c.OpenAsync();
++            await using var cmd = new SqlCommand("SELECT SUM(CAST(size AS bigint)) * 8192 FROM sys.database_files", c);
++            databaseBytes = Convert.ToInt64(await cmd.ExecuteScalarAsync() ?? 0L);
++        }
++        try
++        {
++            var root = Path.GetPathRoot(Path.GetFullPath(Options.Folder));
++            if (string.IsNullOrEmpty(root) || root.StartsWith("\\\\")) return (true, null);       // a network share: no way to ask, let the backup itself fail if it is full
++            return SnapshotRules.EnoughSpace(new DriveInfo(root).AvailableFreeSpace, databaseBytes, root.TrimEnd('\\'));
++        }
++        catch (Exception) { return (true, null); }
++    }
++
+     public async Task<(bool Ok, string Message)> RestoreAsync(string name, string by)
+     {
+         await Gate.WaitAsync();
+-- 
+2.46.0.windows.1
+

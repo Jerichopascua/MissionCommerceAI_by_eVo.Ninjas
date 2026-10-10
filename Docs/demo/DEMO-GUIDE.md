@@ -106,6 +106,8 @@ The hub page itself (Overview, My tasks, Reorders, Customer missions, AI Impact,
 
 ![Rules, assignees and channels](screens/23-hub-rules.png)
 
+**Count first (AI Product Loss Prevention).** The AI ranks what to count first: stock delivered with no receiving report, then high-value fast sellers. A person counts on the shelf, corrects any difference on Stock Adjustments, and presses **Counted** or **Dismiss**. It also shows up in My tasks for the store manager role. Run it from AI Control, Run now.
+
 **Rules.** Nine rules: eight measured by PesoWeb (expired stock not written off, stock close to expiry, cash shift closed with a difference, selling below cost, shrinkage, too much stock, open exceptions, AI proposals waiting) and one fed by AI Monitoring ("Unusual activity found by AI", which has no limit to set). For each: switch it on or off, set the limit, choose the responsible role, the severity, and optionally **a named person** (who then gets the alert and the email instead of the whole role), and whether to also email. PesoWeb checks the rules itself every few minutes (and when the hub opens, and when the agent runner checks in), so alerts open without anyone looking. **Notifications and channels** lets a company send alerts and price changes to another system through a webhook (a chat room, a shelf-label service, an e-commerce site): public https addresses only, with a test message, and a switch for browser desktop alerts. SMS is not available.
 
 ![AI settings: company and branches](screens/18-hub-ai-settings.png)

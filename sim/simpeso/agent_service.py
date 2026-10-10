@@ -170,6 +170,60 @@ def replenish_handler(drv, acct, warehouse_ids: list, model: dict = None, lead_d
     return run
 
 
+COUNT_REASONS = {"delivered without a receiving report": "stock was delivered with no receiving report, so nothing can say how much really arrived",
+                 "high-value fast mover": "a fast seller with a high value on the shelf: a small shortage costs the most here"}
+
+
+def loss_prevention_handler(drv, acct, warehouse_ids: list, per_branch: int = 8, window_days: int = 28, as_of=None):
+    """AI Product Loss Prevention run: PesoWeb's POS cannot see a short delivery or silent stock loss, so the AI spends a small counting budget
+    where a loss would cost the most and is least likely to be explained by a record. It ranks stock delivered without a receiving report first,
+    then high-value fast sellers, and posts the top few per branch as "count first" suggestions. Nothing is counted or changed here."""
+    from . import price_run
+    from missionai import detectors
+    import datetime as dt
+
+    def run() -> str:
+        end = as_of or dt.date.today()
+        since = (end - dt.timedelta(days=window_days)).isoformat()
+        receipts, sales, costs, on_hand = [], {}, {}, {}
+        for wh in warehouse_ids:
+            receipts += drv.all_receipts(acct, wh)
+            after = 0
+            while True:
+                page = drv.movements(acct, wh, "SALE_OUT", after, since)
+                for m in page:
+                    if (m.get("transactionDate") or "")[:10] <= end.isoformat():
+                        sales[(wh, m["productId"])] = sales.get((wh, m["productId"]), 0.0) + float(m["qtyOut"])
+                if len(page) < SALES_PAGE:
+                    break
+                after = max(m["id"] for m in page)
+            for p in price_run.browse(drv, acct, wh):
+                on_hand[(wh, p["id"])] = p["stock"]
+                if p["cost"] > 0 and p["stock"] > 0:          # nothing on the shelf at this branch: nothing to count there
+                    costs[(wh, p["id"])] = p["cost"]
+        ranked = detectors.rank_count_targets(receipts, sales, costs, per_branch * 3)       # a few extra: some have nothing on the shelf any more
+        targets, taken = [], {}
+        for tg in ranked:
+            if on_hand.get((tg.warehouse_id, tg.product_id), 0) <= 0 or taken.get(tg.warehouse_id, 0) >= per_branch:
+                continue
+            taken[tg.warehouse_id] = taken.get(tg.warehouse_id, 0) + 1
+            targets.append(tg)
+        items = []
+        for tg in targets:
+            sold = sales.get((tg.warehouse_id, tg.product_id), 0.0)
+            why = "; ".join(("a lot of value on the shelf for a product that has not sold in this period" if (r == "high-value fast mover" and sold <= 0)
+                             else COUNT_REASONS.get(r, r)) for r in tg.reasons) or "worth a count"
+            items.append({"WarehouseId": tg.warehouse_id, "ProductId": tg.product_id, "Score": round(tg.score, 2), "Reason": why[:380].capitalize() + "."})
+        status, body = drv.post_count_suggestions(acct, warehouse_ids, items)
+        if status != 200:
+            raise RuntimeError(f"PesoWeb refused the count suggestions: {status} {body}")
+        unreported = sum(1 for tg in targets if "delivered without a receiving report" in tg.reasons)
+        return (f"{body.get('added', 0)} products to count first at {len(warehouse_ids)} branch(es) ({unreported} with an unreported delivery)"
+                + (f"; {body.get('skipped', 0)} left out (already counted or dismissed lately)" if body.get("skipped") else ""))
+
+    return run
+
+
 def monitoring_handler(drv, acct, warehouse_ids: list, today=None, history_days: int = 28, event_pages: int = 20):
     """AI Monitoring: asks PesoWeb to check the company's rules, then compares each branch with its own recent past and posts
     everything unusual as findings (alerts follow the "Unusual activity found by AI" rule). The scan is complete each time, so findings
@@ -235,7 +289,8 @@ def serve_real(args) -> int:
     handlers = {"Pricing": pricing_handler(drv, acct, whs, model, args.limit),
                 "Replenish": replenish_handler(drv, acct, whs, None, window_days=args.history_days, as_of=as_of),
                 "CustomerMission": mission_sim.mission_handler(drv, acct, whs, lambda: mission_sim.pesoweb_baskets(drv, acct, whs, args.history_days, as_of), args.history_days),
-                "Monitoring": monitoring_handler(drv, acct, whs, today=as_of)}
+                "Monitoring": monitoring_handler(drv, acct, whs, today=as_of),
+                "LossPrevention": loss_prevention_handler(drv, acct, whs, window_days=args.history_days, as_of=as_of)}
     agent = AgentRunner(drv, acct, handlers)
     window = f"the {args.history_days} days to {as_of.isoformat()}" if as_of else f"the last {args.history_days} days"
     print(f"REAL company {args.email}: {len(whs)} branch(es), looking at {window}.")
@@ -298,7 +353,8 @@ def main(argv=None) -> int:
 
     agent = AgentRunner(drv, acct, {"Pricing": pricing_handler(drv, acct, whs, model, args.limit), "Replenish": replenish_handler(drv, acct, whs, model),
                                     "CustomerMission": mission_sim.mission_handler(drv, acct, whs, mission_source),
-                                    "Monitoring": monitoring_handler(drv, acct, whs)})
+                                    "Monitoring": monitoring_handler(drv, acct, whs),
+                                    "LossPrevention": loss_prevention_handler(drv, acct, whs)})
     if args.once:
         agent.poll_once()
         return 0

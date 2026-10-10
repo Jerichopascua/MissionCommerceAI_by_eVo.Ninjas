@@ -3,10 +3,12 @@
 #   RUN\RESTORE-SNAPSHOT.cmd                   (shows the copies and asks)
 param(
     [string]$Name,
+    [switch]$AllowUnverified,      # only for a copy made before this check existed; the database may then not work afterwards
     [string]$Database = 'PesoWeb_MissionDev',
     [string]$Folder = 'D:\PesoWeb_Backups'
 )
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot '_structure.ps1')
 $copies = Get-ChildItem $Folder -Filter '*.bak' -File -ErrorAction SilentlyContinue | Where-Object { $_.Name -like "$Database*" -or $_.Name -notlike 'PesoWeb_V2*' } | Sort-Object LastWriteTime -Descending
 if (-not $Name) {
     if (-not $copies) { throw "No copies found in $Folder." }
@@ -17,6 +19,19 @@ if (-not $Name) {
 $Name = $Name -replace '\.bak$', ''
 $file = Join-Path $Folder ($Name + '.bak')
 if (-not (Test-Path $file)) { throw "No such copy: $file" }
+$sidecar = $file -replace '\.bak$', '.structure.txt'
+if (Test-Path $sidecar) {
+    $problem = Compare-Structure -Saved (Get-Content $sidecar -Raw) -Now (Get-DatabaseStructure -Database $Database)
+    if ($problem) {
+        Write-Host "REFUSED: this copy cannot be restored into the database as it is now: $problem." -ForegroundColor Red
+        Write-Host 'Restoring it would put back an old structure and PesoWeb would stop working. Use a copy saved after the change, or save a new one now.'
+        exit 3
+    }
+} elseif (-not $AllowUnverified) {
+    Write-Host 'REFUSED: this copy has no record of the database structure it was saved from (it was made by hand or before the structure check existed), so it cannot be checked.' -ForegroundColor Red
+    Write-Host 'Nothing was changed. If you are sure, run this file with -AllowUnverified.'
+    exit 3
+}
 Write-Host "This replaces the WHOLE database ($Database) with '$Name' (every company, not only 520 Minimart)." -ForegroundColor Yellow
 $confirm = Read-Host 'Type RESTORE to continue'
 if ($confirm -cne 'RESTORE') { Write-Host 'Cancelled. Nothing was changed.'; exit 0 }

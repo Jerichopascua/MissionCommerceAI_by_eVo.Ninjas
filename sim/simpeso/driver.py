@@ -309,6 +309,24 @@ class PesoWebDriver:
         q = f"?type={kind}&afterId={after_id}&take=5000" + (f"&warehouseId={warehouse_id}" if warehouse_id else "") + (f"&since={since}" if since else "")
         return (self._call("GET", f"/api/ai/movements{q}", acct.token) or {}).get("movements", [])
 
+    # ---- AI Product Loss Prevention ------------------------------------------------------------------------------
+    def all_receipts(self, acct: Account, warehouse_id: int) -> list:
+        """Every receipt line of a branch (the endpoint pages at 1000)."""
+        out, after = [], 0
+        while True:
+            page = self.receipts(acct, warehouse_id, after)
+            out += page
+            if len(page) < 1000:
+                return out
+            after = max(r["id"] for r in page)
+
+    def post_count_suggestions(self, acct: Account, warehouse_ids: list, items: list):
+        """items: dicts with WarehouseId, ProductId, Score, Reason. Returns (status, body)."""
+        return self._call("POST", "/api/ai/count-suggestions", acct.token, json_body={"WarehouseIds": warehouse_ids, "Items": items}, raw=True)
+
+    def count_suggestions(self, acct: Account, status: str = "Open") -> list:
+        return self._call("GET", f"/api/ai/count-suggestions?status={status}", acct.token) or []
+
     # ---- AI Monitoring ------------------------------------------------------------------------------------------
     def branch_names(self, acct: Account) -> dict:
         return {b["warehouseId"]: b["name"] for b in (self._call("GET", "/api/ai/branch-settings", acct.token) or [])}
