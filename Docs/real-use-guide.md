@@ -99,7 +99,7 @@ Do **one** of the two ways. Do this **before** you change anything.
 1. At the sign-in page, enter `superadmin@email.com` and your superadmin password. Press Sign in.
 2. In the left menu click **Intelligent Hub**, then **Test snapshots** (the last item).
 3. Under **Save a snapshot**, in **File name** type `before-real-test` (letters, digits, dashes only).
-4. Press **Save snapshot**. It takes a few seconds. You should see "Saved "before-real-test" (205 MB)" in green, and a new row in the table with "Can be restored now: Yes".
+4. Press **Save snapshot**. It takes a few seconds. You should see "Saved "before-real-test" (about 215 MB)" in green, and a new row in the table with "Can be restored now: Yes".
 5. Sign out (your name at the top right, then Sign out).
 
 **Way B: with a command (no login needed)**
