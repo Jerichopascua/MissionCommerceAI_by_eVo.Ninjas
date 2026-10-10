@@ -12,9 +12,18 @@ $ErrorActionPreference = 'Stop'
 $copies = Get-ChildItem $Folder -Filter '*.bak' -File -ErrorAction SilentlyContinue | Where-Object { $_.Name -like "$Database*" -or $_.Name -notlike 'PesoWeb_V2*' } | Sort-Object LastWriteTime -Descending
 if (-not $Name) {
     if (-not $copies) { throw "No copies found in $Folder." }
+    $now = Get-DatabaseStructure -Database $Database
     Write-Host "Safety copies in $Folder (newest first):"
-    $copies | Select-Object -First 15 | ForEach-Object { Write-Host ('  {0}   {1}   {2} MB' -f $_.BaseName, $_.LastWriteTime.ToString('yyyy-MM-dd HH:mm'), [math]::Round($_.Length / 1MB)) }
-    $Name = Read-Host 'Which one? (type the name exactly, without .bak)'
+    Write-Host ('  {0,-52} {1,-17} {2,8}  {3}' -f 'name', 'saved', 'size', 'can be restored now?')
+    $copies | Select-Object -First 15 | ForEach-Object {
+        $note = $_.FullName -replace '\.bak$', '.structure.txt'
+        $status = if (-not (Test-Path $note)) { 'no (no structure note)' }
+                  elseif (Compare-Structure -Saved (Get-Content $note -Raw) -Now $now) { 'no (structure changed since)' }
+                  else { 'yes' }
+        Write-Host ('  {0,-52} {1,-17} {2,5} MB  {3}' -f $_.BaseName, $_.LastWriteTime.ToString('yyyy-MM-dd HH:mm'), [math]::Round($_.Length / 1MB), $status)
+    }
+    $Name = Read-Host 'Which one? (type the name exactly, without .bak; press Enter to cancel)'
+    if (-not $Name) { Write-Host 'Nothing typed. Cancelled; nothing was changed.'; exit 0 }
 }
 $Name = $Name -replace '\.bak$', ''
 $file = Join-Path $Folder ($Name + '.bak')

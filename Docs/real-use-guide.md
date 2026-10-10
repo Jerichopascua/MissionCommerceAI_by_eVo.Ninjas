@@ -53,23 +53,24 @@ Step 3B (double-click `SAVE-SNAPSHOT.cmd`) needs no login at all, so you can use
 
 ---
 
-## Part 3. Before you start: three quick checks (once)
+## Part 3. Before you start: three quick checks
 
 1. **Open the RUN folder in File Explorer:** go to `D:\git\AMD\hackathon_amd_act3\MissionCommerceAI_by_eVo.Ninjas\RUN`. You will see these files; you only ever double-click the ones ending in `.cmd`:
 
 | File | What it does |
 |---|---|
-| `START.cmd` | Starts PesoWeb, the screens and the dashboard |
+| `CHECK.cmd` | Checks that everything is ready (Python, the database, the ports, space on D) and says what to fix |
+| `START.cmd` | Starts the database service, PesoWeb, the screens and the dashboard |
 | `SAVE-SNAPSHOT.cmd` | Saves a safety copy of the whole database on drive D |
 | `AGENT-REAL.cmd` | Starts the AI helper for the real company (asks for the password) |
-| `RESTORE-SNAPSHOT.cmd` | Puts the database back to a safety copy |
+| `RESTORE-SNAPSHOT.cmd` | Puts the database back to a safety copy; it lists the copies and refuses one whose database structure has changed since |
 | `STOP.cmd` | Stops everything |
 
    Each one opens a black window, does its job, tells you what happened, and waits for you to press a key.
 2. **Free space on D:** you need at least 2 GB free on drive D (File Explorer, This PC).
-3. **The database service is running:** press the Windows key, type `PowerShell`, press Enter, type `sqllocaldb start MSSQLLocalDB` and press Enter. You should see "started" (or "already running"). Then close that window. (If you restarted your PC today, do this once.)
+3. **Run the readiness check:** double-click **`CHECK.cmd`**. It lists what is ready and what is not, line by line ("OK" or "!!" with what to do). Python, the database, the three ports, free space on D, and how many safety copies can be restored are all checked. Nothing is changed. (It is normal for the three ports to say "!!" before you have started the system.)
 
-*Python must be installed.* If `AGENT-REAL.cmd` later says "python is not recognized", tell me.
+*Python must be installed.* `CHECK.cmd` tells you if it is not.
 
 ---
 
