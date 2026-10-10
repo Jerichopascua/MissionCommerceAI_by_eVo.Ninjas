@@ -1,6 +1,6 @@
 // Keeps the app available offline. Network first, so a new version shows at once; the saved copy is used only when there is no connection.
-var CACHE = 'mm-shell-v5';
-var SHELL = ['./', 'index.html', 'style.css', 'app.js', 'vendor/qrcode.js', 'manifest.webmanifest',
+var CACHE = 'mm-shell-v6';
+var SHELL = ['./', 'index.html', 'style.css', 'app.js', 'config.js', 'vendor/qrcode.js', 'manifest.webmanifest',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/maskable-512.png', 'icons/apple-touch-icon.png', 'icons/icon-diamond.png', 'icons/sale.svg', 'data.json'];
 
 self.addEventListener('install', function (e) {

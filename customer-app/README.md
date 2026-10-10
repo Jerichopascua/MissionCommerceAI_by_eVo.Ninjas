@@ -56,6 +56,20 @@ The app is a Progressive Web App: it has a manifest, icons, an offline service w
 - **GitHub Pages / Netlify:** upload the `customer-app` folder. It then shows the saved prices (`data.json`) because the store system is not on the internet.
 - **A tunnel to this PC** (Cloudflare Tunnel, ngrok): gives an https address that reaches `serve.py`, so the live prices and the cashier demo work. It exposes the app and the price feed on the internet while it runs.
 
+## Hosting it with your own server
+
+Two parts, and they can be on different addresses:
+
+1. **PesoWeb (the API)** on your server, over HTTPS, with:
+   - the database brought up to date: run `scripts/20261011_product_sales.sql` (idempotent) from the PesoWeb project;
+   - `CustomerApp__TenantId` set to the company whose prices are published (an environment variable or `appsettings`); with 0 or unset the price feed is off;
+   - the public price feed reachable: `GET /api/customer-app/offers` (read-only, no login, allows any origin). The cashier lookup `GET /api/online-orders/{reference}` stays behind the cashier's login.
+2. **This folder** on any static host over HTTPS. Edit `config.js` and set `window.MM_API = 'https://your-pesoweb-address'`.
+
+Then open the app address on the phone: it downloads the live prices and **Install app** appears.
+
+Before going public: the logins in `data.json` are demo values and reservations stay on the phone. A real launch needs customer accounts and a reservations table in PesoWeb (see the list below).
+
 ## What is demo and what is real
 
 - **Real:** the product list and prices are downloaded from PesoWeb (`/api/customer-app/offers`). Sales put on by a manager and approved AI markdowns show as offers. The cashier lookup is a real PesoWeb screen and API.

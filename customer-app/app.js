@@ -26,7 +26,7 @@
   var DEMO_BASKET = { '1367': 3, '1019': 2, '1370': 2, '1375': 1 };
   function api() {
     try { var o = localStorage.getItem('mm-api'); if (o) { return o; } } catch (e) { /* ignore */ }
-    return '';                                   // same address as the app: serve.py forwards the price feed
+    return (window.MM_API || '').replace(/\/+$/, '');   // '' = same address as the app (serve.py forwards the price feed)
   }
 
   // ---- install as an app on the phone
