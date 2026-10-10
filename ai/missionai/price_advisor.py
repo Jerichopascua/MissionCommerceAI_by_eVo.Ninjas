@@ -87,6 +87,10 @@ def advise_one(p: dict, rate: float, beta: float, beta_source: str, policy: dict
                           round((new_price - price) / price * 100.0, 1) if price else 0.0, round(units_now, 3), round(units_new, 3),
                           round(profit_now, 2), round(profit_new, 2), round(profit_new - profit_now, 2), round(gain_worst, 2), beta, beta_source, reason)
 
+    if price <= 0 or cost <= 0:
+        # real catalogs have products with no price or no cost yet (an item set up but never priced); there is nothing to base a suggestion on
+        what = "selling price" if price <= 0 else "cost"
+        return make("no_evidence", price, 0.0, 0.0, 0.0, f"this product has no {what} recorded (0), so no suggestion is made; set it first")
     if price < fl:
         return make("margin_alert", fl, 0.0, 0.0, 0.0, f"today's price {price:g} is below the margin price {fl:g} (cost {cost:g} + {hard:g}%); raise to at least {fl:g}")
     if not rate or rate <= 0:

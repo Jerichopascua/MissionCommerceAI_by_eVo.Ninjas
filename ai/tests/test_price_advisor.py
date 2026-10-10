@@ -88,6 +88,26 @@ class AdviceTests(unittest.TestCase):
         self.assertEqual(a, b)
 
 
+class UnpricedProductTests(unittest.TestCase):
+    POLICY = {"hardMarginFloorPct": 5, "softMarginFloorPct": 10}
+
+    def test_a_product_with_no_price_does_not_crash_the_advisor_even_if_it_sells(self):
+        s = pa.advise_one({"id": 1, "name": "KN95 MASK", "category": "X", "cost": 0.0, "price": 0.0}, 3.0, -1.3, "assumed", self.POLICY)
+        self.assertEqual(s.status, "no_evidence")
+        self.assertIn("selling price", s.reason)
+
+    def test_a_product_with_a_price_but_no_cost_gets_no_suggestion_either(self):
+        s = pa.advise_one({"id": 2, "name": "Unknown cost", "category": "X", "cost": 0.0, "price": 50.0}, 3.0, -1.3, "assumed", self.POLICY)
+        self.assertEqual(s.status, "no_evidence")
+        self.assertIn("cost", s.reason)
+
+    def test_the_rest_of_the_catalog_is_still_advised(self):
+        out = pa.advise([{"id": 1, "name": "A", "category": "X", "cost": 0.0, "price": 0.0}, {"id": 2, "name": "B", "category": "X", "cost": 40.0, "price": 60.0}],
+                        {1: 3.0, 2: 3.0}, lambda c: (-1.3, "assumed"), self.POLICY)
+        self.assertEqual([x.status for x in out][0], "no_evidence")
+        self.assertEqual(len(out), 2)
+
+
 if __name__ == "__main__":
     unittest.main()
 
