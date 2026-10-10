@@ -23,10 +23,32 @@
 
   // The demo basket: exactly what the cashier's lookup of R4821 returns in PesoWeb (product id -> quantity).
   var DEMO_REF = 'R4821';
-  var DEMO_BASKET = { '1362': 2, '1421': 1, '1406': 2, '1385': 1 };
+  var DEMO_BASKET = { '1367': 3, '1019': 2, '1370': 2, '1375': 1 };
   function api() {
     try { var o = localStorage.getItem('mm-api'); if (o) { return o; } } catch (e) { /* ignore */ }
     return '';                                   // same address as the app: serve.py forwards the price feed
+  }
+
+  // ---- install as an app on the phone
+  var installEvent = null;
+  var standalone = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
+  var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); installEvent = e; paintInstall(); });
+  window.addEventListener('appinstalled', function () { installEvent = null; standalone = true; paintInstall(); });
+
+  function paintInstall() {
+    var slot = document.getElementById('installSlot');
+    if (!slot) { return; }
+    if (standalone) { slot.innerHTML = ''; return; }
+    var how = installEvent
+      ? '<button class="btn small" id="installBtn">Install app</button>'
+      : '';
+    var hint = installEvent ? 'Put it on your home screen like any other app.'
+      : isIOS ? 'On iPhone: tap the Share button, then <b>Add to Home Screen</b>.'
+      : 'Open the browser menu (three dots), then choose <b>Install app</b> or <b>Add to Home screen</b>.';
+    slot.innerHTML = '<div class="card"><div class="row"><div class="grow"><b>Get the app</b><div class="muted">' + hint + '</div></div>' + how + '</div></div>';
+    var b = document.getElementById('installBtn');
+    if (b) { b.onclick = function () { installEvent.prompt(); installEvent.userChoice.then(function () { installEvent = null; paintInstall(); }); }; }
   }
   function dayText(n) { return n < 0 ? Math.abs(n) + ' day(s) overdue' : n === 0 ? 'due today' : 'due in ' + n + ' day(s)'; }
   function dueDate(n) { var d = new Date(); d.setDate(d.getDate() + n); return d.toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' }); }
@@ -57,7 +79,7 @@
     return '<div class="login"><img class="logo" src="icons/icon-192.png" alt="">' +
       '<h1 style="text-align:center">' + esc(data.store.name) + '</h1>' +
       '<p class="muted" style="text-align:center">Sales, clearance and your account</p>' +
-      '<div class="card"><form id="loginForm">' +
+      '<div id="installSlot"></div><div class="card"><form id="loginForm">' +
       '<label>User ID or phone number</label><input type="text" name="who" autocomplete="username" autocapitalize="none" required>' +
       '<label>Password</label><input type="password" name="pw" autocomplete="current-password" required>' +
       (ui.err ? '<div class="err">' + esc(ui.err) + '</div>' : '') +
@@ -152,7 +174,7 @@
 
   function viewAccount() {
     var c = customer();
-    return '<div class="card"><h3>My details</h3>' +
+    return '<div id="installSlot"></div><div class="card"><h3>My details</h3>' +
       '<label>Name</label><input type="text" value="' + esc(c.name) + '" readonly>' +
       '<label>User ID (cannot be changed)</label><input type="text" value="' + esc(c.userId) + '" readonly>' +
       (c.email ? '<label>Email (cannot be changed)</label><input type="text" value="' + esc(c.email) + '" readonly>' : '') +
@@ -173,7 +195,7 @@
   function render() {
     var app = document.getElementById('app');
     var c = data && customer();
-    if (!c) { app.innerHTML = viewLogin(); bindLogin(); return; }
+    if (!c) { app.innerHTML = viewLogin(); bindLogin(); paintInstall(); return; }
     var owe = c.owes.reduce(function (s, x) { return s + x.amount; }, 0);
     var count = Object.keys(ui.cart).reduce(function (s, k) { return s + ui.cart[k]; }, 0);
     var body = ui.ticket ? viewTicket(ui.ticket) : ui.tab === 'sale' ? viewSale() : ui.tab === 'shop' ? viewShop() : ui.tab === 'order' ? viewOrder() : ui.tab === 'owes' ? viewOwes() : viewAccount();
@@ -184,6 +206,7 @@
         return '<button data-tab="' + t[0] + '" class="' + (ui.tab === t[0] && !ui.ticket ? 'on' : '') + '"><b>' + t[1] + '</b>' + t[2] + dot + '</button>';
       }).join('') + '</nav>';
     bindApp();
+    paintInstall();
     if (ui.ticket) { drawQr(ui.ticket); }
   }
 

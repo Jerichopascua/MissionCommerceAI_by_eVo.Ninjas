@@ -24,21 +24,42 @@ A very small web app a customer can put on a phone. It is a separate folder and 
 - **Same Wi-Fi:** run `SERVE.cmd`, open `http://<this PC IPv4 address>:8090` in the phone browser, then browser menu, **Add to Home screen**.
 - **Real install (works like an app, offline):** host the folder on any HTTPS site (GitHub Pages, Netlify, the store's server). Android Chrome then offers **Install app**; on iPhone use Safari, Share, **Add to Home Screen**.
 
-## The one-minute demo (customer app, then the cashier)
+## Put a product on sale (PesoWeb)
 
-PesoWeb must be running with the demo feed on for company 520 Minimart (`CustomerApp__TenantId=6`, set in `appsettings.Development.json`).
+1. In PesoWeb open **Put on sale** (menu: Intelligent Hub, Put on sale).
+2. Type the product name, pick it, set **Percent off** and the **Last day**, press **Put on sale**.
+3. The pricing rules apply. Never more than the maximum discount, never below cost plus the minimum margin; otherwise it says why it was refused.
+4. At once: the POS lists and charges the sale price, and the customer app shows it under **Sale** (30% and over as **Clearance**). **End sale** brings the normal price back.
 
-1. **Phone:** open the app, log in as `juan` / `demo123`. It opens on **Sale**, clearance items first. The line under the banner says "Prices from the store system", which means the prices were downloaded from PesoWeb.
-2. Press **Reserve it** on the demo basket (4 clearance and sale items). The app shows reference **R4821** and a QR code.
-3. **Cashier:** in PesoWeb open **POS**, press the phone icon (**Online order**), key in `R4821`, press **Find order**. It shows **Juan Dela Cruz** and the 4 items at the clearance prices (total 377.40).
-4. Press **Load into this sale**. The customer and the items are in the sale like any other, and the cashier takes payment as usual.
+## The demo (customer app, then the cashier)
 
-Any other reference gives "No online order with that reference". Prices are never typed in the app: they are live PesoWeb prices, with the fixed demo markdowns on 11 products (30% and over show as clearance).
+PesoWeb must be running with the price feed on for company 520 Minimart (`CustomerApp__TenantId=6`).
+
+1. **Phone:** open the app, log in as `juan` / `demo123`. It opens on **Sale**, clearance items first. The line under the banner says "Prices from the store system".
+2. Press **Reserve it** on the demo basket (4 items). The app shows reference **R4821** and a QR code.
+3. **Cashier:** in PesoWeb open **POS**, press the phone icon (**Online order**), key in `R4821`, press **Find order**. It shows **Juan Dela Cruz** and the 4 items at the sale prices (total 73.08).
+4. Press **Load into this sale**. The sale is rung up at the sale prices, like any other sale.
+
+Any other reference gives "No online order with that reference".
+
+## Install it on a phone as an app
+
+The app is a Progressive Web App: it has a manifest, icons, an offline service worker and an **Install app** button.
+
+| Where | What to do |
+|---|---|
+| Android, Chrome | Open the address, press **Install app** in the app (or browser menu, Install app). |
+| iPhone, Safari | Open the address, Share button, **Add to Home Screen**. |
+
+**Important:** the browser only offers a real install on a secure address (**https**). Over plain Wi-Fi (`http://192.168...`) the page works and "Add to Home screen" makes a shortcut, but it is not a full install. For a real install put the folder on an HTTPS address:
+
+- **GitHub Pages / Netlify:** upload the `customer-app` folder. It then shows the saved prices (`data.json`) because the store system is not on the internet.
+- **A tunnel to this PC** (Cloudflare Tunnel, ngrok): gives an https address that reaches `serve.py`, so the live prices and the cashier demo work. It exposes the app and the price feed on the internet while it runs.
 
 ## What is demo and what is real
 
-- **Real:** the product list and prices are downloaded from PesoWeb (`/api/customer-app/offers`). Any approved AI markdown shows as an offer. The cashier lookup is a real PesoWeb screen and API.
-- **Demo:** the 11 sale and clearance offers are fixed demo markdowns on live prices, the customer (Juan) and his reservation R4821 are fixed, and the customers and balances in `data.json` are fake.
+- **Real:** the product list and prices are downloaded from PesoWeb (`/api/customer-app/offers`). Sales put on by a manager and approved AI markdowns show as offers. The cashier lookup is a real PesoWeb screen and API.
+- **Demo:** the customer (Juan) and his reservation R4821 are fixed, and the customers and balances in `data.json` are fake. The offers are real sales put on in PesoWeb.
 - Reservations are saved on the phone only; PesoWeb knows only the fixed demo reference R4821.
 - With no connection to PesoWeb the app shows the saved prices from `data.json`.
 - Passwords in `data.json` are plain demo values. The real app must never ship passwords in a file.
