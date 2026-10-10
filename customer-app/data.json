@@ -1,0 +1,256 @@
+{
+ "store": {
+  "name": "520 Minimart",
+  "phone": "0917 000 0520",
+  "hours": "7:00 AM - 10:00 PM"
+ },
+ "products": [
+  {
+   "id": 1264,
+   "name": "Santini Parmesan Cheese 85G",
+   "price": 172.0
+  },
+  {
+   "id": 1404,
+   "name": "Purefoods Chicken Drummets 240G",
+   "price": 105.0,
+   "offer": {
+    "kind": "sale",
+    "percentOff": 20,
+    "daysLeft": 5,
+    "note": "Weekend sale"
+   }
+  },
+  {
+   "id": 1468,
+   "name": "Vida Bacon 250G",
+   "price": 105.0,
+   "offer": {
+    "kind": "sale",
+    "percentOff": 15,
+    "daysLeft": 5,
+    "note": "Weekend sale"
+   }
+  },
+  {
+   "id": 1406,
+   "name": "Purefoods Beef Tapa 220G",
+   "price": 85.0,
+   "offer": {
+    "kind": "sale",
+    "percentOff": 25,
+    "daysLeft": 3,
+    "note": "Weekend sale"
+   }
+  },
+  {
+   "id": 1400,
+   "name": "Purefoods Crazy Cut Nuggets 200G",
+   "price": 80.0
+  },
+  {
+   "id": 1403,
+   "name": "Purefoods Chicken Tapa 220G",
+   "price": 72.0
+  },
+  {
+   "id": 1467,
+   "name": "Vida Sweet Ham 250G",
+   "price": 65.0
+  },
+  {
+   "id": 1396,
+   "name": "Purefoods Siz-Delight Sisig Chicken 250G",
+   "price": 53.0
+  },
+  {
+   "id": 1362,
+   "name": "Rebisco Doowee Donut Strawberry 420G",
+   "price": 105.0,
+   "offer": {
+    "kind": "clearance",
+    "percentOff": 50,
+    "daysLeft": 2,
+    "note": "Best before soon - rush to the store"
+   }
+  },
+  {
+   "id": 1421,
+   "name": "Whoopie Mallow Cake Choco Loco 10 X 34G",
+   "price": 98.0,
+   "offer": {
+    "kind": "clearance",
+    "percentOff": 45,
+    "daysLeft": 2,
+    "note": "Best before soon - rush to the store"
+   }
+  },
+  {
+   "id": 1393,
+   "name": "Quake Overload Black Forest 10/30G",
+   "price": 83.0,
+   "offer": {
+    "kind": "clearance",
+    "percentOff": 40,
+    "daysLeft": 1,
+    "note": "Last day"
+   }
+  },
+  {
+   "id": 1391,
+   "name": "Quake Overload Mocha 10/30G",
+   "price": 83.0
+  },
+  {
+   "id": 1485,
+   "name": "Ys Nata De Coco White 340G",
+   "price": 62.0,
+   "offer": {
+    "kind": "sale",
+    "percentOff": 18,
+    "daysLeft": 6,
+    "note": "Sale"
+   }
+  },
+  {
+   "id": 1439,
+   "name": "Tita Ely Nata De Coco 340G",
+   "price": 62.0
+  },
+  {
+   "id": 1116,
+   "name": "Super Delights Brownie Bites Dark Chocolate 180G",
+   "price": 55.0
+  },
+  {
+   "id": 1117,
+   "name": "Super Delights Brownie Bites 200G",
+   "price": 52.0
+  },
+  {
+   "id": 1012,
+   "name": "Spam Lucnheon Meat Regular 12Oz.",
+   "price": 225.0,
+   "offer": {
+    "kind": "sale",
+    "percentOff": 12,
+    "daysLeft": 7,
+    "note": "Sale"
+   }
+  },
+  {
+   "id": 1013,
+   "name": "Spam Luncheonmeat Lesssodium1120Z",
+   "price": 225.0
+  },
+  {
+   "id": 1401,
+   "name": "Purefoods Corned Beef 380G",
+   "price": 175.0,
+   "offer": {
+    "kind": "sale",
+    "percentOff": 10,
+    "daysLeft": 7,
+    "note": "Sale"
+   }
+  },
+  {
+   "id": 1450,
+   "name": "Ufc Golden Fiesta Oil Canola Pet 1L",
+   "price": 140.0
+  },
+  {
+   "id": 1385,
+   "name": "Quaker Oats Instant 800G",
+   "price": 140.0,
+   "offer": {
+    "kind": "clearance",
+    "percentOff": 35,
+    "daysLeft": 3,
+    "note": "Clearance"
+   }
+  },
+  {
+   "id": 1011,
+   "name": "Spam",
+   "price": 150.0
+  },
+  {
+   "id": 1457,
+   "name": "Ufc Hapi Fiesta Oil Sup 1L (900Ml)",
+   "price": 120.0
+  },
+  {
+   "id": 1291,
+   "name": "Saba Squid Chili 425G",
+   "price": 113.0
+  },
+  {
+   "id": 1289,
+   "name": "Saba Squid Reg 425G",
+   "price": 113.0
+  },
+  {
+   "id": 1402,
+   "name": "Purefoods Corned Beef 210G",
+   "price": 110.0
+  },
+  {
+   "id": 1066,
+   "name": "Sunmac Superghetti Combo 1'S-P",
+   "price": 108.0,
+   "offer": {
+    "kind": "clearance",
+    "percentOff": 30,
+    "daysLeft": 3,
+    "note": "Clearance"
+   }
+  },
+  {
+   "id": 1065,
+   "name": "Super Delights Chocolate Chip Cookies 400G",
+   "price": 98.0
+  },
+  {
+   "id": 1180,
+   "name": "Snowbear Candy 100S",
+   "price": 95.0
+  },
+  {
+   "id": 1277,
+   "name": "Samyang Hot Chicken Ramen Big Bowl 105G",
+   "price": 93.0
+  }
+ ],
+ "customers": [
+  {
+   "userId": "juan",
+   "phone": "09171234567",
+   "password": "demo123",
+   "name": "Juan Dela Cruz",
+   "email": "juan@example.test",
+   "owes": [
+    {
+     "ref": "INV-2031",
+     "description": "Groceries on account",
+     "amount": 1250.0,
+     "dueInDays": 4
+    },
+    {
+     "ref": "INV-1988",
+     "description": "Rice and cooking oil",
+     "amount": 780.5,
+     "dueInDays": -3
+    }
+   ]
+  },
+  {
+   "userId": "maria",
+   "phone": "09181234567",
+   "password": "demo123",
+   "name": "Maria Santos",
+   "email": "",
+   "owes": []
+  }
+ ]
+}

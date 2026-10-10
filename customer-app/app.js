@@ -1,0 +1,238 @@
+/* 520 Minimart customer app (prototype). Plain JavaScript, no build step.
+   Data comes from data.json (demo). The real app will read the same shapes from PesoWeb. */
+(function () {
+  'use strict';
+  var KEY = 'mm-customer-v1';
+  var data = null;
+  var ui = { tab: 'sale', search: '', cart: {}, msg: '', err: '' };
+
+  function load() { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; } }
+  function save(s) { try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) { /* private mode */ } }
+  var store = load();
+  store.overrides = store.overrides || {};   // userId -> { phone, password } changed by the customer
+  store.orders = store.orders || [];
+
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function peso(n) { return '₱' + Number(n).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+  function digits(s) { return String(s || '').replace(/\D/g, ''); }
+  function salePrice(p) { return p.offer ? Math.round(p.price * (100 - p.offer.percentOff)) / 100 : p.price; }
+  function dayText(n) { return n < 0 ? Math.abs(n) + ' day(s) overdue' : n === 0 ? 'due today' : 'due in ' + n + ' day(s)'; }
+  function dueDate(n) { var d = new Date(); d.setDate(d.getDate() + n); return d.toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' }); }
+
+  function customer() {
+    if (!store.session) { return null; }
+    var c = data.customers.filter(function (x) { return x.userId === store.session; })[0];
+    if (!c) { return null; }
+    var o = store.overrides[c.userId] || {};
+    return Object.assign({}, c, { phone: o.phone || c.phone, password: o.password || c.password });
+  }
+
+  function login(who, pw) {
+    var w = who.trim().toLowerCase(), d = digits(who);
+    var c = data.customers.filter(function (x) {
+      var o = store.overrides[x.userId] || {};
+      var phone = digits(o.phone || x.phone);
+      return x.userId.toLowerCase() === w || (d.length >= 7 && phone === d);
+    })[0];
+    if (!c) { return false; }
+    var o = store.overrides[c.userId] || {};
+    if ((o.password || c.password) !== pw) { return false; }
+    store.session = c.userId; save(store); return true;
+  }
+
+  // ---------- views
+  function viewLogin() {
+    return '<div class="login"><img class="logo" src="icons/icon-192.png" alt="">' +
+      '<h1 style="text-align:center">' + esc(data.store.name) + '</h1>' +
+      '<p class="muted" style="text-align:center">Sales, clearance and your account</p>' +
+      '<div class="card"><form id="loginForm">' +
+      '<label>User ID or phone number</label><input type="text" name="who" autocomplete="username" autocapitalize="none" required>' +
+      '<label>Password</label><input type="password" name="pw" autocomplete="current-password" required>' +
+      (ui.err ? '<div class="err">' + esc(ui.err) + '</div>' : '') +
+      '<p><button class="btn" style="width:100%" type="submit">Log in</button></p>' +
+      '<p class="muted">Demo: user ID <b>juan</b> or phone <b>09171234567</b>, password <b>demo123</b></p>' +
+      '</form></div></div>';
+  }
+
+  function productCard(p, showAdd) {
+    var q = ui.cart[p.id] || 0;
+    var o = p.offer;
+    return '<div class="card"><div class="row"><div class="grow">' +
+      (o ? '<span class="tag ' + (o.kind === 'clearance' ? 'clearance' : '') + '">' + (o.kind === 'clearance' ? 'CLEARANCE ' : 'SALE ') + o.percentOff + '% OFF</span> ' : '') +
+      '<div><b>' + esc(p.name) + '</b></div>' +
+      '<div><span class="price">' + peso(salePrice(p)) + '</span>' + (o ? '<span class="was">' + peso(p.price) + '</span>' : '') + '</div>' +
+      (o ? '<div class="muted">' + esc(o.note) + ' · ends in ' + o.daysLeft + ' day(s)</div>' : '') +
+      '</div>' + (showAdd ? (q ? '<div class="qty"><button data-dec="' + p.id + '">−</button><b>' + q + '</b><button data-inc="' + p.id + '">+</button></div>'
+        : '<button class="btn small" data-inc="' + p.id + '">Add</button>') : '') +
+      '</div></div>';
+  }
+
+  function viewSale() {
+    var list = data.products.filter(function (p) { return p.offer; })
+      .sort(function (a, b) { return b.offer.percentOff - a.offer.percentOff; });
+    var clr = list.filter(function (p) { return p.offer.kind === 'clearance'; });
+    return '<div class="banner"><img src="icons/hub-banner-clearance.png" alt=""></div>' +
+      '<div class="note">Rush to the store: clearance items are limited and end soon. Reserve them here, then pay at the cashier.</div>' +
+      (clr.length ? '<h3 style="margin:6px 0 8px">Clearance (super discount)</h3>' + clr.map(function (p) { return productCard(p, true); }).join('') : '') +
+      '<h3 style="margin:6px 0 8px">On sale</h3>' +
+      list.filter(function (p) { return p.offer.kind !== 'clearance'; }).map(function (p) { return productCard(p, true); }).join('');
+  }
+
+  function viewShop() {
+    var s = ui.search.toLowerCase();
+    var list = data.products.filter(function (p) { return !s || p.name.toLowerCase().indexOf(s) >= 0; });
+    return '<input type="search" id="search" placeholder="Search products" value="' + esc(ui.search) + '" style="margin-bottom:12px">' +
+      (list.length ? list.map(function (p) { return productCard(p, true); }).join('') : '<p class="muted">No product found.</p>');
+  }
+
+  function cartLines() {
+    return Object.keys(ui.cart).map(function (id) {
+      var p = data.products.filter(function (x) { return String(x.id) === id; })[0];
+      return p ? { p: p, q: ui.cart[id], price: salePrice(p) } : null;
+    }).filter(Boolean);
+  }
+
+  function viewOrder() {
+    var lines = cartLines(), total = lines.reduce(function (s, l) { return s + l.q * l.price; }, 0);
+    var html = '';
+    if (ui.msg) { html += '<div class="okmsg">' + esc(ui.msg) + '</div>'; }
+    html += '<h3 style="margin:6px 0 8px">Your basket</h3>';
+    if (!lines.length) { html += '<p class="muted">Your basket is empty. Add items from Sale or Shop.</p>'; }
+    else {
+      html += lines.map(function (l) { return productCard(l.p, true); }).join('') +
+        '<div class="card"><div class="row"><div class="grow"><b>Total</b></div><div class="price">' + peso(total) + '</div></div>' +
+        '<p><button class="btn" style="width:100%" id="reserve">Reserve and pay at the store</button></p>' +
+        '<p><button class="btn ghost" style="width:100%" disabled>Pay online (coming with the real app)</button></p></div>';
+    }
+    var mine = store.orders.filter(function (o) { return o.userId === store.session; }).slice().reverse();
+    if (mine.length) {
+      html += '<h3 style="margin:14px 0 8px">My reservations</h3>' + mine.map(function (o) {
+        return '<div class="card"><div class="row"><div class="grow"><b>' + esc(o.code) + '</b><div class="muted">' + o.items.length + ' item(s) · ' + peso(o.total) +
+          '</div></div><button class="btn small" data-show="' + esc(o.code) + '">Show code</button></div></div>';
+      }).join('');
+    }
+    return html;
+  }
+
+  function viewTicket(code) {
+    var o = store.orders.filter(function (x) { return x.code === code; })[0];
+    if (!o) { return viewOrder(); }
+    return '<div class="card"><p class="muted" style="text-align:center">Show this to the cashier</p>' +
+      '<div class="big">' + esc(o.code) + '</div><div class="qr" id="qr"></div>' +
+      '<p class="muted" style="text-align:center">' + esc(data.store.name) + ' · ' + o.items.length + ' item(s) · ' + peso(o.total) + '</p></div>' +
+      '<div class="card">' + o.items.map(function (i) { return '<div class="row"><div class="grow">' + esc(i.name) + ' × ' + i.qty + '</div><div>' + peso(i.price * i.qty) + '</div></div>'; }).join('') + '</div>' +
+      '<p><button class="btn ghost" style="width:100%" id="back">Back</button></p>';
+  }
+
+  function viewOwes() {
+    var c = customer(), total = c.owes.reduce(function (s, x) { return s + x.amount; }, 0);
+    if (!c.owes.length) { return '<div class="card"><h3>You have no balance</h3><p class="muted">Nothing is owed to the store. Thank you!</p></div>'; }
+    return '<div class="card"><div class="muted">Total you owe</div><div class="big" style="letter-spacing:0">' + peso(total) + '</div></div>' +
+      c.owes.map(function (x) {
+        return '<div class="card"><div class="row"><div class="grow"><b>' + esc(x.description) + '</b><div class="muted">' + esc(x.ref) + ' · deadline ' + dueDate(x.dueInDays) + '</div></div>' +
+          '<div style="text-align:right"><div class="price">' + peso(x.amount) + '</div><span class="tag ' + (x.dueInDays < 0 ? 'bad' : x.dueInDays <= 3 ? 'warn' : 'ok') + '">' + dayText(x.dueInDays) + '</span></div></div></div>';
+      }).join('') + '<p class="muted">Please pay at the store before the deadline.</p>';
+  }
+
+  function viewAccount() {
+    var c = customer();
+    return '<div class="card"><h3>My details</h3>' +
+      '<label>Name</label><input type="text" value="' + esc(c.name) + '" readonly>' +
+      '<label>User ID (cannot be changed)</label><input type="text" value="' + esc(c.userId) + '" readonly>' +
+      (c.email ? '<label>Email (cannot be changed)</label><input type="text" value="' + esc(c.email) + '" readonly>' : '') +
+      '</div><div class="card"><h3>Change phone number</h3><form id="phoneForm">' +
+      '<label>Phone number</label><input type="tel" name="phone" value="' + esc(c.phone) + '" required>' +
+      '<label>Password (to confirm)</label><input type="password" name="pw" required>' +
+      '<p><button class="btn" type="submit">Save phone</button></p></form></div>' +
+      '<div class="card"><h3>Change password</h3><form id="pwForm">' +
+      '<label>Current password</label><input type="password" name="old" required>' +
+      '<label>New password (at least 6 characters)</label><input type="password" name="pw1" required>' +
+      '<label>Repeat new password</label><input type="password" name="pw2" required>' +
+      '<p><button class="btn" type="submit">Save password</button></p></form></div>' +
+      (ui.err ? '<div class="err">' + esc(ui.err) + '</div>' : '') + (ui.msg ? '<div class="okmsg">' + esc(ui.msg) + '</div>' : '') +
+      '<p><button class="btn ghost" style="width:100%" id="logout">Log out</button></p>';
+  }
+
+  // ---------- render and events
+  function render() {
+    var app = document.getElementById('app');
+    var c = data && customer();
+    if (!c) { app.innerHTML = viewLogin(); bindLogin(); return; }
+    var owe = c.owes.reduce(function (s, x) { return s + x.amount; }, 0);
+    var count = Object.keys(ui.cart).reduce(function (s, k) { return s + ui.cart[k]; }, 0);
+    var body = ui.ticket ? viewTicket(ui.ticket) : ui.tab === 'sale' ? viewSale() : ui.tab === 'shop' ? viewShop() : ui.tab === 'order' ? viewOrder() : ui.tab === 'owes' ? viewOwes() : viewAccount();
+    var tabs = [['sale', '🏷️', 'Sale'], ['shop', '🛒', 'Shop'], ['order', '🧺', 'Basket'], ['owes', '💳', 'My balance'], ['account', '👤', 'Account']];
+    app.innerHTML = '<div class="top"><img src="icons/icon-diamond.png" width="26" height="26" alt=""><h1>' + esc(data.store.name) + '</h1><div class="who">Hi, ' + esc(c.name.split(' ')[0]) + '</div></div>' +
+      '<div class="wrap">' + body + '</div><nav>' + tabs.map(function (t) {
+        var dot = t[0] === 'order' && count ? '<span class="dot">' + count + '</span>' : t[0] === 'owes' && owe ? '<span class="dot">!</span>' : '';
+        return '<button data-tab="' + t[0] + '" class="' + (ui.tab === t[0] && !ui.ticket ? 'on' : '') + '"><b>' + t[1] + '</b>' + t[2] + dot + '</button>';
+      }).join('') + '</nav>';
+    bindApp();
+    if (ui.ticket) { drawQr(ui.ticket); }
+  }
+
+  function drawQr(code) {
+    var el = document.getElementById('qr');
+    if (!el || typeof qrcode !== 'function') { return; }
+    var qr = qrcode(0, 'M'); qr.addData('MM|' + code + '|' + store.session); qr.make();
+    el.innerHTML = qr.createSvgTag({ cellSize: 6, margin: 2, scalable: true });
+  }
+
+  function bindLogin() {
+    document.getElementById('loginForm').onsubmit = function (e) {
+      e.preventDefault(); var f = e.target;
+      if (login(f.who.value, f.pw.value)) { ui.err = ''; ui.tab = 'sale'; render(); }
+      else { ui.err = 'User ID, phone number or password is not correct.'; render(); }
+    };
+  }
+
+  function bindApp() {
+    var app = document.getElementById('app');
+    Array.prototype.forEach.call(app.querySelectorAll('[data-tab]'), function (b) { b.onclick = function () { ui.tab = b.dataset.tab; ui.ticket = null; ui.err = ''; ui.msg = ''; render(); window.scrollTo(0, 0); }; });
+    Array.prototype.forEach.call(app.querySelectorAll('[data-inc]'), function (b) { b.onclick = function () { var id = b.dataset.inc; ui.cart[id] = (ui.cart[id] || 0) + 1; ui.msg = ''; render(); }; });
+    Array.prototype.forEach.call(app.querySelectorAll('[data-dec]'), function (b) { b.onclick = function () { var id = b.dataset.dec; ui.cart[id] = (ui.cart[id] || 0) - 1; if (ui.cart[id] <= 0) { delete ui.cart[id]; } render(); }; });
+    Array.prototype.forEach.call(app.querySelectorAll('[data-show]'), function (b) { b.onclick = function () { ui.ticket = b.dataset.show; render(); }; });
+    var s = document.getElementById('search');
+    if (s) { s.oninput = function () { ui.search = s.value; var pos = s.selectionStart; render(); var n = document.getElementById('search'); n.focus(); n.setSelectionRange(pos, pos); }; }
+    var r = document.getElementById('reserve');
+    if (r) { r.onclick = reserve; }
+    var bk = document.getElementById('back');
+    if (bk) { bk.onclick = function () { ui.ticket = null; render(); }; }
+    var lo = document.getElementById('logout');
+    if (lo) { lo.onclick = function () { store.session = null; save(store); ui = { tab: 'sale', search: '', cart: {}, msg: '', err: '' }; render(); }; }
+    var pf = document.getElementById('phoneForm');
+    if (pf) { pf.onsubmit = function (e) {
+      e.preventDefault(); var c = customer(), f = e.target; ui.err = ''; ui.msg = '';
+      if (f.pw.value !== c.password) { ui.err = 'Password is not correct.'; }
+      else if (digits(f.phone.value).length < 10) { ui.err = 'Enter a valid phone number.'; }
+      else { store.overrides[c.userId] = Object.assign({}, store.overrides[c.userId], { phone: f.phone.value.trim() }); save(store); ui.msg = 'Phone number saved.'; }
+      render(); }; }
+    var wf = document.getElementById('pwForm');
+    if (wf) { wf.onsubmit = function (e) {
+      e.preventDefault(); var c = customer(), f = e.target; ui.err = ''; ui.msg = '';
+      if (f.old.value !== c.password) { ui.err = 'Current password is not correct.'; }
+      else if (f.pw1.value.length < 6) { ui.err = 'New password must be at least 6 characters.'; }
+      else if (f.pw1.value !== f.pw2.value) { ui.err = 'The two new passwords are not the same.'; }
+      else { store.overrides[c.userId] = Object.assign({}, store.overrides[c.userId], { password: f.pw1.value }); save(store); ui.msg = 'Password changed.'; }
+      render(); }; }
+  }
+
+  function reserve() {
+    var lines = cartLines(); if (!lines.length) { return; }
+    var code;
+    do { code = 'R' + String(Math.floor(1000 + Math.random() * 9000)); } while (store.orders.some(function (o) { return o.code === code; }));
+    store.orders.push({
+      code: code, userId: store.session, createdAt: new Date().toISOString(),
+      total: lines.reduce(function (s, l) { return s + l.q * l.price; }, 0),
+      items: lines.map(function (l) { return { id: l.p.id, name: l.p.name, qty: l.q, price: l.price }; })
+    });
+    save(store); ui.cart = {}; ui.ticket = code; render();
+  }
+
+  // ---------- start
+  fetch('data.json', { cache: 'no-cache' }).then(function (r) { return r.json(); })
+    .then(function (d) { data = d; render(); })
+    .catch(function () { document.getElementById('app').innerHTML = '<div class="wrap"><div class="card">Could not load the store data. Check your connection and try again.</div></div>'; });
+
+  if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js').catch(function () { /* optional */ }); }
+})();
