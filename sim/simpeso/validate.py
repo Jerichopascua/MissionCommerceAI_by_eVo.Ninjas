@@ -63,7 +63,11 @@ def _fill(days_units: dict, days_value: dict, key: str, category: str, min_days:
     return Series(key, category, days, price, units) if len(days) >= min_days else None
 
 
-def series_from_dunnhumby(base=None, top: int = 150, row_limit: int = 2_000_000) -> list:
+MAX_LINE_QTY = 20          # a till line with more units than this is a weighed or bulk line, not a shelf item
+MIN_SALES_DAYS = 200       # a product must have sold on at least this many days to be tested
+
+
+def series_from_dunnhumby(base=None, top: int = 150, row_limit: int = 5_000_000) -> list:
     base = Path(base) if base else datasets.folder("dunnhumby")
     units, value = defaultdict(lambda: defaultdict(float)), defaultdict(lambda: defaultdict(float))
     with (base / "transaction_data.csv").open(newline="", encoding="utf-8-sig") as f:
@@ -76,12 +80,13 @@ def series_from_dunnhumby(base=None, top: int = 150, row_limit: int = 2_000_000)
                 q, v, d = float(r[up["QUANTITY"]]), float(r[up["SALES_VALUE"]]), int(r[up["DAY"]])
             except (KeyError, ValueError):
                 continue
-            if q <= 0:
+            if q <= 0 or q > MAX_LINE_QTY or v <= 0:
                 continue
             p = r[up["PRODUCT_ID"]]
             units[p][d] += q
             value[p][d] += v
-    best = sorted(units, key=lambda p: -sum(units[p].values()))[:top]
+    eligible = [p for p in units if len(units[p]) >= MIN_SALES_DAYS]
+    best = sorted(eligible, key=lambda p: -sum(units[p].values()))[:top]
     out = [s for s in (_fill(units[p], value[p], p, "all") for p in best) if s]
     return out
 
@@ -194,33 +199,43 @@ def backtest_price_model(series: list, train_share: float = 0.7, min_days: int =
         for p, u in zip(s.price[:cut], s.units[:cut]):
             model.observe(s.category, base, p / ref, u)
 
-    actual, aware, flat, recent, seasonal = [], [], [], [], []
-    moved_a, moved_aware, moved_flat, moved_recent, moved_seasonal = [], [], [], [], []
+    actual, aware, aware_recent, flat, recent, seasonal = [], [], [], [], [], []
+    moved_a, moved_aware, moved_aware_recent, moved_flat, moved_recent, moved_seasonal = [], [], [], [], [], []
     for s, cut, ref, base in fitted:
         beta = model.beta(s.category)
         tail = statistics.mean(s.units[max(0, cut - 28):cut])
+        # as deployed, the AI's base rate is the recent rate of sale at the prices those days had, not an all-history average
+        recent_base = statistics.mean(u / ((p / ref) ** beta) for p, u in zip(s.price[max(0, cut - 28):cut], s.units[max(0, cut - 28):cut]))
         for k in range(cut, len(s.days)):
             ratio = s.price[k] / ref
             pa = base * (ratio ** beta)
+            pr = recent_base * (ratio ** beta)
             ps = s.units[k - 7 * ((k - cut) // 7 + 1)] if k - 7 * ((k - cut) // 7 + 1) >= 0 else base          # same weekday in the last week of training
-            for lst, val in ((actual, s.units[k]), (aware, pa), (flat, base), (recent, tail), (seasonal, ps)):
+            for lst, val in ((actual, s.units[k]), (aware, pa), (aware_recent, pr), (flat, base), (recent, tail), (seasonal, ps)):
                 lst.append(val)
             if abs(ratio - 1.0) >= MOVED:
-                for lst, val in ((moved_a, s.units[k]), (moved_aware, pa), (moved_flat, base), (moved_recent, tail), (moved_seasonal, ps)):
+                for lst, val in ((moved_a, s.units[k]), (moved_aware, pa), (moved_aware_recent, pr), (moved_flat, base), (moved_recent, tail), (moved_seasonal, ps)):
                     lst.append(val)
     out = {
         "series_used": len(fitted), "test_days": len(actual),
         "betas": {c: round(model.beta(c), 3) for c in sorted({s.category for s, _, _, _ in fitted})},
-        "wape_all_days": {"price_aware": round(_wape(actual, aware), 4), "average": round(_wape(actual, flat), 4),
+        "wape_all_days": {"price_aware": round(_wape(actual, aware), 4), "price_aware_recent_level": round(_wape(actual, aware_recent), 4), "average": round(_wape(actual, flat), 4),
                           "recent_average": round(_wape(actual, recent), 4), "same_weekday_last_week": round(_wape(actual, seasonal), 4)},
         "days_with_price_move": len(moved_a),
     }
     if moved_a:
-        out["wape_price_move_days"] = {"price_aware": round(_wape(moved_a, moved_aware), 4), "average": round(_wape(moved_a, moved_flat), 4),
+        out["wape_price_move_days"] = {"price_aware": round(_wape(moved_a, moved_aware), 4), "price_aware_recent_level": round(_wape(moved_a, moved_aware_recent), 4),
+                                       "average": round(_wape(moved_a, moved_flat), 4),
                                        "recent_average": round(_wape(moved_a, moved_recent), 4), "same_weekday_last_week": round(_wape(moved_a, moved_seasonal), 4)}
         best_baseline = min(out["wape_price_move_days"][k] for k in ("average", "recent_average", "same_weekday_last_week"))
-        out["verdict"] = ("The price-aware model beat every price-blind baseline on the days the price moved."
-                          if out["wape_price_move_days"]["price_aware"] < (1 - MIN_IMPROVEMENT) * best_baseline
+        mv = out["wape_price_move_days"]
+        # the same model with and without price, level for level: what price awareness adds by itself (positive: error is lower with it)
+        out["price_awareness_gain_on_price_move_days"] = {
+            "fixed_level_vs_average": round(1 - mv["price_aware"] / mv["average"], 4),
+            "recent_level_vs_recent_average": round(1 - mv["price_aware_recent_level"] / mv["recent_average"], 4)}
+        # the verdict is about the model as the AI uses it (recent level); the fixed-level form is reported beside it
+        out["verdict"] = ("The price-aware model (recent level) beat every price-blind baseline on the days the price moved."
+                          if mv["price_aware_recent_level"] < (1 - MIN_IMPROVEMENT) * best_baseline
                           else "The price-aware model did NOT clearly beat the best price-blind baseline on the days the price moved in this data set.")
     return out
 
@@ -237,6 +252,7 @@ def validate_demand(mix: "datasets.Mix", log=print) -> dict:
             log(f"   error (WAPE, lower is better), all test days: {r['wape_all_days']}")
         if r.get("wape_price_move_days"):
             log(f"   on the {r['days_with_price_move']} days with a price move: {r['wape_price_move_days']}")
+            log("   price awareness on its own, like for like: " + str(r["price_awareness_gain_on_price_move_days"]))
             log("   " + r["verdict"])
         elif r.get("note"):
             log("   " + r["note"])

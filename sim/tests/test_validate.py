@@ -33,6 +33,9 @@ class BacktestTests(unittest.TestCase):
         self.assertLess(moved["price_aware"], moved["average"])
         self.assertLess(moved["price_aware"], moved["recent_average"])
         self.assertIn("beat every price-blind baseline", r["verdict"])
+        gain = r["price_awareness_gain_on_price_move_days"]
+        self.assertGreater(gain["fixed_level_vs_average"], 0.05)           # like for like, price awareness lowers the error
+        self.assertGreater(gain["recent_level_vs_recent_average"], 0.05)
         self.assertLess(r["betas"]["all"], -1.0)                       # it found that a higher price sells fewer
 
     def test_the_report_says_so_when_price_awareness_does_not_help(self):
@@ -72,14 +75,14 @@ class LoaderTests(unittest.TestCase):
     def test_dunnhumby_series_are_daily_units_and_average_price(self):
         with tempfile.TemporaryDirectory() as d:
             rows = ["household_key,BASKET_ID,DAY,PRODUCT_ID,QUANTITY,SALES_VALUE,STORE_ID,RETAIL_DISC,TRANS_TIME,WEEK_NO,COUPON_DISC,COUPON_MATCH_DISC"]
-            for day in range(1, 61):
+            for day in range(1, 241):
                 price = 2.0 if day % 4 else 1.5
                 for h in range(3):
                     rows.append(f"{h},{day * 10 + h},{day},777,2,{2 * price},1,0,1200,1,0,0")
             (Path(d) / "transaction_data.csv").write_text("\n".join(rows), encoding="utf-8")
             s = validate.series_from_dunnhumby(Path(d), top=5)
             self.assertEqual(len(s), 1)
-            self.assertEqual(len(s[0].days), 60)
+            self.assertEqual(len(s[0].days), 240)
             self.assertEqual(s[0].units[0], 6.0)
             self.assertEqual(sorted(set(s[0].price)), [1.5, 2.0])
 

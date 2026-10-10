@@ -39,7 +39,7 @@ Team Evo.Ninjas. Written 2026-10-10. Source of the requirements: `amd-hackathon-
    - Recommendation: (a), plus a clear "run it locally" README for PesoWeb.
 3. **"Built during the event".** Most of this was built before the Oct 12 kick-off. Ask in the Oct 13 Q&A whether pre-existing work is allowed; the answer decides how we word the submission (for example: PesoWeb existed, the AI layer, simulator and hub were built for this hackathon). The git history shows when each part was added.
 4. **A private key is in your notes.** `Docs/amd-setup-guide.md` (modified, not committed) contains an SSH private-key block. It is not in any commit and not on GitHub. Delete that block before anyone commits or shares the file, and if the file was shared anywhere, create a new key in the AMD console.
-5. **Evidence from real shoppers is thin.** 50 real receipts from one store. The demand check on a public dataset is the fastest fix (see the standard explainer, section 5b).
+5. **Evidence from real shoppers.** Partly closed: the price-aware demand model was tested on 2 years of real supermarket sales (Dunnhumby): price awareness lowers the error by about 10 to 12% like for like, but the form the AI uses is only about 1% better than the long-run average (`Docs/real-data-demand-check.md`). Your own store has only 50 receipts, so the control-branch evidence on real sales is still to come.
 
 ## 4. Text for the form (edit freely)
 
@@ -56,7 +56,7 @@ Small retailers have the data in their till but not the decisions: short-dated f
 
 | Date | What |
 |---|---|
-| Oct 10 to 11 | You: download one public dataset (Dunnhumby) and check the repo is public. Me: demand check on it, the clean demo database, rehearsal |
+| Oct 10 to 11 | Done: Dunnhumby downloaded and the demand check run. You: check the repo is public. Me: clean demo database (needs your OK), rehearsal |
 | Oct 12 to 13 | Kick-off; ask the Q&A questions (pre-existing work; whether a local PesoWeb demo with a video is acceptable as the "application") |
 | **Oct 14** | **AMD session** (about 2 hours): GPU check, Quick Sim on ROCm, record numbers and screenshots, destroy the server |
 | Oct 15 | Record the demo video from the real system; enable GitHub Pages; final README pass |

@@ -1,0 +1,41 @@
+{
+ "kind": "demand",
+ "datasets": {
+  "datasets": {
+   "dunnhumby": 1.0
+  },
+  "summary": "dunnhumby 100%"
+ },
+ "by_dataset": {
+  "dunnhumby": {
+   "series_used": 150,
+   "test_days": 31744,
+   "betas": {
+    "all": -1.292
+   },
+   "wape_all_days": {
+    "price_aware": 0.5836,
+    "price_aware_recent_level": 0.6192,
+    "average": 0.625,
+    "recent_average": 0.6962,
+    "same_weekday_last_week": 0.8774
+   },
+   "days_with_price_move": 19546,
+   "wape_price_move_days": {
+    "price_aware": 0.5694,
+    "price_aware_recent_level": 0.6225,
+    "average": 0.6302,
+    "recent_average": 0.7089,
+    "same_weekday_last_week": 0.885
+   },
+   "price_awareness_gain_on_price_move_days": {
+    "fixed_level_vs_average": 0.0965,
+    "recent_level_vs_recent_average": 0.1219
+   },
+   "verdict": "The price-aware model did NOT clearly beat the best price-blind baseline on the days the price moved in this data set.",
+   "series_loaded": 150
+  }
+ },
+ "note": "Real shoppers, not our simulated ones. The data sets are not Philippine unless the file is yours; they test the method. WAPE is total absolute error over total units on days the model has not seen.",
+ "source": "Dunnhumby The Complete Journey (public data set; 150 ordinary products, last 30% of each history as the test). Aggregated results only."
+}
