@@ -247,7 +247,7 @@ Four shoppers get a persona and a mission and the model chooses what they do eac
 ```powershell
 $env:PESOWEB_ROOT_PASSWORD = "<the root password, never saved to a file>"
 python scripts\showcase_preflight.py --run real2                       # read-only: are prices still the catalog's?
-python scriptsa_check.py --run-a real2 --run-b real3 --days 214-216  # the twins must show no difference with no AI
+python scripts\aa_check.py --run-a real2 --run-b real3 --days 214-216  # the twins must show no difference with no AI
 python scripts\showcase.py --ai-run real2 --base-run real3 --day 201   # the flow with the AI, and the same day without it
 python scripts\showcase_days.py --days-on 204-208 --days-off 209-213   # more days, to average out the noise
 ```
