@@ -32,14 +32,16 @@ You do not have to type any ID anywhere. The IDs are only for reference.
 
 ### The logins
 
+**All logins and passwords are in one file: `RUN\CREDENTIALS.txt`** (in the same RUN folder; open it with Notepad). It is plain text, kept on drive D and never committed to GitHub, so don't share it.
+
 | Login (email) | What it is | Password | Use it for |
 |---|---|---|---|
-| **superuser@520minimart.test** (username `superuser`) | The new full-access login for 520 Minimart, on the company's **SuperAdmin** role, both branches | The password you chose when you asked me to create it | **Everything in this guide** |
+| **superuser@520minimart.test** (username `superuser`) | The new full-access login for 520 Minimart, on the company's **SuperAdmin** role, both branches | In `RUN\CREDENTIALS.txt`, section A | **Everything in this guide** |
 | `almastoreadmin@gmail.com` | Existing store admin, role "Default User" (no AI permissions) | Yours | Not needed |
 | `almaposuser1@gmail.com` | Existing till user, role "Default User" (no AI permissions) | Yours | Not needed (it gets "403" in the AI screens) |
-| **superadmin@email.com** | The head (root) login for the whole system | Yours | **Only** to save and restore snapshots (Step 3A) |
+| **superadmin@email.com** | The head (root) login for the whole system | In `RUN\CREDENTIALS.txt`, section B | **Only** to save and restore snapshots on screen (Step 3A) |
 
-If you don't remember the superadmin password, use Step 3B (a command) instead; it needs no login.
+Step 3B (double-click `SAVE-SNAPSHOT.cmd`) needs no login at all, so you can use it instead.
 
 ### Where things are
 
@@ -97,7 +99,7 @@ Open Chrome and go to `http://127.0.0.1:4200`. You should see the PesoWeb sign-i
 Do **one** of the two ways. Do this **before** you change anything.
 
 **Way A: from the screen (needs the superadmin password)**
-1. At the sign-in page, enter `superadmin@email.com` and your superadmin password. Press Sign in.
+1. At the sign-in page, enter `superadmin@email.com` and the password in `RUN\CREDENTIALS.txt` (section B). Press Sign in.
 2. In the left menu click **Intelligent Hub**, then **Test snapshots** (the last item).
 3. Under **Save a snapshot**, in **File name** type `before-real-test` (letters, digits, dashes only).
 4. Press **Save snapshot**. It takes a few seconds. You should see "Saved "before-real-test" (about 215 MB)" in green, and a new row in the table with "Can be restored now: Yes".

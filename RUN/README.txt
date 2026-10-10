@@ -5,6 +5,7 @@ RUN folder: everything you need, in one place. Double-click a .cmd file (or run 
   AGENT-REAL.cmd        start the AI helper for the real company 520 Minimart (asks for the password); leave the window open
   RESTORE-SNAPSHOT.cmd  put the database back to a safety copy (asks which; saves the present state first)
   STOP.cmd              stop PesoWeb, the screens and the dashboard
+  CREDENTIALS.txt       every login and where each secret is kept (plain text, git-ignored: never commit or share it)
 
 Order for a real test: START, then SAVE-SNAPSHOT, then sign in at http://127.0.0.1:4200, then AGENT-REAL.
 Full step-by-step: Docs\real-use-guide.md

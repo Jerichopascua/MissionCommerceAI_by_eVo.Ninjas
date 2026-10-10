@@ -9,3 +9,6 @@ sim/runs/
 
 # real customer data sets the user places for tests (licences and privacy are theirs to check)
 sim/customer_data/
+
+# every login in one place for the local test bench; plain text, never committed
+RUN/CREDENTIALS.txt
