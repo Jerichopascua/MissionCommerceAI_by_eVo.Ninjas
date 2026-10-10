@@ -83,7 +83,7 @@
     var list = data.products.filter(function (p) { return p.offer; })
       .sort(function (a, b) { return b.offer.percentOff - a.offer.percentOff; });
     var clr = list.filter(function (p) { return p.offer.kind === 'clearance'; });
-    return '<div class="banner"><img src="icons/hub-banner-clearance.png" alt=""></div>' +
+    return '<div class="banner"><img src="icons/sale.svg" alt=""></div>' +
       '<div class="note">Rush to the store: clearance items are limited and end soon. Reserve them here, then pay at the cashier.</div>' +
       '<div class="card"><div class="row"><div class="grow"><b>Demo basket</b><div class="muted">Four clearance and sale items, ready to reserve</div></div>' +
       '<button class="btn small" id="demoBasket">Reserve it</button></div></div>' +

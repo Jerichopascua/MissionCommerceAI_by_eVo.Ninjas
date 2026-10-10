@@ -64,7 +64,7 @@ def main():
         icon.thumbnail((int(size * 0.62), int(size * 0.62)))
         canvas.alpha_composite(icon, ((size - icon.width) // 2, (size - icon.height) // 2))
         canvas.convert("RGB").save(HERE / "icons" / f"icon-{size}.png")
-    for name in ("hub-banner-clearance", "icon-diamond"):
+    for name in ("icon-diamond",):
         Image.open(ART / f"{name}.png").save(HERE / "icons" / f"{name}.png")
     print(len(products), "products,", sum(1 for p in products if "offer" in p), "on offer")
 
