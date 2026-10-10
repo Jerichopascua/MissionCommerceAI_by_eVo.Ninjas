@@ -45,36 +45,37 @@ If you don't remember the superadmin password, use Step 3B (a command) instead; 
 
 | | |
 |---|---|
-| Project folder | `D:\git\AMD\hackathon_amd_act3\MissionCommerceAI_by_eVo.Ninjas` |
-| The AI helper program lives in | `...\MissionCommerceAI_by_eVo.Ninjas\sim` |
+| **The one folder with every script you need** | **`D:\git\AMD\hackathon_amd_act3\MissionCommerceAI_by_eVo.Ninjas\RUN`** (open it in File Explorer and double-click the files; you never need to open or change any other folder) |
 | Backups and snapshots (drive D, never C) | `D:\PesoWeb_Backups` and `D:\PesoWeb_Snapshots` |
 | The screens (open in Chrome) | `http://127.0.0.1:4200` |
 
 ---
 
-## Part 3. Before you start: five quick checks (once)
+## Part 3. Before you start: three quick checks (once)
 
-1. **Open PowerShell:** press the Windows key, type `PowerShell`, press Enter. You will use **two** PowerShell windows. Call them **Window A** and **Window B**.
-2. **Free space on D:** you need at least 2 GB free on drive D. Open File Explorer, This PC, and look at drive D.
-3. **Python works:** in Window A type `python --version` and press Enter. You should see a version such as `Python 3.13`. If you see an error, tell me.
-4. **The database service is running:** in Window A type `sqllocaldb start MSSQLLocalDB` and press Enter. You should see "LocalDB instance ... started" (or "already running").
-5. **Go to the project folder:** in Window A type
+1. **Open the RUN folder in File Explorer:** go to `D:\git\AMD\hackathon_amd_act3\MissionCommerceAI_by_eVo.Ninjas\RUN`. You will see these files; you only ever double-click the ones ending in `.cmd`:
 
-```powershell
-cd D:\git\AMD\hackathon_amd_act3\MissionCommerceAI_by_eVo.Ninjas
-```
+| File | What it does |
+|---|---|
+| `START.cmd` | Starts PesoWeb, the screens and the dashboard |
+| `SAVE-SNAPSHOT.cmd` | Saves a safety copy of the whole database on drive D |
+| `AGENT-REAL.cmd` | Starts the AI helper for the real company (asks for the password) |
+| `RESTORE-SNAPSHOT.cmd` | Puts the database back to a safety copy |
+| `STOP.cmd` | Stops everything |
+
+   Each one opens a black window, does its job, tells you what happened, and waits for you to press a key.
+2. **Free space on D:** you need at least 2 GB free on drive D (File Explorer, This PC).
+3. **The database service is running:** press the Windows key, type `PowerShell`, press Enter, type `sqllocaldb start MSSQLLocalDB` and press Enter. You should see "started" (or "already running"). Then close that window. (If you restarted your PC today, do this once.)
+
+*Python must be installed.* If `AGENT-REAL.cmd` later says "python is not recognized", tell me.
 
 ---
 
 ## Part 4. The steps
 
-### Step 1. Start the system (Window A)
+### Step 1. Start the system
 
-Type this and press Enter:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File ui\demo\start-demo.ps1
-```
+In the RUN folder **double-click `START.cmd`**. A black window opens.
 
 Wait. The first start takes **1 to 3 minutes** because the screens compile. When finished you will see:
 
@@ -83,9 +84,9 @@ PesoWeb API is up: http://localhost:5071/api/ai/settings
 PesoWeb screens is up: http://127.0.0.1:4200/
 ```
 
-Three small windows may open minimised in the taskbar. Leave them alone; closing them stops the system.
+then "Press any key to continue": press a key to close that window. Some small windows may be minimised in the taskbar; leave them alone, because closing them stops the system.
 
-*If it says "did not answer within ... seconds":* wait one more minute and open `http://127.0.0.1:4200` in Chrome. If the page loads, it's fine.
+*If it says "did not answer within ... seconds" for the dashboard:* ignore it; the dashboard is not used in this guide. If it says that for the screens, wait one more minute and open `http://127.0.0.1:4200` in Chrome. If the page loads, it's fine.
 
 ### Step 2. Check you can open the screens
 
@@ -102,14 +103,12 @@ Do **one** of the two ways. Do this **before** you change anything.
 4. Press **Save snapshot**. It takes a few seconds. You should see "Saved "before-real-test" (about 215 MB)" in green, and a new row in the table with "Can be restored now: Yes".
 5. Sign out (your name at the top right, then Sign out).
 
-**Way B: with a command (no login needed)**
-In Window A type (one line):
+**Way B: with a double-click (no login needed)**
+1. In the RUN folder double-click **`SAVE-SNAPSHOT.cmd`**.
+2. It asks **"Name for this safety copy"**. Type `before-real-test` and press Enter. (Pressing Enter with nothing typed gives it an automatic name with today's date and time.)
+3. After a few seconds you see **"Saved: D:\PesoWeb_Backups\before-real-test.bak (about 205 MB)"** in green. Press a key to close.
 
-```powershell
-sqlcmd -S "(localdb)\MSSQLLocalDB" -d master -E -b -Q "BACKUP DATABASE [PesoWeb_MissionDev] TO DISK = N'D:\PesoWeb_Backups\before-real-test.bak' WITH COPY_ONLY, INIT, CHECKSUM"
-```
-
-You should see "BACKUP DATABASE successfully processed". The file is now in `D:\PesoWeb_Backups`.
+If it says the name already exists, run it again and type a different name (for example `before-real-test-2`). If it says drive D is short of space, free some space on D.
 
 ### Step 4. Sign in as the 520 Minimart super user
 
@@ -140,20 +139,13 @@ This is the step most people miss. 520 Minimart has **no pricing rules yet**, so
 4. Leave "Auto-approve small, learned changes" **switched off**.
 5. Click **Save**. A green "Saved" appears.
 
-### Step 6. Start the AI helper (Window B)
+### Step 6. Start the AI helper
 
 The Run now buttons only work while this program is running.
 
-1. Open a **new** PowerShell window (Window B).
-2. Type:
-
-```powershell
-cd D:\git\AMD\hackathon_amd_act3\MissionCommerceAI_by_eVo.Ninjas\sim
-python -m simpeso.agent_service --real --email superuser@520minimart.test --as-of 2026-05-30 --interval 20
-```
-
-3. It asks **Password for superuser@520minimart.test:**. Type the super user's password. **Nothing appears while you type; that is normal.** Press Enter.
-4. You should see:
+1. In the RUN folder **double-click `AGENT-REAL.cmd`**.
+2. It asks **Password for superuser@520minimart.test:**. Type the super user's password. **Nothing appears while you type; that is normal.** Press Enter.
+3. You should see:
 
 ```
 REAL company superuser@520minimart.test: 2 branch(es), looking at the 28 days to 2026-05-30.
@@ -161,11 +153,11 @@ Pricing proposals go to the Approval Center; nothing changes a price or an order
 polling every 20s for Run now requests; Ctrl+C to stop
 ```
 
-**Leave Window B open and running** for the rest of the test.
+**Leave this black window open and running** for the rest of the test. Do not press a key in it.
 
-Why `--as-of 2026-05-30`: the real sales are from April and May. This tells the AI to look at the 28 days up to May 30 instead of "the last 28 days", which would be empty.
+Why it looks at "28 days to 2026-05-30": the real sales are from April and May. The helper is told to look at the 28 days up to May 30 instead of "the last 28 days", which would be empty. Once there are sales from today, open `RUN\AGENT-REAL.ps1` in Notepad and change the line `[string]$AsOf = '2026-05-30'` to `[string]$AsOf = ''`.
 
-*If you see "403":* the login is not the super user. *If you see a password or login error:* retry Step 6 and type the password again.
+*If you see "403":* the login is not the super user. *If you see a password or login error:* close the window and double-click `AGENT-REAL.cmd` again, then type the password again.
 
 ### Step 7. Press "Run now" on the AI features
 
@@ -173,7 +165,7 @@ Why `--as-of 2026-05-30`: the real sales are from April and May. This tells the 
 
 1. In Chrome, left menu: **Intelligent Hub**, then **AI Control**.
 2. You will see six cards. Press the orange **Run now** on each of these four, one after another: **AI Monitoring**, **AI Pricing**, **AI Replenish**, **AI Customer Mission**. (AI Product Loss Prevention and AI Insight have no Run now.)
-3. Wait up to 20 seconds (Window B shows a line for each run) and click **Refresh**. Each card shows **Last run: Done** with a sentence.
+3. Wait up to 20 seconds (the AGENT-REAL window shows a line for each run) and click **Refresh**. Each card shows **Last run: Done** with a sentence.
 
 What the real run showed on 520 Minimart:
 
@@ -234,17 +226,12 @@ Left menu: **Intelligent Hub**. Click each item below.
 ### Step 11. Finish and put everything back
 
 When you are done testing:
-1. In Window B press **Ctrl+C** to stop the helper.
+1. Close the **AGENT-REAL** black window (or press Ctrl+C in it).
 2. To **undo everything** you did (price rules, proposals, alerts), restore the safety copy:
-   - **If you used Way A:** sign in as `superadmin@email.com`, Intelligent Hub, Test snapshots, press **Restore** on `before-real-test`, type `RESTORE`, press **Restore now**.
-   - **If you used Way B:** first close the PesoWeb windows (or press Ctrl+C in them), then in Window A:
-
-```powershell
-sqlcmd -S "(localdb)\MSSQLLocalDB" -d master -E -b -Q "ALTER DATABASE [PesoWeb_MissionDev] SET SINGLE_USER WITH ROLLBACK IMMEDIATE; RESTORE DATABASE [PesoWeb_MissionDev] FROM DISK = N'D:\PesoWeb_Backups\before-real-test.bak' WITH REPLACE, CHECKSUM, RECOVERY; ALTER DATABASE [PesoWeb_MissionDev] SET MULTI_USER;"
-```
-
-   Then start the system again with Step 1.
+   - **If you used Way A (the Test snapshots screen):** sign in as `superadmin@email.com`, Intelligent Hub, Test snapshots, press **Restore** on `before-real-test`, type `RESTORE`, press **Restore now**.
+   - **If you used Way B:** in the RUN folder double-click **`RESTORE-SNAPSHOT.cmd`**. It lists your safety copies, newest first. Type `before-real-test` and press Enter. It warns you that this replaces the whole database, so type `RESTORE` and press Enter. It first saves the present state as `before-restore-...` (so even this can be undone), stops PesoWeb, restores, and tells you when it is done. Then double-click **`START.cmd`** to start again.
 3. If you don't want to undo, just leave it.
+4. To switch everything off for the day, double-click **`STOP.cmd`**. It stops PesoWeb, the screens and the dashboard. Your data is not touched.
 
 ---
 
@@ -252,14 +239,14 @@ sqlcmd -S "(localdb)\MSSQLLocalDB" -d master -E -b -Q "ALTER DATABASE [PesoWeb_M
 
 | What you see | What it means | What to do |
 |---|---|---|
-| Sign-in page won't load | The system isn't running | Repeat Step 1 and wait 2 minutes |
-| "403" in Window B or a blank AI screen | You signed in with a login that has no AI permissions (like `almaposuser1`) | Use `superuser@520minimart.test` |
+| Sign-in page won't load | The system isn't running | Double-click `START.cmd` (Step 1) and wait 2 minutes |
+| "403" in the AGENT-REAL window or a blank AI screen | You signed in with a login that has no AI permissions (like `almaposuser1`) | Use `superuser@520minimart.test` |
 | A card says **Failed** | The one-line reason is on the card | Tell me the sentence |
-| A card stays "Requested" or "Running" | Window B is not running | Do Step 6 again |
+| A card stays "Requested" or "Running" | The AGENT-REAL window is not running | Double-click `AGENT-REAL.cmd` (Step 6) |
 | AI Pricing: "10 refused by a rule" and 0 waiting | The pricing rules (Step 5) are missing | Do Step 5, then Run now again |
 | Overview shows ₱0 | The company's sales are from May | Normal; do Step 9 |
 | "Not enough free space" when saving a snapshot | Drive D is nearly full | Free space on D |
-| Port 4200 or 5071 busy | An old copy is still running | Close the minimised PesoWeb windows and repeat Step 1 |
+| Port 4200 or 5071 busy | An old copy is still running | Double-click `STOP.cmd`, then `START.cmd` |
 
 ---
 
