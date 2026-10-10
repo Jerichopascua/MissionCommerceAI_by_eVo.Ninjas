@@ -174,10 +174,79 @@ COUNT_REASONS = {"delivered without a receiving report": "stock was delivered wi
                  "high-value fast mover": "a fast seller with a high value on the shelf: a small shortage costs the most here"}
 
 
-def loss_prevention_handler(drv, acct, warehouse_ids: list, per_branch: int = 8, window_days: int = 28, as_of=None):
+HORIZON_DAYS = 14          # batches expiring within this many days are looked at
+PROPOSE_WITHIN_DAYS = 3    # the nearest ones also get a markdown proposed (the same window the markdown agent uses)
+
+
+def _batch_date(text):
+    import datetime as dt
+    return dt.date.fromisoformat(str(text)[:10]) if text else None
+
+
+def expiry_findings(batches: list, info: dict, rates: dict, policy: dict, configured: bool, model, today, wh: int,
+                    horizon_days: int = HORIZON_DAYS) -> list:
+    """Which batches with an expiry date will not sell in time at the product's rate of sale, how much is at risk, and the discount (inside the
+    owner's margin rules) that is expected to clear it. FEFO: units of the same product that expire sooner sell first. Returns dicts with
+    batch_id, product_id, days_left, qty, rate, unsold, value, discount, new_price, reason, expired."""
+    from missionai.optimizer import Batch, choose
+    out, ahead = [], {}
+    for b in sorted([x for x in batches if x.get("expiryDate") and float(x.get("qtyOnHand") or 0) > 0], key=lambda x: (x["productId"], str(x["expiryDate"]), x["id"])):
+        pid, qty = b["productId"], float(b["qtyOnHand"])
+        days_left = (_batch_date(b["expiryDate"]) - today).days
+        queued = ahead.get(pid, 0.0)
+        ahead[pid] = queued + qty
+        p = info.get(pid)
+        cost = float(b.get("cost") or (p or {}).get("cost") or 0)
+        if days_left > horizon_days:
+            continue
+        name = (p or {}).get("name") or f"product {pid}"
+        if days_left < 0:
+            value = qty * cost
+            out.append({"batch_id": b["id"], "product_id": pid, "days_left": days_left, "qty": qty, "rate": 0.0, "unsold": qty, "value": value,
+                        "discount": 0.0, "new_price": None, "expired": True,
+                        "reason": (f"Expired {-days_left} day(s) ago: {qty:g} unit(s), about ₱{value:,.0f} at cost, are still on the books. "
+                                   f"They cannot be sold: write them off (Inventory, near-expiry monitoring).")})
+            continue
+        rate = float(rates.get(f"{wh}:{pid}", 0.0))
+        days = max(1, days_left)
+        expected = min(qty, max(0.0, rate * days - queued))
+        unsold = qty - expected
+        if unsold < 0.5:
+            continue                                              # it should sell before it expires
+        value = unsold * cost
+        when = "today" if days_left == 0 else f"in {days_left} day(s)"
+        base = f"{qty:g} unit(s) expire {when}. "
+        discount, new_price, why = 0.0, None, ""
+        if rate <= 0:
+            base += "It has not sold in this period, so there is no evidence a discount would move it; consider a clearance price or moving it to a busier branch."
+        else:
+            base += f"At about {rate:.1f} a day only {expected:.0f} are expected to sell, so about {unsold:.0f} (₱{value:,.0f} at cost) may be thrown away."
+            if not configured:
+                why = " Set the pricing rules (Approval Center, Settings) so the AI can suggest a discount."
+            elif p and p.get("price", 0) > 0 and cost > 0:
+                batch = Batch(wh, pid, b["id"], p.get("category", ""), qty, cost, float(p["price"]), float(days), rate, 0.0, queued, name)
+                d = choose(batch, policy, model, 6)
+                if d.discount_pct > 0:
+                    discount, new_price = d.discount_pct, d.new_price
+                    why = (f" A {discount:g}% markdown (to ₱{new_price:,.0f}) is expected to sell {d.mean_units:.0f} of the {qty:g}"
+                           f" and cut the waste from about ₱{d.baseline_waste_pesos:,.0f} to ₱{d.waste_pesos:,.0f}.")
+                else:
+                    why = " No discount inside your margin rules is expected to sell it in time."
+        out.append({"batch_id": b["id"], "product_id": pid, "days_left": days_left, "qty": qty, "rate": rate, "unsold": unsold, "value": value,
+                    "discount": discount, "new_price": new_price, "expired": False, "reason": base + why})
+    return out
+
+
+def loss_prevention_handler(drv, acct, warehouse_ids: list, per_branch: int = 8, window_days: int = 28, as_of=None,
+                            horizon_days: int = HORIZON_DAYS, propose_markdowns: bool = True, today=None):
     """AI Product Loss Prevention run: PesoWeb's POS cannot see a short delivery or silent stock loss, so the AI spends a small counting budget
     where a loss would cost the most and is least likely to be explained by a record. It ranks stock delivered without a receiving report first,
-    then high-value fast sellers, and posts the top few per branch as "count first" suggestions. Nothing is counted or changed here."""
+    then high-value fast sellers, and posts the top few per branch as "count first" suggestions. Nothing is counted or changed here.
+
+    It also covers the other kind of loss, stock that expires unsold: for every batch with an expiry date inside `horizon_days` it works out how
+    much will not sell in time at the product's rate of sale, what that is worth at cost and the discount that would clear it, and posts it as a
+    "sell fast" suggestion. For batches 1 to 3 days from expiry it also PROPOSES that markdown (source AI): PesoWeb's guardrails, the company's
+    autonomy mode and the branch's AI-markdown switch decide whether it waits for a person, applies, or is refused."""
     from . import price_run
     from missionai import detectors
     import datetime as dt
@@ -185,7 +254,7 @@ def loss_prevention_handler(drv, acct, warehouse_ids: list, per_branch: int = 8,
     def run() -> str:
         end = as_of or dt.date.today()
         since = (end - dt.timedelta(days=window_days)).isoformat()
-        receipts, sales, costs, on_hand = [], {}, {}, {}
+        receipts, sales, costs, on_hand, info_by_wh = [], {}, {}, {}, {}
         for wh in warehouse_ids:
             receipts += drv.all_receipts(acct, wh)
             after = 0
@@ -199,6 +268,7 @@ def loss_prevention_handler(drv, acct, warehouse_ids: list, per_branch: int = 8,
                 after = max(m["id"] for m in page)
             for p in price_run.browse(drv, acct, wh):
                 on_hand[(wh, p["id"])] = p["stock"]
+                info_by_wh.setdefault(wh, {})[p["id"]] = p
                 if p["cost"] > 0 and p["stock"] > 0:          # nothing on the shelf at this branch: nothing to count there
                     costs[(wh, p["id"])] = p["cost"]
         ranked = detectors.rank_count_targets(receipts, sales, costs, per_branch * 3)       # a few extra: some have nothing on the shelf any more
@@ -214,12 +284,48 @@ def loss_prevention_handler(drv, acct, warehouse_ids: list, per_branch: int = 8,
             why = "; ".join(("a lot of value on the shelf for a product that has not sold in this period" if (r == "high-value fast mover" and sold <= 0)
                              else COUNT_REASONS.get(r, r)) for r in tg.reasons) or "worth a count"
             items.append({"WarehouseId": tg.warehouse_id, "ProductId": tg.product_id, "Score": round(tg.score, 2), "Reason": why[:380].capitalize() + "."})
+        # ---- the expiry side: what will not sell before it expires, and what to do about it
+        sell_items, proposed, at_risk_value = [], 0, 0.0
+        batches_by_wh = {wh: drv.all_batches(acct, wh) for wh in warehouse_ids}
+        if any(batches_by_wh.values()):
+            pol = drv.pricing_policy(acct) or {}
+            configured = bool(pol.get("configured", True)) and str(pol.get("autonomyMode", "Off")).lower() != "off"
+            policy = {"maxDiscountPct": float(pol.get("maxDiscountPct") or 0), "hardMarginFloorPct": float(pol.get("hardMarginFloorPct") or 0),
+                      "softMarginFloorPct": float(pol.get("softMarginFloorPct") or 0)}
+            rates = model_from_sales(drv, acct, warehouse_ids, window_days, as_of)["rates"]
+            dm = price_run.demand_model({"observations": {}, "estimates": {}})
+            now = today or dt.date.today()
+            earlier = {}
+            for s in drv.count_suggestions(acct, "Open", "SellFast"):
+                if s.get("batchId") and s.get("proposalStatus"):
+                    earlier[(s["warehouseId"], s["batchId"])] = s["proposalStatus"]
+            for wh in warehouse_ids:
+                for f in expiry_findings(batches_by_wh[wh], info_by_wh.get(wh, {}), rates, policy, configured, dm, now, wh, horizon_days):
+                    status_text = earlier.get((wh, f["batch_id"]))
+                    if (propose_markdowns and configured and not f["expired"] and f["discount"] > 0 and 1 <= f["days_left"] <= PROPOSE_WITHIN_DAYS
+                            and status_text is None):
+                        st, body = drv.markdown(acct, wh, f["product_id"], f["batch_id"], f["new_price"], f["reason"][:280], None, "Ai")
+                        code = (body or {}).get("code") or (body or {}).get("Code")
+                        status_text = "Applied" if st == 200 else "Proposed" if st == 202 else f"Refused: {code or st}"
+                        proposed += 1 if st in (200, 202) else 0
+                    at_risk_value += f["value"]
+                    sell_items.append({"WarehouseId": wh, "ProductId": f["product_id"], "Kind": "SellFast", "BatchId": f["batch_id"],
+                                       "ExpiryDate": (now + dt.timedelta(days=f["days_left"])).isoformat(), "DaysLeft": f["days_left"],
+                                       "BatchQty": f["qty"], "RatePerDay": round(f["rate"], 3), "UnitsAtRisk": round(f["unsold"], 2),
+                                       "ValueAtRisk": round(f["value"], 2), "SuggestedDiscountPct": f["discount"] or None, "SuggestedPrice": f["new_price"],
+                                       "ProposalStatus": status_text, "Score": max(1.0, round(f["value"], 2)) * (2 if f["expired"] else 1),
+                                       "Reason": f["reason"][:395]})
+        items += sell_items
         status, body = drv.post_count_suggestions(acct, warehouse_ids, items)
         if status != 200:
             raise RuntimeError(f"PesoWeb refused the count suggestions: {status} {body}")
         unreported = sum(1 for tg in targets if "delivered without a receiving report" in tg.reasons)
-        return (f"{body.get('added', 0)} products to count first at {len(warehouse_ids)} branch(es) ({unreported} with an unreported delivery)"
-                + (f"; {body.get('skipped', 0)} left out (already counted or dismissed lately)" if body.get("skipped") else ""))
+        n_count = len([i for i in items if i.get("Kind") != "SellFast"])
+        text = (f"{n_count} products to count first at {len(warehouse_ids)} branch(es) ({unreported} with an unreported delivery)"
+                f"; {len(sell_items)} batch(es) may expire unsold (about ₱{at_risk_value:,.0f} at cost), {proposed} markdown(s) proposed")
+        if body.get("skipped"):
+            text += f"; {body.get('skipped', 0)} left out (already handled lately)"
+        return text
 
     return run
 

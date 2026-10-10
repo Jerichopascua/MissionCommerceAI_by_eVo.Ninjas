@@ -20,6 +20,15 @@ class FakeDrv:
     def movements(self, acct, wh, kind="SALE_OUT", after_id=0, since=None):
         return [m for m in self._movements if m["warehouseId"] == wh and m["id"] > after_id and m["transactionDate"][:10] >= (since or "0")]
 
+    def all_batches(self, acct, wh):
+        return []                                   # these tests are about counting; expiry risk has its own tests
+
+    def pricing_policy(self, acct):
+        return {}
+
+    def count_suggestions(self, acct, status="Open", kind=None):
+        return []
+
     def post_count_suggestions(self, acct, warehouse_ids, items):
         self.posted.append((warehouse_ids, items))
         return self.status, {"added": len(items), "skipped": 0}

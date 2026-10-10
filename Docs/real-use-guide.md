@@ -176,7 +176,7 @@ What the real run showed on 520 Minimart:
 |---|---|---|
 | AI Monitoring | "2 unusual (Ledger); 2 new" | At the main branch 488 products, and at branch 2 two products, have a shelf quantity that doesn't match the stock ledger. Most likely the opening stock was entered without ledger entries; a stock count would settle it |
 | AI Pricing | "proposed 33 price changes (25 margin fixes): 31 waiting in the Approval Center, 2 refused by a rule" | 25 products are priced less than 5% above their cost |
-| AI Product Loss Prevention | "8 products to count first at 2 branch(es) (1 with an unreported delivery)" | The stock most worth counting: a delivery that has no receiving report, then high-value fast sellers. See "Count first" below |
+| AI Product Loss Prevention | "8 products to count first at 2 branch(es) (1 with an unreported delivery); 1 batch(es) may expire unsold (about ₱3,600 at cost), 0 markdown(s) proposed" | Stock to count first (a delivery with no receiving report, then high-value fast sellers) and batches that may expire unsold. See "Loss prevention" below |
 | AI Replenish | "0 reorder suggestions" | Nothing will run out soon: the shelves hold a lot of stock compared with the sales rate |
 | AI Customer Mission | "6 mission rows from 65 baskets at 2 branches" | A picture of why shoppers came |
 
@@ -198,13 +198,18 @@ Left menu: **Intelligent Hub**. Click each item below.
 
 **8.3 My tasks** (35 items on the real run): the 31 proposals plus 3 alerts (expired stock; the two ledger differences) and anything assigned to you. Each has the button or link that settles it. Click **Got it** on an alert to acknowledge it.
 
-**8.3b Count first (AI Product Loss Prevention)**
+**8.3b Loss prevention (AI Product Loss Prevention)**
 
-![Count first](demo/screens/37-real-count-first.png)
+![Loss prevention: sell fast and count first](demo/screens/39-real-loss-prevention.png)
 
-- Open the **Count first** tab (or Intelligent Hub, then **Count first**). On the real run it listed 8 products at the main branch. The top one: **BIOGESIC, 390 on the shelf, about ₱15,600 at cost, "stock was delivered with no receiving report, so nothing can say how much really arrived"**. The others are fast sellers with a lot of value on the shelf.
-- What to do: count that product on the shelf. If the shelf differs from the system, correct it on **Stock Adjustments**. Then press **Counted** (or **Dismiss** if you will not count it). Either answer removes it, and it won't be suggested again for 14 days.
-- It never counts or changes stock by itself, and it never says anyone took anything: only "the count differs from the system".
+Open the **Loss prevention** tab (or Intelligent Hub, then **Loss prevention**). It has two lists, for the two kinds of loss your POS cannot warn you about:
+
+- **Sell fast: stock that may expire unsold.** For every batch with an expiry date within 14 days: how many units are expected to be left at the expiry date at the product's usual rate of sale (units that expire sooner sell first), what that is worth at cost, and the discount, inside your margin rules, expected to clear it. For batches 1 to 3 days from expiry the AI has also **proposed the markdown**, and the "Markdown" column says whether it is waiting in the Approval Center, was applied, or was refused (with the reason). On the real run it showed **90 BIOGESIC that expired 72 days ago, about ₱3,600 at cost, still on the books** (the same stock the Overview and AI Monitoring flag). Expired stock can't be sold, so it says **write off** and offers no discount. What to do: write it off under Inventory, near-expiry monitoring; for a batch with a discount, approve or reject the markdown in the Approval Center; then press **Handled** (or **Dismiss**).
+- **Count first: hidden shrink.** On the real run the top one was **BIOGESIC, 390 on the shelf, about ₱15,600 at cost, "stock was delivered with no receiving report"**; the others are fast sellers with a lot of value on the shelf. What to do: count that product on the shelf; if the shelf differs from the system, correct it on **Stock Adjustments**; then press **Counted** (or **Dismiss**). Either answer removes it, and it won't be suggested again for 14 days.
+
+It never counts or changes stock by itself, never changes a price by itself (a markdown it proposes follows the company's autonomy mode, margin floors, and the branch's AI-markdown switch), and never says anyone took anything: only "the count differs from the system".
+
+If no discount is suggested, the row says why: the pricing rules are not set (do Step 5), the product has not sold in the period so there is no evidence a discount would move it, or no discount inside your margin rules is expected to clear it in time.
 
 **8.4 Reorders:** empty on this data (see the AI Replenish note above). To see it work you need stock that is running low.
 

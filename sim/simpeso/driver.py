@@ -321,11 +321,13 @@ class PesoWebDriver:
             after = max(r["id"] for r in page)
 
     def post_count_suggestions(self, acct: Account, warehouse_ids: list, items: list):
-        """items: dicts with WarehouseId, ProductId, Score, Reason. Returns (status, body)."""
+        """items: dicts with WarehouseId, ProductId, Score, Reason (and, for Kind SellFast: BatchId, ExpiryDate, DaysLeft, BatchQty, RatePerDay,
+        UnitsAtRisk, ValueAtRisk, SuggestedDiscountPct, SuggestedPrice, ProposalStatus). Returns (status, body)."""
         return self._call("POST", "/api/ai/count-suggestions", acct.token, json_body={"WarehouseIds": warehouse_ids, "Items": items}, raw=True)
 
-    def count_suggestions(self, acct: Account, status: str = "Open") -> list:
-        return self._call("GET", f"/api/ai/count-suggestions?status={status}", acct.token) or []
+    def count_suggestions(self, acct: Account, status: str = "Open", kind: str = None) -> list:
+        q = f"?status={status}" + (f"&kind={kind}" if kind else "")
+        return self._call("GET", f"/api/ai/count-suggestions{q}", acct.token) or []
 
     # ---- AI Monitoring ------------------------------------------------------------------------------------------
     def branch_names(self, acct: Account) -> dict:
