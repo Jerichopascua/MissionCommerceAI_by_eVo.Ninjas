@@ -193,6 +193,23 @@ def fill_basket(plan, visit: Visit, seed: int, price_ratio=None, calib=None):
     return replace(visit, lines=tuple(sorted(chosen.items())))
 
 
+def respond_to_prices(visit: Visit, lines, seed: int, price_ratio=None):
+    """A basket someone else chose (a real data set), put through this shopper's reaction to the prices in force now. A line the shopper would
+    skip at today's price is dropped; a cheaper price can add a unit. At list price almost every line stays. Returns the visit with lines, or None.
+    The hidden price response is read here and nowhere else."""
+    from dataclasses import replace
+    ratio = price_ratio or (lambda branch, code: 1.0)
+    a = _library()[visit.archetype]
+    r = rng.derive(seed, "replay-response", visit.id)
+    kept = {}
+    for code, qty in lines:
+        ratio_now = ratio(visit.branch, code)
+        if r.random() < _buy_probability(1.0, a.price_response, ratio_now, r.uniform(0.95, 1.05)):
+            extra = 1 if r.random() < max(0.0, (ratio_now < 1.0) * 0.25 * a.price_response) else 0
+            kept[code] = kept.get(code, 0) + qty + extra
+    return replace(visit, lines=tuple(sorted(kept.items()))) if kept else None
+
+
 def day_visits(plan, individuals: list, day: int, seed: int, price_ratio=None, calib=None) -> list:
     """All visits of one virtual day with baskets, sorted by time (prices fixed for the whole day)."""
     filled = (fill_basket(plan, v, seed, price_ratio, calib) for v in day_arrivals(plan, individuals, day, seed, calib))

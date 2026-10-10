@@ -172,13 +172,49 @@ cd D:\git\AMD\hackathon_amd_act3\MissionCommerceAI_by_eVo.Ninjas\sim
 **1. Run one business day in a world that already exists** (the usual way to put live data on the Overview, My tasks and AI Impact screens):
 
 ```powershell
-python -m simpeso.runner day --run real2 --day 400
+python -m simpeso.runner day --run real2 --day 400 --datasets simulated-rules
 ```
 
 - `--run` is the world: `real2` is the demo company with the AI on, `real3` the same shop with the AI off (the control), `real1` has no AI setup; `ai1`, `ai2` and `ai3` are small generated worlds (the same command on `ai3` took 3 seconds and produced 76 sales).
+- `--datasets` is **required**: every test must say which customer data set(s) the shoppers come from (see "Choosing the customer data set" below). Run without it in a terminal and you are shown a menu and asked.
 - `--day` is any number you have not used before for that world. It only picks the dice, so the same number replays the same shoppers; use a new number each time (the showcase used 201 to 213, so start at 400). PesoWeb itself stamps sales with the real clock, so they appear as today's sales.
 - Some sales fail with "Insufficient FEFO stock": that is PesoWeb refusing to sell stock it does not have, and it is counted, not hidden.
 - It prints sales, units, revenue, cost, returns, refusals and how many incidents were planted (expired stock not written off, cash differences, and so on) for the AI to find.
+
+**1b. Choosing the customer data set (one, or a mix)**
+
+Every test must name where its shoppers come from. There is no silent default. See what is available, and what is missing, with:
+
+```powershell
+python -m simpeso.datasets
+```
+
+| Data set | What it is | Used for |
+|---|---|---|
+| `simulated-rules` | Our rule-based pretend shoppers | business days (always available) |
+| `hero-llm` | A few shoppers whose choices come from an AI API | the customer-story test |
+| `store-pos` | Receipts exported from a real store | business days (baskets replayed), demand check, mission check |
+| `instacart` | Public grocery baskets (about 3 million orders) | business days |
+| `dunnhumby` | Public supermarket history with promotions | business days, demand check |
+| `m5`, `favorita` | Public daily sales (and prices or promotions) | demand check |
+| `till-survey` | Real shoppers' answers to "why did you come today?" | mission check |
+
+Real files go in `sim\customer_data\<id>\` (git-ignored; check each licence, and keep personal data out). Choose one, or a mix with weights:
+
+```powershell
+python -m simpeso.runner day --run real2 --day 401 --datasets store-pos:0.6,simulated-rules:0.4
+```
+
+For every visit one source is picked by those weights (the same run always repeats), and that source supplies the basket. A real data set's items are mapped onto the shop's catalog so that every product gets an equal share of purchases, most-bought first; basket sizes, quantities and which items travel together are real, the products are the shop's own. The shopper's reaction to the shop's prices stays the simulator's assumption (real baskets were bought at someone else's prices), and the result says which data sets were used (`datasets` in the day's output and `sim\runs\<run>\datasets.json`).
+
+Checking our models against real shoppers (also needs a choice):
+
+```powershell
+python -m simpeso.validate demand   --datasets dunnhumby          # does the price-aware demand model beat price-blind baselines on days it has not seen?
+python -m simpeso.validate missions --datasets till-survey        # does AI Customer Mission agree with what shoppers said? (needs store-pos receipts too)
+```
+
+The demand check fits on the first 70% of each product's history, predicts the last 30%, and reports the error against the average, the recent average and the same weekday last week, separately for the days the price moved. If the price-aware model does not clearly win (at least 2% lower error), it says so.
 
 **2. Let the AI work on it** (needs the agent runner; start it once in a second window and leave it running):
 
@@ -191,9 +227,9 @@ Then in PesoWeb, Intelligent Hub, AI Control: **Run now** on AI Pricing, AI Repl
 **2b. Shoppers whose judgement comes from an AI API (optional "hero shoppers")**
 
 ```powershell
-python -m simpeso.story --arm learning --days 6 --seed 3 --heroes 4 --llm stub     # no key, offline stand-in
+python -m simpeso.story --arm learning --days 6 --seed 3 --datasets hero-llm,simulated-rules --llm stub     # no key, offline stand-in
 $env:ANTHROPIC_API_KEY = "<your key, typed in this window only>"                     # or LLM_BASE_URL + LLM_MODEL for a vLLM / OpenAI-compatible server
-python -m simpeso.story --arm learning --days 6 --seed 3 --heroes 4                 # real AI API
+python -m simpeso.story --arm learning --days 6 --seed 3 --datasets hero-llm,simulated-rules --heroes 4     # real AI API
 ```
 
 Four shoppers get a persona and a mission and the model chooses what they do each step; the rest of the neighbourhood stays rule-based. The key is read from the environment and never saved. Only the synthetic persona and what a shopper could see are sent. Answers are cached, so a repeat run is free, and `--max-llm-calls` caps the spend. Details and limits: `Docs/customer-actors.md`, section 5.
@@ -215,7 +251,7 @@ Results are written to `sim/runs/showcase*.md` and summarised in `Docs/showcase-
 ```powershell
 $env:PESOWEB_ROOT_PASSWORD = "<the root password>"
 python -m simpeso.runner build --seed 21 --profile smoke --run myworld --policy autonomous
-python -m simpeso.runner day   --run myworld --day 0
+python -m simpeso.runner day   --run myworld --day 0 --datasets simulated-rules
 python -m simpeso.runner score --run myworld        # how many planted incidents were found, missed or wrongly flagged
 ```
 

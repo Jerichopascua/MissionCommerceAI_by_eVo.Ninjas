@@ -86,6 +86,21 @@ Each step lists what was added and the principle behind it.
 
 ---
 
+## 5b. Choosing the shoppers: customer data sets
+
+Every test must say where its shoppers come from; there is no silent default (`python -m simpeso.datasets` lists them). They can be combined with weights, for example `store-pos:0.6,simulated-rules:0.4`.
+
+| Data set | Source | Roles |
+|---|---|---|
+| `simulated-rules` | Our seeded rule-based shoppers (the price reaction is the simulator's assumption) | visits |
+| `hero-llm` | A few shoppers whose choices come from an AI API | decisions |
+| `store-pos` | A real store's receipts | visits, demand |
+| `instacart`, `dunnhumby` | Public basket data | visits (dunnhumby also demand) |
+| `m5`, `favorita` | Public daily sales with prices or promotion flags | demand |
+| `till-survey` | Real shoppers' answers to "why did you come today?" | missions |
+
+Real baskets are replayed by mapping the data set's items onto the shop's catalog (equal purchase share per product, most-bought first), so real basket sizes, quantities and co-purchases survive; each basket then passes through the shopper's reaction to the shop's current prices. `python -m simpeso.validate demand|missions` checks the price-aware demand model and AI Customer Mission against real data and reports honestly when they do not win.
+
 ## 6. Evidence and test counts
 
 - PesoWeb back end: 277 tests. AI layer: 152. Simulator: 170.
@@ -111,7 +126,7 @@ Each step lists what was added and the principle behind it.
 cd D:\git\AMD\hackathon_amd_act3\MissionCommerceAI_by_eVo.Ninjas
 powershell -ExecutionPolicy Bypass -File ui\demo\start-demo.ps1        # PesoWeb, screens, dashboard
 cd sim
-python -m simpeso.runner day --run real2 --day 400                      # play a business day
+python -m simpeso.runner day --run real2 --day 400 --datasets simulated-rules   # play a business day; a test must name its customer data set(s)
 python -m simpeso.agent_service --run real2 --company c1 --interval 30  # lets Run now work
 ```
 

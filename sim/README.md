@@ -9,8 +9,9 @@ PesoWeb must be running with the Retail_MissionCommerceAI migrations applied (re
     pip install -r sim/requirements.txt
     export PESOWEB_ROOT_PASSWORD=...            # root SuperAdmin of the throwaway database
     cd sim
-    python -m simpeso.runner all --seed 21 --profile smoke --run demo1     # build, one day, score
-    python -m simpeso.runner build|day|score --run demo1                   # or step by step
+    python -m simpeso.runner all --seed 21 --profile smoke --run demo1 --datasets simulated-rules     # build, one day, score
+    python -m simpeso.runner build|day|score --run demo1 [--datasets ...]   # or step by step (a day needs --datasets)
+    python -m simpeso.datasets                                              # the customer data sets and whether their files are in place
     python -m unittest discover -s tests -t .                              # 63 unit tests
 
 `smoke` = 5 companies, 2 branches each (10 + 2 opened mid-run), 8 products, about 110 sales a day. `starter` = about 17 branches plus 2 mid-run openings, 30 products, about 460 sales a day (26 s on a laptop). Run state (throwaway credentials, ledger, scorecard) goes to `sim/runs/<run>/`, which is git-ignored.
@@ -40,7 +41,7 @@ PesoWeb must be running with the Retail_MissionCommerceAI migrations applied (re
 ## Calibrating against real sales (optional)
 
     python scripts/calibrate_real.py --db PesoWeb_V2_Real --fit          # reads a restored PesoWeb database, read-only
-    python -m simpeso.runner all --seed 21 --profile smoke --run cal1 --calibration runs/real-calibration.json --calib-weight 0.5
+    python -m simpeso.runner all --datasets simulated-rules --seed 21 --profile smoke --run cal1 --calibration runs/real-calibration.json --calib-weight 0.5
 
 `calibrate_real.py` reads every tenant and branch, reports bootstrap intervals, and writes `runs/real-calibration.json` and `.md` (git-ignored, because they are derived from a real business). `--calibration` blends the real hour-of-day profile into shopper arrivals (weight = how far to trust a small sample) and scales basket size to the real lines per sale. Without the flag nothing changes. Price response is not calibrated: the real sample has too few discounted sales to fit it.
 

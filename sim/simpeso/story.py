@@ -20,7 +20,7 @@ import sys
 import uuid
 from pathlib import Path
 
-from . import customers as cu, rng
+from . import customers as cu, datasets, rng
 from .ai_hook import AI_DIR     # noqa: F401  (puts ai/ on sys.path)
 from .driver import PesoWebDriver
 from .verticals import ProductSpec
@@ -261,14 +261,21 @@ def main(argv=None) -> int:
     ap.add_argument("--seeds", default="1-3")
     ap.add_argument("--base-url", default=os.environ.get("PESOWEB_URL", "http://localhost:5071"))
     ap.add_argument("--out", default=None)
-    ap.add_argument("--heroes", type=int, default=0, help="this many shoppers get their judgement from an AI API instead of the rules")
+    ap.add_argument("--datasets", default=None, help="who the shoppers are: simulated-rules (rule-based), hero-llm (a few get an AI API as their judgement), or both, e.g. simulated-rules:0.8,hero-llm:0.2 (required)")
+    ap.add_argument("--heroes", type=int, default=4, help="with hero-llm: how many shoppers get their judgement from the AI API")
     ap.add_argument("--personas", default=None, help="a JSONL file of synthetic personas (for example a Nemotron-Personas sample); default: four built in")
     ap.add_argument("--llm", choices=["env", "stub"], default="env",
                     help="env: the AI API named by ANTHROPIC_API_KEY or LLM_BASE_URL/LLM_MODEL (see simpeso/llm_hero.py); stub: an offline stand-in, no key, no network")
     ap.add_argument("--max-llm-calls", type=int, default=300, help="the most real AI API calls a run may make (cached answers are free)")
     args = ap.parse_args(argv)
+    try:
+        mix = datasets.choose(args.datasets, "story", stub_llm=(args.llm == "stub"))
+    except datasets.SelectionError as e:
+        print("Cannot start the test: " + str(e), file=sys.stderr)
+        return 2
+    print("customer data sets: " + mix.summary())
     heroes = llm = None
-    if args.heroes:
+    if "hero-llm" in mix.weights and args.heroes:
         from . import llm_hero
         specs = llm_hero.load_personas(args.personas, args.heroes, args.seed) if args.personas else llm_hero.BUILT_IN[:args.heroes]
         if args.llm == "stub":

@@ -6,3 +6,6 @@ ai/smoke/mainsample.py
 
 # sim run state (throwaway credentials, ledgers)
 sim/runs/
+
+# real customer data sets the user places for tests (licences and privacy are theirs to check)
+sim/customer_data/

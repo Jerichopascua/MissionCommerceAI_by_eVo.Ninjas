@@ -14,7 +14,7 @@ import os
 import sys
 from pathlib import Path
 
-from . import behavior, incidents as inc, rng, scoring, world
+from . import behavior, datasets, incidents as inc, replay, rng, scoring, world
 from .driver import Account, DriverError, DriverRefusal, PesoWebDriver
 
 RUNS = Path(__file__).resolve().parent.parent / "runs"
@@ -27,6 +27,8 @@ class Context:
     def __init__(self, driver: PesoWebDriver, plan, state: dict, run_dir: Path, root: Account = None, calib=None):
         self.driver, self.plan, self.state, self.run_dir, self.root = driver, plan, state, run_dir, root
         self.calib = calib                  # optional real-data calibration of shopper behavior (calibration.py)
+        self.source = None                  # where baskets come from (replay.MixSource); None: the simulated shoppers, as always
+        self.mix = None                     # the customer data sets the test chose (datasets.Mix)
         self._tokens = {}
         self.cmap = {c.key: c for c in plan.companies}
         self.bmap = {b.key: (c, b) for c in plan.companies for b in c.branches}
@@ -232,7 +234,7 @@ def run_day(ctx: Context, day: int, log=print, hooks=None, incidents: bool = Tru
         if isinstance(item, inc.Incident):
             _inject(ctx, item, ledger, action_log)
             continue
-        v = behavior.fill_basket(plan, item, seed, ratio_fn, ctx.calib)
+        v = (ctx.source or behavior).fill_basket(plan, item, seed, ratio_fn, ctx.calib)
         if v is None or v.branch not in shifts or not live(v.branch):
             continue
         c, _b = ctx.bmap[v.branch]
@@ -300,6 +302,9 @@ def run_day(ctx: Context, day: int, log=print, hooks=None, incidents: bool = Tru
     stats["action_log_hash"] = rng.stable_hash(action_log)
     stats["actions"] = len(action_log)
     stats["incidents_injected"] = len(ledger.incidents)
+    if ctx.source is not None and ctx.mix is not None:
+        stats["datasets"] = {"mix": ctx.mix.summary(), "visits_by_source": dict(ctx.source.counts)}
+        datasets.record(ctx.run_dir, ctx.mix, day)
     return stats
 
 
@@ -400,8 +405,21 @@ def main(argv=None) -> int:
     ap.add_argument("--calibration", default=None, help="path to real-calibration.json: use the real hour profile and basket size")
     ap.add_argument("--calib-weight", type=float, default=0.5, help="weight on the real hour profile (the sample is small)")
     ap.add_argument("--policy", choices=["off", "autonomous", "approval"], default="off", help="pricing autonomy set at build")
+    ap.add_argument("--datasets", default=None,
+                    help="the customer data set(s) the shoppers come from, e.g. simulated-rules, or store-pos:0.6,simulated-rules:0.4 (required to run a day; "
+                         "run  python -m simpeso.datasets  to list them; with a terminal and no value you are asked)")
     args = ap.parse_args(argv)
+    source = mix = None
+    if args.command in ("day", "all"):
+        try:
+            mix = datasets.choose(args.datasets, "visits")
+            source = replay.build_source(mix)
+        except datasets.SelectionError as e:
+            print("Cannot start the test: " + str(e), file=sys.stderr)
+            return 2
+        print("customer data sets: " + mix.summary())
     ctx = _load(args)
+    ctx.source, ctx.mix = source, mix
     if args.command in ("build", "all"):
         build(ctx)
     if args.command in ("day", "all"):

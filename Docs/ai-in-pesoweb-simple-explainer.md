@@ -121,6 +121,15 @@ Running tests changes the database. We added a **Test snapshots** screen: save t
 
 ---
 
+### Choosing who the pretend shoppers are
+Before any test starts, you **must choose** where the shoppers come from, and you can mix sources:
+- **Pretend shoppers** made by our rules (always there).
+- **A few chatbot shoppers** that think for themselves.
+- **Real receipts** from a real store, or **public shopping data** (Instacart, Dunnhumby): real baskets get replayed in our shop.
+- **Real answers** from shoppers at the till ("why did you come today?") to check the "customer mission" guesses.
+
+The result always says which sources were used. We can also check our price predictions on real data and the report says plainly if they did not do better than simple guessing.
+
 ## 6. What it cannot do (we say it plainly)
 
 - The pretend shoppers are **simulated**. Their reaction to price is our assumption. The shop's products and prices are real.
