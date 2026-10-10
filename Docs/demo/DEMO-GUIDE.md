@@ -224,6 +224,8 @@ python -m simpeso.validate missions --datasets till-survey        # does AI Cust
 
 The demand check fits on the first 70% of each product's history, predicts the last 30%, and reports the error against the average, the recent average and the same weekday last week, separately for the days the price moved. If the price-aware model does not clearly win (at least 2% lower error), it says so.
 
+**2a. A real company instead of a simulated one:** `python -m simpeso.agent_service --real --email <owner login> [--as-of YYYY-MM-DD]`. It builds the sales model from the company's own PesoWeb sales and uses no simulator files. Step by step, with what to expect: `Docs/real-use-guide.md`.
+
 **2. Let the AI work on it** (needs the agent runner; start it once in a second window and leave it running):
 
 ```powershell

@@ -12,9 +12,9 @@ from . import price_run
 from missionai import missions as ms   # noqa: E402  (price_run puts the AI folder on the path)
 
 
-def pesoweb_baskets(drv, acct, warehouse_ids: list, window_days: int = 14) -> dict:
+def pesoweb_baskets(drv, acct, warehouse_ids: list, window_days: int = 14, as_of=None) -> dict:
     """{warehouse id: [Basket]} from PesoWeb's sales of the last window_days."""
-    since = (dt.date.today() - dt.timedelta(days=window_days)).isoformat()
+    since = ((as_of or dt.date.today()) - dt.timedelta(days=window_days)).isoformat()
     out = {}
     for wh in warehouse_ids:
         perishable = {p["id"] for p in price_run.browse(drv, acct, wh) if p["perishable"]}

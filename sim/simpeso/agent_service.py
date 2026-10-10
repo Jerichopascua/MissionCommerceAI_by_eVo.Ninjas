@@ -69,13 +69,47 @@ class AgentRunner:
             time.sleep(interval)
 
 
-def pricing_handler(drv, acct, warehouse_ids: list, model: dict, limit: int = 8, fix_limit: int = 25):
+SALES_PAGE = 5000
+MIN_SPAN_DAYS = 3
+
+
+def model_from_sales(drv, acct, warehouse_ids: list, window_days: int = 28, as_of=None) -> dict:
+    """The sales model AI Pricing needs, built from a real company's own sales in PesoWeb (no simulator files): units sold per day for every
+    product at every branch over the last `window_days` (ending today, or on `as_of`), counted from the first day the branch sold anything in
+    that window. Price sensitivity is not learned from a real company yet: the model carries no observations, so the advisor uses the assumed
+    slope and says "assumed". Returns {"rates": {"warehouse:product": units per day}, "observations": {}, "estimates": {}, "window": {...}}."""
+    import datetime as dt
+    end = as_of or dt.date.today()
+    since = end - dt.timedelta(days=window_days)
+    rates, spans = {}, {}
+    for wh in warehouse_ids:
+        rows, after = [], 0
+        while True:
+            page = drv.movements(acct, wh, "SALE_OUT", after, since.isoformat())
+            rows += page
+            if len(page) < SALES_PAGE:
+                break
+            after = max(m["id"] for m in page)
+        rows = [m for m in rows if (m.get("transactionDate") or "")[:10] <= end.isoformat()]
+        if not rows:
+            continue
+        first = min(dt.date.fromisoformat((m.get("transactionDate") or "")[:10]) for m in rows)
+        span = max(MIN_SPAN_DAYS, min(window_days, (end - first).days + 1))
+        spans[wh] = span
+        for m in rows:
+            key = f"{wh}:{m['productId']}"
+            rates[key] = rates.get(key, 0.0) + float(m["qtyOut"]) / span
+    return {"rates": rates, "observations": {}, "estimates": {}, "window": {"end": end.isoformat(), "days": window_days, "span_by_branch": spans}}
+
+
+def pricing_handler(drv, acct, warehouse_ids: list, model, limit: int = 8, fix_limit: int = 25):
     """AI Pricing run: look at every product's cost, sales rate and learned price sensitivity, then put the best list-price changes
     into the Approval Center. Nothing is applied here; a person (or the tenant's own auto-approve limits) decides."""
     from . import price_run
 
     def run() -> str:
-        _, sugg, _ = price_run.suggestions_for(drv, acct, warehouse_ids, model)
+        m = model() if callable(model) else model          # a real company's model is rebuilt from its latest sales every run
+        _, sugg, _ = price_run.suggestions_for(drv, acct, warehouse_ids, m)
         sent = price_run.propose_top(drv, acct, warehouse_ids[0], sugg, limit, fix_limit)
         waiting = sum(1 for r in sent if r["status"] == 202)
         applied = sum(1 for r in sent if r["status"] == 200)
@@ -90,7 +124,7 @@ BASELINE_DAYS_IN_MODEL = 2     # the saved model's sales rate is the average of 
 
 
 def replenish_handler(drv, acct, warehouse_ids: list, model: dict = None, lead_days: int = 2, cover_days: int = 7, perishable_shelf_days: int = 5,
-                      window_days: int = 14):
+                      window_days: int = 14, as_of=None):
     """AI Replenish run: for every product at every branch, will the stock last until a delivery arrives? Posts the products that need an
     order to PesoWeb as suggestions (replacing the branch's earlier open ones). A person confirms; nothing is ordered here.
 
@@ -101,10 +135,13 @@ def replenish_handler(drv, acct, warehouse_ids: list, model: dict = None, lead_d
     import datetime as dt
 
     def daily_demand(wh):
-        since = (dt.date.today() - dt.timedelta(days=window_days)).isoformat()
+        end = as_of or dt.date.today()
+        since = (end - dt.timedelta(days=window_days)).isoformat()
         per = {}
         for m in drv.movements(acct, wh, "SALE_OUT", 0, since):
             day = (m.get("transactionDate") or "")[:10]
+            if day > end.isoformat():
+                continue
             per.setdefault(m["productId"], {}).setdefault(day, 0.0)
             per[m["productId"]][day] += float(m["qtyOut"])
         return lambda p: rp.demand_from_daily(list(per.get(p["id"], {}).values()) + [0.0] * max(0, window_days - len(per.get(p["id"], {})))) if p["id"] in per else None
@@ -173,11 +210,52 @@ def monitoring_handler(drv, acct, warehouse_ids: list, today=None, history_days:
     return run
 
 
+def serve_real(args) -> int:
+    """The agent runner for a real company: no world.json, no model.json, no simulator."""
+    import datetime as dt
+    import getpass
+    from . import mission_sim
+    from .driver import PesoWebDriver
+    if not args.email:
+        print("--real needs --email <the company owner's login>", file=sys.stderr)
+        return 2
+    password = os.environ.get("PESOWEB_AGENT_PASSWORD") or (getpass.getpass("Password for " + args.email + ": ") if sys.stdin.isatty() else None)
+    if not password:
+        print("set PESOWEB_AGENT_PASSWORD in this window (it is never saved or printed)", file=sys.stderr)
+        return 2
+    as_of = dt.date.fromisoformat(args.as_of) if args.as_of else None
+    drv = PesoWebDriver(args.base_url, "agent-real")
+    acct = drv.login(args.email, password)
+    branches = drv._call("GET", "/api/ai/branch-settings", acct.token) or []
+    whs = [b["warehouseId"] for b in branches]
+    if not whs:
+        print("that company has no branches", file=sys.stderr)
+        return 1
+    model = lambda: model_from_sales(drv, acct, whs, args.history_days, as_of)           # noqa: E731
+    handlers = {"Pricing": pricing_handler(drv, acct, whs, model, args.limit),
+                "Replenish": replenish_handler(drv, acct, whs, None, window_days=args.history_days, as_of=as_of),
+                "CustomerMission": mission_sim.mission_handler(drv, acct, whs, lambda: mission_sim.pesoweb_baskets(drv, acct, whs, args.history_days, as_of), args.history_days),
+                "Monitoring": monitoring_handler(drv, acct, whs, today=as_of)}
+    agent = AgentRunner(drv, acct, handlers)
+    window = f"the {args.history_days} days to {as_of.isoformat()}" if as_of else f"the last {args.history_days} days"
+    print(f"REAL company {args.email}: {len(whs)} branch(es), looking at {window}.")
+    print("Pricing proposals go to the Approval Center; nothing changes a price or an order without a person or the company's own limits.")
+    if args.once:
+        agent.poll_once()
+        return 0
+    print(f"polling every {args.interval:g}s for Run now requests; Ctrl+C to stop")
+    try:
+        agent.serve(args.interval)
+    except KeyboardInterrupt:
+        pass
+    return 0
+
+
 def main(argv=None) -> int:
     from . import runner
     from .driver import PesoWebDriver
     ap = argparse.ArgumentParser(prog="simpeso.agent_service")
-    ap.add_argument("--run", required=True, help="a simulated world under sim/runs (gives the company logins and the learned model)")
+    ap.add_argument("--run", default=None, help="a simulated world under sim/runs (gives the company logins and the learned model)")
     ap.add_argument("--company", default="c1")
     ap.add_argument("--base-url", default=os.environ.get("PESOWEB_URL", "http://localhost:5071"))
     ap.add_argument("--once", action="store_true")
@@ -185,7 +263,18 @@ def main(argv=None) -> int:
     ap.add_argument("--limit", type=int, default=8, help="most price proposals per Pricing run")
     ap.add_argument("--mission-source", choices=["sim", "pesoweb"], default="sim",
                     help="where AI Customer Mission gets baskets: the simulator's visits (a simulated world's sales carry no time of day) or PesoWeb's sales")
+    ap.add_argument("--real", action="store_true",
+                    help="serve a REAL company: log in with --email (the password from PESOWEB_AGENT_PASSWORD, or asked for), build the sales model from its own "
+                         "PesoWeb sales, read baskets from its sales. No simulated world is used. Everything the AI proposes still goes through PesoWeb's rules and approvals.")
+    ap.add_argument("--email", default=None, help="with --real: the company owner's login")
+    ap.add_argument("--history-days", type=int, default=28, help="with --real: how many days of sales the AI looks at")
+    ap.add_argument("--as-of", default=None, help="with --real: end the look-back on this date (YYYY-MM-DD) instead of today, for a company whose last sales are older")
     args = ap.parse_args(argv)
+    if args.real:
+        return serve_real(args)
+    if not args.run:
+        print("give --run <simulated world>, or --real --email <login> for a real company", file=sys.stderr)
+        return 2
     run_dir = runner.RUNS / args.run
     state = json.loads((run_dir / "world.json").read_text(encoding="utf-8"))
     model = json.loads((run_dir / "model.json").read_text(encoding="utf-8"))
