@@ -21,7 +21,7 @@ A very small web app a customer can put on a phone. It is a separate folder and 
 
 ## Put it on a phone
 
-- **Same Wi-Fi:** run `SERVE.cmd`, open `http://<this PC's IPv4 address>:8090` in the phone browser, then browser menu, **Add to Home screen**.
+- **Same Wi-Fi:** run `SERVE.cmd`, open `http://<this PC IPv4 address>:8090` in the phone browser, then browser menu, **Add to Home screen**.
 - **Real install (works like an app, offline):** host the folder on any HTTPS site (GitHub Pages, Netlify, the store's server). Android Chrome then offers **Install app**; on iPhone use Safari, Share, **Add to Home Screen**.
 
 ## The one-minute demo (customer app, then the cashier)

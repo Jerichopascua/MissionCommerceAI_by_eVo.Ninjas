@@ -1,4 +1,4 @@
-// Keeps the app shell available offline; data.json is fetched fresh when online so prices stay current.
+// Keeps the app available offline. Network first, so a new version shows at once; the saved copy is used only when there is no connection.
 var CACHE = 'mm-shell-v3';
 var SHELL = ['./', 'index.html', 'style.css', 'app.js', 'vendor/qrcode.js', 'manifest.webmanifest',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-diamond.png', 'icons/hub-banner-clearance.png', 'data.json'];
@@ -15,12 +15,12 @@ self.addEventListener('activate', function (e) {
 
 self.addEventListener('fetch', function (e) {
   if (e.request.method !== 'GET') { return; }
-  if (new URL(e.request.url).origin !== self.location.origin) { return; }   // the store's price feed is never cached here
-  // Network first, so a new version shows at once; the saved copy is only for when there is no connection.
+  var url = new URL(e.request.url);
+  if (url.origin !== self.location.origin) { return; }
+  if (url.pathname.indexOf('/api/') === 0) { return; }          // the store's price feed is never cached here
   e.respondWith(fetch(e.request).then(function (r) {
-    var c = r.clone(); caches.open(CACHE).then(function (ch) { ch.put(e.request, c); }); return r;
+    var copy = r.clone();
+    caches.open(CACHE).then(function (c) { c.put(e.request, copy); });
+    return r;
   }).catch(function () { return caches.match(e.request); }));
-}); return r; })
-        .catch(function () { return caches.match(e.request); })
-    : caches.match(e.request).then(function (hit) { return hit || fetch(e.request); }));
 });
