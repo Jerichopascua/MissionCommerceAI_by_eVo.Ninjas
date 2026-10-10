@@ -7,4 +7,4 @@ echo   On a phone (same Wi-Fi), use this PC's address, for example http://192.16
 echo   Find it with:  ipconfig   (IPv4 Address)
 echo   Press Ctrl+C to stop.
 echo.
-python -m http.server 8090
+python serve.py 8090

@@ -26,7 +26,7 @@
   var DEMO_BASKET = { '1362': 2, '1421': 1, '1406': 2, '1385': 1 };
   function api() {
     try { var o = localStorage.getItem('mm-api'); if (o) { return o; } } catch (e) { /* ignore */ }
-    return location.protocol + '//' + location.hostname + ':5071';
+    return '';                                   // same address as the app: serve.py forwards the price feed
   }
   function dayText(n) { return n < 0 ? Math.abs(n) + ' day(s) overdue' : n === 0 ? 'due today' : 'due in ' + n + ' day(s)'; }
   function dueDate(n) { var d = new Date(); d.setDate(d.getDate() + n); return d.toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' }); }
@@ -259,19 +259,24 @@
     });
   }
 
-  // Saved file first (works offline), then the store's live prices replace it when PesoWeb answers.
+  // Saved file first (works offline): the screen shows at once, then the store's live prices replace the saved ones.
+  function fetchFeed() {
+    var ctl = typeof AbortController === 'function' ? new AbortController() : null;
+    var timer = setTimeout(function () { if (ctl) { ctl.abort(); } }, 5000);
+    return fetch(api() + '/api/customer-app/offers', { cache: 'no-store', signal: ctl ? ctl.signal : undefined })
+      .then(function (r) { clearTimeout(timer); if (!r.ok) { throw new Error('feed'); } return r.json(); });
+  }
+
   fetch('data.json', { cache: 'no-cache' }).then(function (r) { return r.json(); })
     .then(function (d) {
       data = d; ui.source = 'Saved prices (not connected to the store)';
-      return fetch(api() + '/api/customer-app/offers', { cache: 'no-cache' })
-        .then(function (r) { if (!r.ok) { throw new Error('feed'); } return r.json(); })
-        .then(function (feed) {
-          data.products = liveProducts(feed);
-          ui.source = 'Prices from the store system, updated ' + new Date(feed.generatedAt).toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit' });
-        })
-        .catch(function () { /* keep the saved prices */ });
+      render();
+      fetchFeed().then(function (feed) {
+        data.products = liveProducts(feed);
+        ui.source = 'Prices from the store system, updated ' + new Date(feed.generatedAt).toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit' });
+        if (customer()) { render(); }           // not while someone is typing on the login screen
+      }).catch(function () { /* keep the saved prices */ });
     })
-    .then(function () { render(); })
     .catch(function () { document.getElementById('app').innerHTML = '<div class="wrap"><div class="card">Could not load the store data. Check your connection and try again.</div></div>'; });
 
   if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js').catch(function () { /* optional */ }); }
