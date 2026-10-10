@@ -285,7 +285,7 @@ Running the simulation changes the database. Snapshots let you get back to a kno
 
 **Not covered:** snapshots are for the test and demo database only. They do not replace PesoWeb's own Database Backup utility, which is per company. They are not meant for production and are off unless `Snapshots__Enabled` is set.
 
-**Note on the first initial snapshot.** The demo database has accumulated throwaway test companies from the checks. The automatic initial snapshot (`INITIAL-20261006-1958-...`) contains all of them (about 276 companies and 496 branches). If you want a clean starting point, remove the throwaway companies first, then press **Make the current data the initial snapshot**.
+**What the initial snapshot contains.** On 2026-10-10 the throwaway test companies left by the checks were removed (`sim\scripts\cleanup_test_companies.sql`: preview with `-v Apply=0`, delete with `-v Apply=1`; it only touches companies whose logins all end in `.test`, keeps the simulated worlds, never touches the first ten companies, and rolls back if anything is left) and a clean initial snapshot was made: 183 companies (the 172 simulated AI worlds, your own accounts, and the snapshot operator `snapadmin@snap.test`) with 395 branches. The earlier initial snapshot, with the test shops in it, is archived in `D:\PesoWeb_Backups\old_initial_snapshot`.
 
 ## Suggested 6-minute demo order
 
