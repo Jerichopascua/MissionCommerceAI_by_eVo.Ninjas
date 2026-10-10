@@ -21,7 +21,10 @@ const PORT = 9333;
 const [W, H] = cfg.size || [1440, 900];
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-const profile = fs.mkdtempSync(path.join(os.tmpdir(), 'mc-capture-'));
+// The throwaway Chrome profile (hundreds of MB over a few runs) lives beside the repo's git-ignored run folder, not in the user's temp folder on drive C.
+const profileRoot = process.env.CAPTURE_TMP || path.resolve(path.dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1')), '../../sim/runs');
+fs.mkdirSync(profileRoot, { recursive: true });
+const profile = fs.mkdtempSync(path.join(profileRoot, 'mc-capture-'));
 const chrome = spawn(CHROME, ['--headless=new', `--remote-debugging-port=${PORT}`, `--user-data-dir=${profile}`, `--window-size=${W},${H}`,
   '--hide-scrollbars', '--no-first-run', '--disable-gpu', 'about:blank'], { stdio: 'ignore' });
 
@@ -140,5 +143,6 @@ for (const step of cfg.steps) {
 fs.writeFileSync(path.join(outDir, 'manifest.json'), JSON.stringify(manifest, null, 2));
 ws.close();
 chrome.kill();
-try { fs.rmSync(profile, { recursive: true, force: true }); } catch { /* the profile may still be locked; the OS temp cleaner takes it */ }
+await sleep(1500);                                   // Chrome needs a moment to let go of its files
+try { fs.rmSync(profile, { recursive: true, force: true, maxRetries: 8, retryDelay: 500 }); } catch { /* still locked: sim/runs is git-ignored and can be cleaned by hand */ }
 process.exit(0);
