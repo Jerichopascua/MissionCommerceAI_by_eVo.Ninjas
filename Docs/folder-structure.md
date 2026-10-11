@@ -11,11 +11,14 @@ How they talk: the **simulator** (`sim/`) acts as shoppers and staff and calls P
 
 ```
 Simulator (sim/)  --->  PesoWeb API (Controllers/, Services/)  <---  AI agent (ai/ + sim/simpeso/agent_service.py)
-                              |                                              |
-                        SQL Server                                 proposals back to PesoWeb
-                              |
-                  Angular screens (ClientApp/): Approval Center, AI Control, Intelligence Hub
+                              |   ^                                          |
+                        SQL Server  |                                proposals back to PesoWeb
+                              |     |
+                  Angular screens    customer app (customer-app/): the shopper's phone web app
+                  (ClientApp/): POS, Approval Center, AI Control, Intelligence Hub, Put on sale
 ```
+
+**The phone app is `customer-app/`.** It is a web app (a Progressive Web App) that installs on a phone's home screen. It talks to the **live** PesoWeb through one small server (`customer-app/serve.py`) that forwards only `/api/customer-app/*`: real prices and sales, real registration and login, real reservations. If the store system cannot be reached, it falls back to the saved prices in `data.json`.
 
 ---
 
@@ -61,9 +64,20 @@ MissionCommerceAI_by_eVo.Ninjas/
 │   ├── hub/index.html           One-page explainer of the Intelligence Hub
 │   ├── demo/                    capture.mjs (screenshot tool), start-demo.ps1 (starts everything)
 │   └── prototype/               Early design mock-ups
+├── customer-app/                The shopper's phone app (web app, installable; plain HTML/JS, no build)
+│   ├── index.html, app.js, style.css    the app (login, register, sale, shop, basket, balance, account)
+│   ├── config.js                        where the store's API is (empty = same address as the app)
+│   ├── serve.py, SERVE.cmd              serves the app and forwards /api/customer-app/* to PesoWeb
+│   ├── manifest.webmanifest, sw.js, icons/   install on the phone, offline copy, icons
+│   ├── data.json, make_demo_data.py     saved prices (offline) and demo customers; rebuilt from PesoWeb
+│   └── README.md                        how to run, install and host it
+├── video/                       The Rush Sale presentation video
+│   ├── record_scenes.py, cdp.py, make_video.py   capture the real screens, add voiceover, assemble the mp4
+│   └── MissionCommerce_RushSale.mp4     the video (git-ignored); frames/ holds the captured screens
+├── RUN/                         Double-click scripts (START, STOP, CHECK, SAVE/RESTORE-SNAPSHOT, AGENT-REAL) and CREDENTIALS.txt (git-ignored)
 ├── pesoweb-additions/           What we changed in PesoWeb, as patches and notes
 │   ├── README.md                What each plan added and how to apply it
-│   ├── patches/plan1 ... plan12   git patches, one folder per plan
+│   ├── patches/plan1 ... plan18   git patches, one folder per plan
 │   ├── smoke/, tools/           Smoke tests and helper tools (migration cleanup)
 ├── results/                     Showcase results (JSON and exports)
 ├── Docs/                        Documentation
@@ -86,6 +100,9 @@ Retailo_v1_mission/
 ├── Controllers/                 The web API, one file per area
 │   ├── AiControlController.cs     (ours) AI Control and the whole Intelligence Hub API (/api/ai/control, /hub/*, /replenish, /missions, /competitor-*, /channel)
 │   ├── AiController.cs            (ours) data the AI reads and writes (/api/ai/*)
+│   ├── ProductSalesController.cs  (ours) Put on sale: /api/product-sales, and what was sent to customers /api/customer-campaigns
+│   ├── CustomerAppController.cs   (ours) the shopper's accounts: register, login, profile, reserve, messages (/api/customer-app/*, public)
+│   ├── OnlineOrdersController.cs  (ours) the price feed for the app (/api/customer-app/offers) and the cashier's reference lookup (/api/online-orders)
 │   ├── PricingController.cs       list-price changes and the Approval Center
 │   ├── SalesController, PurchasesController, InventoryController, StockCountsController, ExpiryController,
 │   │   CashShiftsController, ExceptionsController, AccountingController, ReportsController, PeopleController,
@@ -96,12 +113,16 @@ Retailo_v1_mission/
 │   ├── HubMetricsService.cs, HubRuleService.cs, HubTaskService.cs, HubInsightServices.cs,
 │   │   HubChannelService.cs, HubBackgroundService.cs, ReplenishService.cs, GroupOverviewService.cs   (ours) Intelligence Hub
 │   ├── AiImpactService.cs         (ours) AI Impact: before/after and AI branch vs control branch
+│   ├── CountSuggestionService.cs  (ours) AI Product Loss Prevention: count first and sell fast (expiry) lists
+│   ├── ProductSaleService.cs      (ours) the sale price the register charges
+│   ├── CustomerAppSecurity.cs     (ours) password hashing and sign-in tokens for the customer app
 │   ├── SnapshotService.cs         (ours) test snapshots: save, restore, structure guard, initial snapshot
 │   ├── MarkdownPricingService.cs, MarkdownGuardrails.cs, MarkdownService.cs   markdown (clearance) pricing
 │   ├── StockService, InventoryBatchService, ExpiryService, StockCountService, ReceivingService,
 │   │   CashShiftService, ExceptionService, LedgerService, TransactionService, SyncService, ...
 ├── Models/                      Database entities (one file per entity or group)
 │   ├── AiControl.cs, HubRules.cs, HubExtras.cs, Replenish.cs, PriceChange.cs, PricingPolicy.cs   (ours)
+│   ├── CountSuggestion.cs, ProductSale.cs, CustomerAppAccount.cs (accounts, campaigns, reservations)   (ours)
 │   └── Product, Sale, Purchase, Warehouse (branch), User, Role, ... (PesoWeb's own)
 ├── Migrations/                  EF Core migrations (ours: ApprovalCenter, AiControl, AiBranchSettings, HubRules..., Hub assignees/regions/...)
 ├── Data/                        AppDBContext (tenant filter on every query)
@@ -111,9 +132,12 @@ Retailo_v1_mission/
 │       ├── ai/aicontrol/          (ours) AI Control screen (/ai/control)
 │       ├── ai/aihub/              (ours) Intelligence Hub screen (/ai/hub)
 │       ├── pricing/approvalcenter/  (ours) Approval Center (/pricing/approvals)
+│       ├── pricing/putonsale/       (ours) Put on sale (/pricing/sales)
+│       ├── sales/pos/               POS; ours: the Online order lookup (the phone icon)
+│       ├── ai/snapshots/            (ours) test snapshots
 │       ├── sales, purchases, inventory, people, hrm, reports, settings, dashboard, accounting, mobile, ...
 │       └── app.module.ts, app.component.html   routes and the menu
-├── Retailo.Tests/               Back-end tests (245 pass); ours: ApprovalCenter, AiControl, Hub* tests
+├── Retailo.Tests/               Back-end tests (307 pass); ours: ApprovalCenter, AiControl, Hub* tests
 ├── scripts/                     SQL scripts for each migration (idempotent) and smoke checklists
 ├── mission-ai/                  (ours) a copy of the hackathon repo's ai/, sim/, ui/, results/ and key docs, so everything is in one place
 ├── docs/, DATABASE/, DataMigrateMultiTenants/, Integration_API_SYNC/, LandingPage/, wwwroot/, AppFiles/
@@ -130,7 +154,11 @@ Retailo_v1_mission/
 | Change a rule, approval check or hub number | `Services/` (`HubMetricsService.cs` holds the number definitions) |
 | Change a screen | `ClientApp/src/app/ai/`, `ClientApp/src/app/pricing/approvalcenter/` |
 | Add a database table | `Models/`, then a migration in `Migrations/` and a script in `scripts/` |
-| Start the demo | `ui/demo/start-demo.ps1` |
+| Start the demo | `ui/demo/start-demo.ps1`, or the `RUN/` scripts |
+| Change the phone app | `customer-app/app.js`; run it with `customer-app/SERVE.cmd` |
+| Change the shopper's accounts, reservations or the price feed | `Controllers/CustomerAppController.cs`, `Controllers/OnlineOrdersController.cs` |
+| Put a product on sale / change how the register prices it | `Controllers/ProductSalesController.cs`, `Services/ProductSaleService.cs` |
+| Make the presentation video again | `video/README.md` |
 | See screenshots and the click-through | `Docs/demo/DEMO-GUIDE.md` |
 | Check everything works | `dotnet test Retailo.Tests`; `python -m unittest discover -s tests -t .` inside `sim/` and `ai/`; the `*_check.py` live scripts |
 
