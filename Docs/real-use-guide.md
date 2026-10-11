@@ -167,7 +167,7 @@ Why it looks at "28 days to 2026-05-30": the real sales are from April and May. 
 ![AI Control with each feature's last run](demo/screens/32-real-ai-control.png)
 
 1. In Chrome, left menu: **Intelligent Hub**, then **AI Control**.
-2. You will see six cards. Press the orange **Run now** on each of these five, one after another: **AI Monitoring**, **AI Pricing**, **AI Product Loss Prevention**, **AI Replenish**, **AI Customer Mission**. (Only AI Insight has no Run now.)
+2. You will see six cards. Press the orange **Run now** on each of these, one after another: **AI Monitoring**, **AI Pricing**, **AI Product Loss Prevention**, **AI Replenish**, **AI Customer Mission**, and last **AI Insight**, which writes the plain-language notes about what the others found (it shows on the Overview of the Intelligent Hub, under "What the AI did, and why").
 3. Wait up to 20 seconds (the AGENT-REAL window shows a line for each run) and click **Refresh**. Each card shows **Last run: Done** with a sentence.
 
 What the real run showed on 520 Minimart:

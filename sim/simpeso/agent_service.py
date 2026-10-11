@@ -330,6 +330,61 @@ def loss_prevention_handler(drv, acct, warehouse_ids: list, per_branch: int = 8,
     return run
 
 
+def _wording():
+    """The language model for AI Insight, from the environment (see missionai.llm), or None for standard wording."""
+    from missionai import llm
+    return llm.from_env()
+
+
+def _insight_cache():
+    from pathlib import Path
+    return str(Path(__file__).resolve().parent.parent / "runs" / "insight-cache")
+
+
+def insight_handler(drv, acct, warehouse_ids: list, wording=None, cache_dir=None, per_kind: int = 12):
+    """AI Insight run: plain-language notes on what the other AI features suggested and why. It reads what PesoWeb holds (batches that may expire
+    unsold, price changes waiting for approval, what to count first, what to reorder), builds a standard sentence for each from the numbers, and
+    posts them for the Intelligent Hub. A language model (`wording`, when one is connected) may only reword a sentence, and a figure it adds is
+    thrown away (see missionai.insight). Nothing here decides or changes anything."""
+    from missionai import insight as ins
+
+    def run():
+        notes, plan = [], []
+        sell = [r for r in drv.count_suggestions(acct, "Open", "SellFast") or []]
+        sell.sort(key=lambda r: (r.get("daysLeft") if r.get("daysLeft") is not None else 99, -(r.get("valueAtRiskAtCost") or 0)))
+        for r in sell[:per_kind]:
+            plan.append(("SellFast", f"SellFast:{r['id']}", {k: r.get(k) for k in (
+                "product", "branch", "daysLeft", "batchQty", "ratePerDay", "unitsAtRisk", "valueAtRiskAtCost", "suggestedDiscountPct",
+                "suggestedPrice", "proposalStatus")}))
+        queue = drv._call("GET", "/api/Pricing/Approvals", acct.token) or {}
+        for r in (queue.get("items") or [])[:per_kind]:
+            plan.append(("Markdown", f"Markdown:{r['id']}", {k: r.get(k) for k in (
+                "name", "scope", "from", "to", "pct", "marginNowPct", "marginAfterPct", "reason")}))
+        count = [r for r in drv.count_suggestions(acct, "Open", "Count") or []]
+        for r in count[:max(3, per_kind // 3)]:
+            plan.append(("Count", f"Count:{r['id']}", {k: r.get(k) for k in ("product", "branch", "onHand", "valueAtCost", "reason")}))
+        for r in (drv.replenish_suggestions(acct, "Open") or [])[:max(3, per_kind // 3)]:
+            plan.append(("Replenish", f"Replenish:{r['id']}", {k: r.get(k) for k in (
+                "product", "branch", "onHand", "ratePerDay", "daysOfCover", "suggestedQty", "leadTimeDays")}))
+        for kind, ref, facts in plan:
+            try:
+                notes.append(ins.build(kind, ref, facts, wording=wording, cache_dir=cache_dir))
+            except (KeyError, TypeError, ValueError):
+                continue                    # a row missing a fact is left out rather than guessed
+        status, body = drv._call("POST", "/api/ai/insights", acct.token,
+                                 json_body={"Items": [{"Kind": n["kind"], "RefKey": n["refKey"], "Headline": n["headline"], "Body": n["body"],
+                                                       "Source": n["source"]} for n in notes]}, raw=True)
+        if status != 200:
+            raise RuntimeError(f"PesoWeb refused the insights: {status} {body}")
+        reworded = sum(1 for n in notes if n["source"] == "model")
+        text = f"{len(notes)} plain-language note(s): {reworded} reworded by the language model, {len(notes) - reworded} in standard wording"
+        if wording is None:
+            text += " (no language model connected)"
+        return text
+
+    return run
+
+
 def monitoring_handler(drv, acct, warehouse_ids: list, today=None, history_days: int = 28, event_pages: int = 20):
     """AI Monitoring: asks PesoWeb to check the company's rules, then compares each branch with its own recent past and posts
     everything unusual as findings (alerts follow the "Unusual activity found by AI" rule). The scan is complete each time, so findings
@@ -396,7 +451,8 @@ def serve_real(args) -> int:
                 "Replenish": replenish_handler(drv, acct, whs, None, window_days=args.history_days, as_of=as_of),
                 "CustomerMission": mission_sim.mission_handler(drv, acct, whs, lambda: mission_sim.pesoweb_baskets(drv, acct, whs, args.history_days, as_of), args.history_days),
                 "Monitoring": monitoring_handler(drv, acct, whs, today=as_of),
-                "LossPrevention": loss_prevention_handler(drv, acct, whs, window_days=args.history_days, as_of=as_of)}
+                "LossPrevention": loss_prevention_handler(drv, acct, whs, window_days=args.history_days, as_of=as_of),
+                "Insight": insight_handler(drv, acct, whs, wording=_wording(), cache_dir=_insight_cache())}
     agent = AgentRunner(drv, acct, handlers)
     window = f"the {args.history_days} days to {as_of.isoformat()}" if as_of else f"the last {args.history_days} days"
     print(f"REAL company {args.email}: {len(whs)} branch(es), looking at {window}.")
@@ -460,7 +516,8 @@ def main(argv=None) -> int:
     agent = AgentRunner(drv, acct, {"Pricing": pricing_handler(drv, acct, whs, model, args.limit), "Replenish": replenish_handler(drv, acct, whs, model),
                                     "CustomerMission": mission_sim.mission_handler(drv, acct, whs, mission_source),
                                     "Monitoring": monitoring_handler(drv, acct, whs),
-                                    "LossPrevention": loss_prevention_handler(drv, acct, whs)})
+                                    "LossPrevention": loss_prevention_handler(drv, acct, whs),
+                                    "Insight": insight_handler(drv, acct, whs, wording=_wording(), cache_dir=_insight_cache())})
     if args.once:
         agent.poll_once()
         return 0

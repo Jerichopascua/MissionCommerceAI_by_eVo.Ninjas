@@ -51,6 +51,13 @@ The brief (`PesoProfit Agentic Dynamic Markdown Pricing.md`) promises an agentic
 - **Evidence:** covered by the Intelligent Hub live checks (reorders, draft purchase orders) and unit tests on the reorder maths.
 - **Limits:** on the real company it correctly found nothing to reorder (the shelves hold far more than the sales rate needs); the staged demo scenario shows it working.
 
+### AI Insight (built: plain-language notes, figures checked)
+- **Does:** for what the other features found, it writes a short note in plain words: the batch that will expire unsold and the rush sale that would clear it, the price change waiting for approval and the margin before and after, what to count first, what to reorder.
+- **How it stays honest:** every note is first built as a standard sentence from the numbers PesoWeb holds. A language model, when one is connected (Anthropic API, any OpenAI-compatible server such as vLLM on the AMD GPU), may only reword that sentence. It is given nothing but the facts and the sentence, and **any number in its answer that is not in the facts makes the answer unusable**: the standard sentence is shown instead. With no model, or on any failure, the standard wording is used, so nothing depends on a model being up.
+- **Where:** Intelligent Hub, Overview, "What the AI did, and why". Each note says whether it is standard wording or reworded. Run it from the same section or from AI Control, Run now.
+- **Evidence:** 14 unit tests for the wording and the number guard, 4 for the agent handler, and a live check (`sim/scripts/insight_check.py`) that runs it on the real company: 14 notes from the real Sell fast list, the approvals waiting, and the count list.
+- **Limits:** it explains and never decides, changes nothing, and does not have a "why not" for every refusal yet. The language-model path is verified with a stand-in model in tests; it has not been run against a hosted model here.
+
 ## 3. What is still not in the brief's picture
 
 - Live competitor monitoring beyond a fed table.

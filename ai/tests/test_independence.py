@@ -16,9 +16,17 @@ class IndependenceTests(unittest.TestCase):
             text = (PKG / name).read_text(encoding="utf-8")
             self.assertNotRegex(text, r"urllib|requests|openai|vllm|chat/completions", name)
 
-    def test_only_the_explainer_may_make_network_calls(self):
+    def test_only_the_wording_modules_may_make_network_calls(self):
+        # explain.py (markdown notes) and llm.py (the client AI Insight uses to reword notes). Nothing that decides may reach the network.
         callers = [p.name for p in PKG.glob("*.py") if re.search(r"urlopen|requests\.", p.read_text(encoding="utf-8"))]
-        self.assertEqual(callers, ["explain.py"])
+        self.assertEqual(sorted(callers), ["explain.py", "llm.py"])
+
+    def test_no_decision_module_uses_the_wording_modules(self):
+        wording = {"explain.py", "llm.py", "insight.py", "agent.py"}      # agent.py only asks explain.py to word a decision it already made
+        for p in PKG.glob("*.py"):
+            if p.name in wording or p.name == "__init__.py":
+                continue
+            self.assertNotRegex(p.read_text(encoding="utf-8"), r"import\s+(llm|insight|explain)|from\s+\.?\s*(llm|insight|explain)", p.name)
 
 
 if __name__ == "__main__":

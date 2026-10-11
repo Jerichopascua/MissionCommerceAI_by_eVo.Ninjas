@@ -52,7 +52,7 @@ Think of six little helpers, each with one job. The owner can switch each one **
 3. **AI Customer Mission** looks at what people buy and when, and guesses *why they came*: a quick top-up, a dinner run, the weekly big shop. It is only a guess, and we say so.
 4. **AI Monitoring** watches for strange things: a day when sales dropped by half, cash that does not match, lots of returned sales.
 5. **AI Product Loss Prevention** suggests which products to count first, to find stock that went missing.
-6. **AI Insight** writes the reasons in plain language.
+6. **AI Insight** writes the reasons in plain language: for every rush sale, reorder or price change it says what it saw and why, using only the numbers in your own data.
 
 ---
 
