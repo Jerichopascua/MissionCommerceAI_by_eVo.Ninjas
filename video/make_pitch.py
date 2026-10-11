@@ -353,6 +353,9 @@ def scenes(amd):
              say="The simulator is Python and drives the real Peso Web A P I. Peso Web is an ASP dot NET A P I with SQL Server and Angular screens, "
                  "and it enforces the guardrails. The A I layer is Python and only talks to it through the A P I. And the A M D Developer Cloud runs the GPU parts."),
         dict(k="amd", cuts="fsp", kind="amd", say=amd_narration(amd), sayp=amd_narration(amd, short=True)),
+        dict(k="concept3d", cuts="fs", kind="clip", clip="sim3d_concept.mp4",
+             say="On the roadmap: a three D view of the simulated shop. This clip is a concept, built on mock data, with shoppers walking the "
+                 "aisles. It will be replaced by detailed three D shops driven by the simulator's own days."),
         dict(k="close", sayp='Practise safely. Act on the data. People decide. Thank you.', cuts="fsp", kind="card", kicker="Reinvent Commerce", title="Practise safely. Act on the data. People decide.",
              lines=["Sim.PesoWeb tests the AI before a real shop depends on it.", "The Intelligent Hub finds the loss and says how to improve.",
                     "Next: SMS and other channels, online payment, more shops."],
@@ -391,6 +394,8 @@ def main():
             flow(p, s["kicker"], s["title"], s["boxes"], s.get("foot"))
         elif kind == "amd":
             amd_scene(p, amd)
+        elif kind == "clip":
+            p = None
         else:
             mv.scene(p, s["step"], s["title"], s["shots"], s["bullets"], s["caption"])
         imgs.append(p)
@@ -402,7 +407,11 @@ def main():
         dur = mv.seconds(wav) + 0.9
         total += dur
         clip = work / f"c{i:02d}.mp4"
-        subprocess.run([ff, "-y", "-loglevel", "error", "-loop", "1", "-i", str(img), "-i", str(wav),
+        if img is None:                                   # a recorded clip, looped to the length of the narration
+            source = ["-stream_loop", "-1", "-i", str(Path(__file__).resolve().parent / chosen[i]["clip"])]
+        else:
+            source = ["-loop", "1", "-i", str(img)]
+        subprocess.run([ff, "-y", "-loglevel", "error", *source, "-i", str(wav),
                         "-vf", f"scale={W}:{H},format=yuv420p,fade=t=in:st=0:d=0.35,fade=t=out:st={dur - 0.35:.2f}:d=0.35",
                         "-af", "apad", "-t", f"{dur:.2f}", "-r", "25", "-c:v", "libx264", "-preset", "medium", "-crf", "20",
                         "-c:a", "aac", "-b:a", "128k", str(clip)], check=True)

@@ -14,8 +14,9 @@ CHROME = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
 
 
 class Browser:
-    def __init__(self, port=9333, profile=r"D:\tmp_chrome_video_profile"):
+    def __init__(self, port=9333, profile=r"D:/tmp_chrome_video_profile", extra_args=None):
         self.port, self.profile = port, profile
+        self.extra_args = list(extra_args or [])
         self.proc = None
         self.ws = None
         self._id = 0
@@ -23,7 +24,7 @@ class Browser:
     async def start(self):
         self.proc = subprocess.Popen([CHROME, "--headless=new", "--disable-gpu", f"--remote-debugging-port={self.port}",
                                       f"--user-data-dir={self.profile}", "--no-first-run", "--hide-scrollbars",
-                                      "--window-size=1366,900", "about:blank"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                                      "--window-size=1366,900"] + self.extra_args + ["about:blank"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         for _ in range(60):
             try:
                 tabs = json.load(urllib.request.urlopen(f"http://127.0.0.1:{self.port}/json/list", timeout=2))
