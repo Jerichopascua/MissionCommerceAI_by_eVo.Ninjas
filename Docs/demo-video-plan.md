@@ -25,30 +25,45 @@ From published hackathon judging and pitch guides (sources at the end), which ag
 4. **Short.** Common caps are 2 to 3 minutes; some events cut off anything longer and judges may stop watching. This event has **no stated limit** (the requirements list "demo video length/format limits" as a question for the Oct 13 Q&A). So we make two cuts and submit the one the rules allow.
 5. **Technology is explained in the context of the product**, not as a separate lecture, and the sponsor technology is visibly part of the working product.
 
-## 3. The structure (full cut about 4 minutes, short cut about 3)
+## 3. What the video must cover (the whole product, not one use case)
 
-| # | Time | Scene | Audience | What is on screen | Cut |
-|---|---|---|---|---|---|
-| 1 | 0:00 | **Hook**: 36 packs, 8 sold, 28 in the bin | a 15-year-old | three big numbers | both |
-| 2 | 0:18 | **The problem** (Reinvent Commerce): shops have the data, not the decisions | everyone | one card | both |
-| 3 | 0:37 | **The idea** in four lines: watches, suggests, tells customers, a person decides | everyone | four steps | both |
-| 4 | 0:54 | **Demo 1**: the AI finds stock that will expire unsold (real company data) | merchant | Intelligent Hub, Loss prevention | both |
-| 5 | 1:10 | **Demo 2**: Rush sale, filled in from the AI; the owner decides | merchant | Put on sale, prefilled | both |
-| 6 | 1:24 | Demo 3: the register and the customers know at once | merchant | Put on sale, message log | full |
-| 7 | 1:31 | **Demo 4**: a first-time customer registers on her phone | shopper | phone: login, register | both |
-| 8 | 1:45 | Demo 5: she sees the rush sale; installs the app | shopper | phone: sale, install | full |
-| 9 | 1:53 | **Demo 6**: reserves; gets a reference and a QR code | shopper | phone: sale, basket, code | both |
-| 10 | 2:02 | **Demo 7**: the cashier keys the reference; the order is in the sale | cashier | POS Online order | both |
-| 11 | 2:15 | **How the AI predicts** (not a language model): rate of sale, price response, expiry order, safe discount | technical | four steps | both |
-| 12 | 2:41 | What the AI does: six capabilities, one rule (people decide) | technical | four rows | full |
-| 13 | 2:57 | **The effect and its limits** | judges | three figures | both |
-| 14 | 3:23 | **Setup and environment**: what runs where | technical | four boxes | full |
-| 15 | 3:42 | **AMD**: what runs on AMD, with measured numbers | judges | numbers, `rocm-smi` | both |
-| 16 | 4:00 | Close | everyone | one card | both |
+An earlier draft showed only the expiring-stock rush sale. That is one use case of a larger system. The video has to show all of it:
 
-The 15-year-old explanation is scenes 1 to 3 and the plain wording of every demo scene. The technical explanation is scenes 11 to 15.
+| Part of the product | Why the judges need to see it | Evidence on screen |
+|---|---|---|
+| **Sim.PesoWeb**: a seeded world that drives the real PesoWeb API, with real catalog, shoppers with memory, real receipt and public data sets, planted incidents with known answers | it is how we test and prove the AI safely, and where AMD scale comes in | `ui/dashboard` results, day report |
+| **The comparison**: a shop with the AI against an identical shop without it, A/A checked | the measurable effect the brief asks for | 10 of 10 days, +236 pesos a day margin |
+| **The Intelligent Hub, all six AI features**: Monitoring, Pricing (Approval Center), Loss Prevention, Replenish, Customer Mission, Insight | the application of technology, and that people stay in control | Hub overview, AI Control, Approval Center, Loss prevention, Reorders, Missions |
+| **AI Impact**: before and after, and AI branches against a control branch | "did it work?", with caveats | the Impact screen |
+| **AI Insight**: how the AI is doing, what became of its proposals, and **what to improve in the AI setup** | the AI that analyses the AI | the Insight section: improvements, results, explanations |
+| **One use case end to end**: AI finding, rush sale, customers told, first-time customer registers, reserves, cashier | business value and originality, from data to a customer's basket | Put on sale, phone, POS |
+| **How it predicts, and the setup** | not a language model; how it is built and where it runs | steps, flow |
+| **AMD** | the mandatory rule | measured numbers, `rocm-smi`, the Hub with "AI wording" from the AMD endpoint |
 
-Build: `python video/make_pitch.py --cut full|short`. Output `video/MissionCommerce_Pitch_<cut>.mp4`.
+### Three cuts from one script (`video/make_pitch.py`)
+
+| Cut | Length | For | Command |
+|---|---|---|---|
+| **pitch** | about 2 minutes (3 with the real AMD scene) | the strict 3-minute limit some events use | `--cut pitch` |
+| **short** | about 5 minutes | the main submission video: every part above, once | `--cut short` |
+| **full** | about 6.5 minutes | a deep dive with replenish, missions, pricing and the setup | `--cut full` |
+
+The event has no stated limit (a question for the Oct 13 Q&A), so decide after that.
+
+### Order (the short cut)
+
+1. **Hook** for a 15-year-old: 36 packs, 8 sold, 28 in the bin.
+2. **The problem** (Reinvent Commerce): four leaks, data that nobody turns into an action.
+3. **Our answer** in four lines: practise first, the AI proposes, PesoWeb disposes, a person decides.
+4. **Sim.PesoWeb result**: the shop with the AI against the identical shop without it.
+5. **Hub overview**, then **AI Control** (six switchable features).
+6. **Loss Prevention** on real company data.
+7. **AI Impact**: before and after, AI branch against control.
+8. **AI Insight**: the analysis and the improvements to the AI setup.
+9. **Use case**: Rush sale, the shopper registers and reserves, the cashier keys the reference.
+10. **How it predicts**, **the effect and its limits**, **AMD**, **close**.
+
+The 15-year-old explanation is scenes 1 to 3 and the plain captions on every screen. The technical explanation is scene 10 and the setup scene in the full cut.
 
 ## 4. What we can honestly say today, and what we cannot
 

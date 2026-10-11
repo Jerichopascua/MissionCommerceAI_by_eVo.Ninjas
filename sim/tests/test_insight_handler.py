@@ -42,8 +42,9 @@ class InsightHandler(unittest.TestCase):
     def test_every_source_gets_a_note_and_nothing_else_is_called(self):
         drv = FakeDriver()
         text = agent_service.insight_handler(drv, Acct(), [1], wording=None)()
-        kinds = [i["Kind"] for i in drv.posted["Items"]]
-        self.assertEqual(sorted(kinds), ["Count", "Markdown", "Replenish", "SellFast", "SellFast"])
+        explained = [i["Kind"] for i in drv.posted["Items"] if i["Kind"] not in ("Analysis", "Improve")]
+        self.assertEqual(sorted(explained), ["Count", "Markdown", "Replenish", "SellFast", "SellFast"])
+        self.assertTrue(any(i["Kind"] == "Improve" for i in drv.posted["Items"]))      # the setup analysis runs on what could be read
         self.assertIn("no language model connected", text)
         self.assertTrue(all(i["Source"] == "template" for i in drv.posted["Items"]))
 

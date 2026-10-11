@@ -1,8 +1,8 @@
 """Builds the hackathon pitch video: problem first (explained simply), the working product, how the AI works, the evidence,
 the setup, and the AMD part. Reuses the captured screens in video/frames/ and the drawing helpers of make_video.py.
 
-    python video/make_pitch.py                 full cut (about 4.5 minutes), writes video/MissionCommerce_Pitch_full.mp4
-    python video/make_pitch.py --cut short     3-minute cut,             writes video/MissionCommerce_Pitch_short.mp4
+    python video/make_pitch.py                 full cut (about 6 minutes), writes video/MissionCommerce_Pitch_full.mp4
+    python video/make_pitch.py --cut short     short cut (about 4 minutes),        writes video/MissionCommerce_Pitch_short.mp4
     python video/make_pitch.py --final         refuses to build unless results/amd-session.json is a real AMD run
 
 The AMD scene is built only from results/amd-session.json (written by sim/scripts/amd_session_collect.py on the AMD server).
@@ -179,12 +179,21 @@ def amd_scene(path, amd):
     im.save(path)
 
 
-def amd_narration(amd):
+def amd_narration(amd, short=False):
     if not amd:
         return ("Draft placeholder. The A M D scene is filled from the real session numbers: the GPU and ROCm version, how fast the "
-                "shopper simulation runs on the GPU compared with the CPU, and the language model that words the notes on the same GPU.")
+                "shopper simulation runs on the GPU compared with the CPU, and the language model that words the notes on the same GPU." if not short
+                else "Draft placeholder: the A M D scene is filled from the real session numbers.")
     hw, qs, li = amd["hardware"], amd["quicksim"], amd.get("insight_llm", {})
     g = qs.get("gpu", {})
+    if short:
+        bits = [f"On the A M D Developer Cloud, an {hw.get('device', 'A M D GPU')} with ROCm."]
+        if g.get("generation_s"):
+            bits.append(f"PyTorch generates {qs['individuals']:,} shoppers in {g['generation_s']:.0f} seconds"
+                        + (f", {qs['speedup_x']} times the CPU." if qs.get("speedup_x") else "."))
+        if li.get("tokens_per_s"):
+            bits.append(f"And vLLM serves {li['model']} to word the notes at {li['tokens_per_s']:.0f} tokens a second.")
+        return " ".join(bits)
     parts = [f"On the A M D Developer Cloud we run an {hw.get('device', 'A M D GPU')} with ROCm. "]
     if g.get("generation_s"):
         parts.append(f"PyTorch on ROCm generates {qs['individuals']:,} shoppers over {qs['days']} days in {g['generation_s']:.0f} seconds"
@@ -195,61 +204,129 @@ def amd_narration(amd):
     return "".join(parts)
 
 
-# (key, tag set: "f" full cut, "s" short cut)
 def scenes(amd):
-    T = lambda *a: a
+    """The pitch, in order. cuts: 'f' = in the full cut, 's' = in the short cut."""
     return [
-        dict(k="hook", cuts="fs", kind="numbers", kicker="Imagine you run a small shop", title="Snacks that go bad in two days",
+        # ---- 1. the problem, simply
+        dict(k="hook", sayp='A shop has thirty six packs of snacks that go bad in two days. It will sell eight. Twenty eight go in the bin, with the money.', cuts="fsp", kind="numbers", kicker="Imagine you run a small shop", title="Snacks that go bad in two days",
              items=[("36", "packs on the shelf", BLUE), ("8", "you will probably sell", GREEN), ("28", "end up in the bin, with your money", RED)],
-             foot="Every shop has this, every day. A person cannot watch every expiry date.",
+             foot="And that is only one leak. A person cannot watch every date, every price and every shelf.",
              say="Imagine you run a small shop. You have thirty six packs of snacks, and they go bad in two days. You will probably sell eight. "
-                 "The other twenty eight go in the bin, and so does your money. Every shop has this problem, every day."),
+                 "The other twenty eight go in the bin, and so does your money. And that is only one leak in one shop."),
         dict(k="problem", cuts="fs", kind="card", kicker="The problem: Reinvent Commerce", title="Shops have the data, but not the decisions",
-             lines=["Sales, stock, expiry dates and customers sit in different places, so nobody turns them into an action in time.",
-                    "The challenge: turn customer and business data into a useful action that helps a business serve and keep its customers."],
-             say="Shops already have the data: sales, stock, expiry dates and customers. But it sits in different places, so nobody turns it into a "
-                 "decision in time. That is the Reinvent Commerce challenge: turn data into an action that helps the business and its customers."),
-        dict(k="idea", cuts="fs", kind="steps", kicker="Our answer: MissionCommerce AI", title="From a date on a pack to a sale in a customer's hand",
-             rows=[("It watches", "Every batch with an expiry date, against how fast it really sells."),
-                   ("It suggests", "A rush sale at a price that is still safe for the shop's margin."),
-                   ("It tells the shop's own customers", "Registered customers see it in their phone app and reserve it."),
-                   ("A person decides", "The owner approves; the AI never changes a price by itself.")],
-             say="Our answer is Mission Commerce A I. It watches every batch with an expiry date. It suggests a rush sale at a price that is still "
-                 "safe for the shop. It tells the shop's own customers. And a person always has the last word."),
-        dict(k="find", cuts="fs", kind="scene", step=1, title="The AI finds stock that will expire unsold", shots=[("01_ai_sell_fast.png", "desk")],
-             bullets=["Each batch: units still unsold on the last day, at today's rate of sale", "What it is worth at cost, and the discount that clears it",
-                      "Never below cost: the owner's pricing rules apply"],
+             lines=["Four everyday leaks: stock that expires, prices set by habit, shelves that run empty, cash and stock that quietly go missing.",
+                    "The data to catch each one is already in the till. Nobody turns it into an action in time."],
+             say="Shops already have the data. Four leaks cost them every day: stock that expires, prices set by habit, shelves that run empty, "
+                 "and cash and stock that quietly go missing. The data to catch each one is already in the till. Nobody turns it into an action in time."),
+        dict(k="idea", sayp='Mission Commerce A I is two parts. Sim dot Peso Web, a practice world that drives the real point of sale. And the Intelligent Hub, the A I inside it. The A I proposes, Peso Web enforces the rules, and a person decides.', cuts="fsp", kind="steps", kicker="Our answer: MissionCommerce AI", title="Practise first, then run live, and people decide",
+             rows=[("Sim.PesoWeb: a practice world", "A seeded retail world drives the real PesoWeb POS and ERP, so the AI is tested before a real shop depends on it."),
+                   ("The AI proposes", "Six AI features in the Intelligent Hub: pricing, loss prevention, replenish, missions, monitoring, insight."),
+                   ("PesoWeb disposes", "Margin floors, approval lanes, on and off switches and an audit trail. The AI cannot override them."),
+                   ("A person has the last word", "The owner approves; the AI never changes a price by itself.")],
+             say="Our answer is Mission Commerce A I, in two parts. Sim dot Peso Web is a practice world: it drives the real Peso Web point of sale, "
+                 "so the A I is tested before a real shop depends on it. The Intelligent Hub is the A I inside the real system. The A I proposes, "
+                 "Peso Web enforces the rules, and a person has the last word."),
+        # ---- 2. Sim.PesoWeb
+        dict(k="simworld", cuts="f", kind="steps", kicker="Sim.PesoWeb: the practice world", title="A shop that never closes, with the answers known",
+             rows=[("The real system under test", "Companies, branches, staff and a real 493-product catalog with expiry dates, all through PesoWeb's own API."),
+                   ("Shoppers with memory", "Rule-based shoppers, real receipts, public basket data sets, and a few shoppers whose choices come from a language model."),
+                   ("Incidents with known answers", "Cash shortages, hidden shrink and expiring batches are planted, so we can score what the AI caught and missed."),
+                   ("Two identical shops", "One with the AI, one without, same shoppers and stock. An A/A check proves they are identical before we compare.")],
+             say="Sim dot Peso Web is a shop that never closes, and where the answers are known. It runs a real catalog and real staff through Peso Web's "
+                 "own A P I. Shoppers have memory and judgement. We plant incidents with known answers, so we can score what the A I caught and missed. "
+                 "And we run two identical shops, one with the A I and one without."),
+        dict(k="simresult", sayp='In two identical simulated shops, the one with the A I was ahead on ten of ten days, with about two hundred and thirty six pesos a day more margin. An A over A check proves the shops are identical.', cuts="fsp", kind="scene", step=1, title="Sim.PesoWeb: the shop with the AI against the same shop without",
+             shots=[("20_sim_results.png", "desk")],
+             bullets=["10 of 10 trial days ahead of the no-AI shop", "+236 pesos a day gross margin, units about flat", "The markdown agent adds +136 pesos a day net, waste 162 pesos a day lower",
+                      "A/A check: same day, no AI, zero difference"],
+             caption="Real catalog, identical twin shops, recorded run. Simulated shoppers: the shop and the AI's decisions are real.",
+             say="Here is the result. The same shop twice, with the A I and without. The A I shop was ahead on ten of ten trial days, about two hundred "
+                 "and thirty six pesos a day more gross margin, with units about flat. The markdown agent adds a further one hundred and thirty six "
+                 "pesos a day, and cuts waste. An A over A check shows zero difference when the A I does nothing."),
+        dict(k="simstory", cuts="f", kind="scene", step=2, title="Shoppers who think and learn", shots=[("21_sim_customer_story.png", "desk")],
+             bullets=["40 customers with their own money, memory and friends", "Clearance cuts chicken waste from 926 to 424 pesos an evening",
+                      "When shoppers learn when prices drop, it falls to 46", "The behaviour detector reads only purchase records"],
+             caption="A neighbourhood story: what happens when customers learn the evening price drop.",
+             say="Shoppers are not static. In this neighbourhood story, forty customers have their own money, memory and friends. Clearance cuts "
+                 "the chicken thrown away from nine hundred and twenty six pesos an evening to four hundred and twenty four. When customers learn when "
+                 "prices drop, it falls to forty six."),
+        dict(k="siminc", cuts="f", kind="scene", step=3, title="Incidents with known answers: caught and missed", shots=[("22_sim_day_report.png", "desk")],
+             bullets=["Branches, sales, cash variance, expiry at risk, open exceptions", "PesoWeb alone caught 3 of 5 planted incidents",
+                      "Risk-ranked counts by the AI found the other 2", "Coverage rises with counting effort: 0.6, then 0.8, then 1.0"],
+             caption="The day report by company and branch: what happened, and what the system found.",
+             say="Each simulated day is reported by company and branch. We plant incidents with known answers. Peso Web alone caught three of five. "
+                 "The A I's risk ranked stock counts found the other two. Coverage rises with the counting effort."),
+        # ---- 3. the Intelligent Hub: the whole AI
+        dict(k="hub", cuts="fs", kind="scene", step=4, title="The Intelligent Hub: one place for the whole shop", shots=[("30_hub_overview.png", "desk")],
+             bullets=["By period, category and region: sales, margin, turnover, expiry at risk, exceptions", "My tasks by role; alerts follow rules the owner can edit",
+                      "Same screens in the simulator and in the live shop"],
+             caption="A simulated company with real history: numbers by branch and region, and what needs attention.",
+             say="This is the Intelligent Hub inside Peso Web, on a simulated company with history. Sales, margin, stock turnover, expiry at risk and "
+                 "exceptions by period, category and region, and tasks for each role."),
+        dict(k="control", cuts="fs", kind="scene", step=5, title="Six AI features, each one switchable", shots=[("36_ai_control.png", "desk")],
+             bullets=["Monitoring, Pricing, Loss Prevention, Replenish, Customer Mission, Insight", "On or off per company, and AI markdowns per branch",
+                      "Run now, last run, and what it produced", "Enforced on the server: a switched-off feature is refused"],
+             caption="AI Control: the owner decides which features run, and can switch any of them off at once.",
+             say="Six A I features, and the owner controls each one. Monitoring, pricing, loss prevention, replenish, customer missions and insight. "
+                 "Each can be switched off per company, and markdowns per branch. The switch is enforced on the server."),
+        dict(k="pricing", cuts="f", kind="scene", step=6, title="AI Pricing: the owner decides in the Approval Center", shots=[("04_approval_center.png", "desk")],
+             bullets=["Markdowns for short-dated stock, list-price advice from the shop's own sales", "Each proposal shows the reason, margin before and after, rival prices",
+                      "Three approval lanes: store manager, pricing manager, owner", "Margin floors and a maximum discount can never be waived"],
+             caption="Real company: the AI's proposals wait for a person, with the reason and the margin check.",
+             say="A I Pricing proposes markdowns for short dated stock and list price changes learned from the shop's own sales. Every proposal waits in "
+                 "the Approval Center with the reason and the margin before and after. Margin floors can never be waived."),
+        dict(k="loss", cuts="fs", kind="scene", step=7, title="Loss Prevention: stock that will expire, and what to count first", shots=[("01_ai_sell_fast.png", "desk")],
+             bullets=["Batches that will expire unsold, at today's rate of sale", "What it is worth at cost, and the discount that clears it",
+                      "Count first: stock delivered with no receiving report, then fast sellers", "Never accuses anyone: only 'the count differs from the system'"],
              caption="Real company data: batches that will expire unsold, how much it costs, and the discount to clear them.",
-             say="This is the real shop system. The A I has found batches that will expire unsold. For each one it shows how many units will be "
-                 "left on the last day, what that is worth at cost, and the discount that would clear them, never below cost."),
-        dict(k="decide", cuts="fs", kind="scene", step=2, title="One click: Rush sale, the owner decides", shots=[("02_put_on_sale_prefilled.png", "desk")],
-             bullets=["Product, discount and last day are filled in from the AI", "The pricing rules still apply", "Tick: tell registered customers"],
-             caption="Rush sale: filled in from the AI suggestion. The manager only confirms.",
-             say="With one click on Rush sale, the product, the discount and the last day are filled in. The pricing rules still apply, and the "
-                 "manager confirms, with a tick to tell the shop's registered customers."),
-        dict(k="told", cuts="f", kind="scene", step=3, title="The register and the customers know at once", shots=[("03_put_on_sale_sent.png", "desk")],
-             bullets=["The POS charges the sale price immediately", "A message reaches every registered customer's app", "SMS and other channels: next"],
-             caption="Put on sale: the register charges the sale price and registered customers get the message.",
-             say="The register charges the sale price at once, and the message reaches every registered customer in the app."),
-        dict(k="register", cuts="fs", kind="scene", step=4, title="A first-time customer registers on her phone", shots=[("05_phone_login.png", "phone"), ("06_phone_register.png", "phone")],
-             bullets=["The shop's web app opens in the phone's browser", "A name, a mobile number, a password: no email", "She is now a registered customer of the shop"],
-             caption="First visit: name, mobile number, password. That is all it takes to become a registered customer.",
+             say="Loss Prevention finds two kinds of loss the point of sale cannot see. Batches that will expire unsold, with the discount that clears "
+                 "them. And what to count first, where a shortage would cost the most. Real company data, never an accusation."),
+        dict(k="replenish", cuts="f", kind="scene", step=8, title="Replenish: what to reorder, how much, by when", shots=[("32_hub_reorders.png", "desk")],
+             bullets=["From each branch's rate of sale, stock on hand and lead time", "Reorder point with a 90% service level; pack rounding; perishables capped",
+                      "Becomes a pending draft purchase order, stock untouched until received"],
+             caption="AI Replenish: suggestions with the reasoning, and draft purchase orders for a person to confirm.",
+             say="Replenish suggests what to reorder, how much, and by when, from each branch's rate of sale and lead time. A person confirms, and "
+                 "it becomes a draft purchase order."),
+        dict(k="missions", cuts="f", kind="scene", step=9, title="Customer Missions: why shoppers came", shots=[("33_hub_missions.png", "desk")],
+             bullets=["Late night, morning grab-and-go, quick top-up, weekly restock", "From the shape of the basket and the time of day",
+                      "Says what it means for stock and staffing", "An inference, labelled as one: it cannot see intent"],
+             caption="AI Customer Mission: what shoppers were trying to get done, by branch.",
+             say="Customer Missions works out what shoppers were trying to get done, from the shape of the basket and the time of day, and says what "
+                 "that means for stock and staff. It is an inference, and it is labelled as one."),
+        dict(k="impact", cuts="fs", kind="scene", step=10, title="AI Impact: the AI branch against the control branch", shots=[("34_hub_impact.png", "desk")],
+             bullets=["Equal days before and after the AI started pricing", "Keep one branch with AI markdowns off and the Hub compares fairly",
+                      "Difference in differences, with an explicit 'indicative, not proof'", "Needs several days: it says when there are too few"],
+             caption="Before and after, and AI branches against a control branch, with the caveats stated.",
+             say="A I Impact answers: did it work? It compares equal days before and after, and when the owner keeps one branch with the A I off, it "
+                 "compares A I branches against that control. It states plainly that this is indicative, not proof."),
+        dict(k="insight", sayp='A I Insight analyses how the A I is doing and what to improve: proposals expiring before anyone decides, people rejecting twenty three of a hundred and one, and no control branch. Each with a concrete change.', cuts="fsp", kind="scene", step=11, title="AI Insight: how the AI is doing, and what to improve", shots=[("38_hub_insight.png", "desk")],
+             bullets=["Reads the results, the proposal outcomes, the approval queue and the settings", "Says what became of the proposals: applied, rejected by people, refused by a rule, expired",
+                      "Suggests concrete changes: approvers, step size, a control branch, features never run", "Every figure checked against the data; a language model may only reword"],
+             caption="A simulated company: 13 proposals expired, 23 of 101 rejected by people, and no control branch. Each with the advice.",
+             say="A I Insight does not just explain. It analyses how the A I is doing, and what to improve in its setup. Here, thirteen proposals "
+                 "expired before anyone decided, twenty three of a hundred and one were rejected by people, and there is no control branch. Each comes with "
+                 "a concrete change. It is rules over the numbers, every figure is checked, and a language model may only reword it."),
+        # ---- 4. one use case end to end: from the AI's finding to a customer's basket
+        dict(k="rush", sayp="One click on Rush sale fills in the product, the discount and the last day. The register charges it at once and the shop's registered customers are told.", cuts="fsp", kind="scene", step=12, title="Use case: from an AI finding to a rush sale", shots=[("02_put_on_sale_prefilled.png", "desk")],
+             bullets=["One click on Rush sale: product, discount and last day filled in", "The pricing rules still apply; the manager confirms",
+                      "The register charges it at once; registered customers are told in their app"],
+             caption="Real company: the AI's expiry finding becomes a rush sale in one click, and the shop's own customers are told.",
+             say="Here is one use case end to end. The A I found stock that will expire. One click on Rush sale fills in the product, the discount "
+                 "and the last day. The manager confirms, the register charges it at once, and the shop's registered customers are told."),
+        dict(k="shopper", sayp='A first time customer registers on her phone with a name, a number and a password, sees the sale, and reserves.', cuts="fsp", kind="scene", step=13, title="The shopper: register, see the sale, reserve", shots=[("06_phone_register.png", "phone"), ("07_phone_welcome_sale.png", "phone"), ("11_phone_reference.png", "phone")],
+             bullets=["A first-time customer registers on her phone: name, mobile number, password", "She sees the rush sale, and can install the app",
+                      "She reserves and gets a reference number and a QR code"],
+             caption="The customer app: installable, no app store, no email. Reserved at the sale price.",
              say="A first time customer opens the shop's web app on her phone. A name, a mobile number and a password, and she is a registered "
-                 "customer of the shop. No app store, no email."),
-        dict(k="install", cuts="f", kind="scene", step=5, title="She sees the rush sale and installs the app", shots=[("07_phone_welcome_sale.png", "phone"), ("08_phone_install.png", "phone")],
-             bullets=["The shop's message and the clearance items come first", "One tap installs it on the home screen", "She can change her phone and password, not her ID"],
-             caption="The rush sale is the first thing she sees. One tap puts the app on her home screen.",
-             say="She sees the rush sale straight away, and one tap puts the app on her home screen like any other app."),
-        dict(k="reserve", cuts="fs", kind="scene", step=6, title="Reserve now, pay at the store", shots=[("09_phone_sale_added.png", "phone"), ("10_phone_basket.png", "phone"), ("11_phone_reference.png", "phone")],
-             bullets=["She adds the clearance items and reserves", "A reference number and a QR code", "She rushes to the store: the stock sells before it expires"],
-             caption="Reserved at the sale price: a reference number and a QR code for the store.",
-             say="She adds the clearance items and reserves them. She gets a reference number and a Q R code, and she rushes to the store to pay."),
-        dict(k="cashier", cuts="fs", kind="scene", step=7, title="The cashier keys in the reference", shots=[("12_pos_online_order.png", "desk")],
-             bullets=["Her name and reserved items appear, at the sale prices", "One click loads them into the normal sale", "The batch that would have expired is now cash"],
+                 "customer. She sees the rush sale, installs the app, reserves the items, and gets a reference number and a Q R code."),
+        dict(k="cashier", sayp='At the cashier the reference brings up her order at the sale prices, and the expiring batch becomes cash.', cuts="fsp", kind="scene", step=14, title="The cashier keys in the reference", shots=[("12_pos_online_order.png", "desk")],
+             bullets=["Her name and reserved items appear, at the sale prices", "One click loads them into the normal sale",
+                      "The batch that would have expired is now cash"],
              caption="The reference number brings up the customer and her items at the clearance prices.",
              say="At the cashier, the reference number brings up her name and her items at the clearance prices. One click loads them into the "
                  "normal sale. The batch that would have expired is now cash."),
-        dict(k="predict", cuts="fs", kind="steps", kicker="How the AI works: not a language model", title="The prediction is statistics, and you can check it",
+        # ---- 5. how it is built, the evidence, the AMD part
+        dict(k="predict", sayp="The prediction is statistics: the shop's own rate of sale, a price response model, and expiry order. A language model never decides.", cuts="fsp", kind="steps", kicker="How the AI works: not a language model", title="The prediction is statistics, and you can check it",
              rows=[("Rate of sale", "From the shop's own sales of the last 28 days, per product and branch."),
                    ("Price response", "A Poisson demand model: units follow the usual rate times (price / usual price) to a learned slope."),
                    ("First expired, first sold", "Units that expire sooner sell first, so the model knows what is left on the last day."),
@@ -258,40 +335,35 @@ def scenes(amd):
              say="The prediction is not a language model. It is statistics you can check. The rate of sale comes from the shop's own sales. A "
                  "demand model learns how units respond to price. Units that expire first sell first, so we know what is left on the last day. "
                  "Then an optimizer picks a discount that is safe for the margin. A language model never decides."),
-        dict(k="caps", cuts="f", kind="steps", kicker="What the AI does", title="Six capabilities, one rule: people decide",
-             rows=[("Monitoring and Loss Prevention", "Unusual activity, what to count first, and stock that will expire unsold."),
-                   ("Pricing", "Markdowns and list-price advice, every change through margin rules and approval."),
-                   ("Replenish and Customer Missions", "What to reorder and why shoppers came; the shop plans stock and staff."),
-                   ("Insight", "Plain-language notes; every figure is checked against the data.")],
-             foot="Switchable per company and per branch. Every action is audited.",
-             say="Behind this are six capabilities: monitoring, loss prevention, pricing, replenishment, customer missions and plain language "
-                 "insight. Each can be switched off per company and per branch, and every action is audited."),
         dict(k="evidence", cuts="fs", kind="numbers", kicker="The effect, and its limits", title="Measured, and honest about it",
              items=[("10 of 10", "test days where the AI shop beat the identical shop without it", GREEN), ("+8%", "gross margin (simulated shoppers, A/A checked)", BLUE),
                     ("10 to 12%", "lower forecast error with price awareness, on 2 years of real supermarket sales", ORANGE)],
-             foot="Limits we state: simulated shoppers in the twin test; against the best simple baseline the gain on real data is small.",
+             foot="Limits we state: simulated shoppers in the twin test; against the best simple baseline the gain on real data is small; "
+                  "the AI did not beat a sensible fixed rule in the smallest world.",
              say="Measured, and honest about it. In two identical simulated shops, the A I shop was ahead on ten of ten test days, with about eight "
                  "percent more gross margin. On two years of real supermarket sales, price awareness lowered forecast error by ten to twelve percent. "
-                 "We also state the limits: simulated shoppers, and only a small gain over the best simple baseline."),
+                 "We state the limits: simulated shoppers, only a small gain over the best simple baseline, and in the smallest world the A I did not beat "
+                 "a sensible fixed rule."),
         dict(k="setup", cuts="f", kind="flow", kicker="The setup and environment", title="What runs where",
-             boxes=[("The shop system (PesoWeb)", ["ASP.NET Core API", "Angular screens", "SQL Server", "POS, stock, expiry batches"], BLUE),
-                    ("The AI layer", ["Python", "Demand model, optimizer", "Detectors, agent", "Never decides alone"], GREEN),
-                    ("The customer app", ["Installable web app", "Register, reserve, QR", "Live prices and sales"], ORANGE),
-                    ("AMD Developer Cloud", ["Instinct GPU, ROCm", "PyTorch: shopper simulation", "vLLM: wording of notes"], (237, 28, 36))],
-             foot="Tests: 311 shop-system, 170 AI, 240 simulator. Live checks on the real company data. Open source, MIT.",
-             say="The shop system is Peso Web: an ASP dot NET API, Angular screens and SQL Server. The A I layer is Python and talks to it through "
-                 "the real A P I. The customer app is an installable web app. And the A M D Developer Cloud runs the GPU parts."),
-        dict(k="amd", cuts="fs", kind="amd", say=amd_narration(amd)),
-        dict(k="close", cuts="fs", kind="card", kicker="Reinvent Commerce", title="From a date on a pack to a sale in a customer's hand",
-             lines=["The AI finds the loss. People decide. Customers get a deal.", "Next: SMS and other channels, online payment, more shops."],
+             boxes=[("Sim.PesoWeb (Python)", ["Seeded world, shoppers, incidents", "Calls the real API", "Scoring, twin worlds"], ORANGE),
+                    ("The shop system (PesoWeb)", ["ASP.NET Core API, SQL Server", "Angular screens: POS, Hub", "Guardrails, approvals, audit"], BLUE),
+                    ("The AI layer (Python)", ["Demand model, optimizer", "Detectors, missions, replenish", "Insight: rules plus wording"], GREEN),
+                    ("AMD Developer Cloud", ["Instinct GPU, ROCm", "PyTorch: Quick Sim", "vLLM: wording of notes"], (237, 28, 36))],
+             foot="Tests: 311 shop-system, 190 AI, 240 simulator. Live checks on real data. Open source, MIT.",
+             say="The simulator is Python and drives the real Peso Web A P I. Peso Web is an ASP dot NET A P I with SQL Server and Angular screens, "
+                 "and it enforces the guardrails. The A I layer is Python and only talks to it through the A P I. And the A M D Developer Cloud runs the GPU parts."),
+        dict(k="amd", cuts="fsp", kind="amd", say=amd_narration(amd), sayp=amd_narration(amd, short=True)),
+        dict(k="close", sayp='Practise safely. Act on the data. People decide. Thank you.', cuts="fsp", kind="card", kicker="Reinvent Commerce", title="Practise safely. Act on the data. People decide.",
+             lines=["Sim.PesoWeb tests the AI before a real shop depends on it.", "The Intelligent Hub finds the loss and says how to improve.",
+                    "Next: SMS and other channels, online payment, more shops."],
              dark=True,
-             say="Mission Commerce A I. The A I finds the loss, people decide, and customers get a deal. Thank you."),
+             say="Mission Commerce A I. Practise safely in Sim dot Peso Web, act on the data in the Intelligent Hub, and let people decide. Thank you."),
     ]
 
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--cut", choices=("full", "short"), default="full")
+    ap.add_argument("--cut", choices=("full", "short", "pitch"), default="full")
     ap.add_argument("--final", action="store_true")
     args = ap.parse_args()
     amd = load_amd()
@@ -303,7 +375,7 @@ def main():
     work = mv.WORK / ("pitch_" + args.cut)
     work.mkdir(parents=True, exist_ok=True)
     mv.FRAMES.mkdir(exist_ok=True)
-    tag = "s" if args.cut == "short" else "f"
+    tag = {"full": "f", "short": "s", "pitch": "p"}[args.cut]
     chosen = [s for s in scenes(amd) if tag in s["cuts"]]
     imgs = []
     for i, s in enumerate(chosen):
@@ -324,7 +396,7 @@ def main():
         imgs.append(p)
     # the voice-over: Windows' built-in voice unless the narration files are replaced
     mv.WORK = work
-    wavs = mv.tts([s["say"] for s in chosen])
+    wavs = mv.tts([(s.get("sayp") or s["say"]) if args.cut == "pitch" else s["say"] for s in chosen])
     clips, total = [], 0.0
     for i, (img, wav) in enumerate(zip(imgs, wavs)):
         dur = mv.seconds(wav) + 0.9

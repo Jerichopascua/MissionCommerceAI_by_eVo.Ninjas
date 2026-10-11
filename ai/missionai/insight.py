@@ -108,7 +108,7 @@ def template(kind: str, f: dict) -> tuple:
                 f"{f['branch']} shows {g(f['onHand'], 0)} on the shelf, about {peso(f['valueAtCost'])} at cost. {f.get('reason') or ''}".strip())
     if kind == "Replenish":
         return (f"Reorder {f['product']}",
-                f"{f['branch']} has {g(f['onHand'], 0)} on hand and sells about {g(f['ratePerDay'])} a day, which is {g(f['daysOfCover'])} days of cover. "
+                f"{f['branch']} has {g(f['onHand'], 0)} on hand and sells about {g(f['ratePerDay'])} a day, which is {g(f['daysOfCover'])} day(s) of cover. "
                 f"Suggested order: {g(f['suggestedQty'], 0)} units, with a delivery lead time of {g(f['leadTimeDays'], 0)} days.")
     if kind == "Markdown":
         move = "down" if float(f["to"]) < float(f["from"]) else "up"
@@ -124,12 +124,12 @@ SYSTEM = ("You reword notes for a store owner. Use only the facts and the senten
           "Keep every number exactly as given. Never add a number, a reason or a recommendation that is not in the facts.")
 
 
-def build(kind: str, ref: str, facts: dict, wording=None, cache_dir=None) -> dict:
-    """One insight: {kind, refKey, headline, body, source}. `wording` is a callable (system, user) -> text, or None."""
-    headline, body = template(kind, facts)
+def reword(kind: str, ref: str, headline: str, body: str, facts: dict, wording=None, cache_dir=None) -> dict:
+    """One note from a sentence that is already correct. A model (`wording`, a callable (system, user) -> text) may reword it, and its answer
+    is used only if every figure in it is in the facts or in the sentence it was given."""
     source = "template"
     if wording is not None:
-        key = hashlib.sha256(json.dumps([kind, facts], sort_keys=True, default=str).encode()).hexdigest()[:24]
+        key = hashlib.sha256(json.dumps([kind, facts, body], sort_keys=True, default=str).encode()).hexdigest()[:24]
         cached = None
         path = Path(cache_dir) / f"{key}.json" if cache_dir else None
         if path and path.exists():
@@ -152,3 +152,9 @@ def build(kind: str, ref: str, facts: dict, wording=None, cache_dir=None) -> dic
         if text and valid_wording(text.strip(), facts, body):
             body, source = text.strip(), "model"
     return {"kind": kind, "refKey": ref, "headline": headline, "body": body, "source": source}
+
+
+def build(kind: str, ref: str, facts: dict, wording=None, cache_dir=None) -> dict:
+    """One explanation: the standard sentence for what another AI feature suggested, optionally reworded."""
+    headline, body = template(kind, facts)
+    return reword(kind, ref, headline, body, facts, wording, cache_dir)

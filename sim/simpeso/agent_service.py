@@ -341,12 +341,33 @@ def _insight_cache():
     return str(Path(__file__).resolve().parent.parent / "runs" / "insight-cache")
 
 
+def insight_snapshot(drv, acct) -> dict:
+    """What PesoWeb holds about how the AI is doing, for AI Insight's analysis (see missionai.analysis). A part that cannot be read is left out."""
+    import datetime as dt
+
+    def get(path, default):
+        try:
+            got = drv._call("GET", path, acct.token)
+            return default if got is None else got
+        except Exception:
+            return default
+
+    return {"now": dt.datetime.now().isoformat(timespec="seconds"),
+            "features": get("/api/ai/control", []),
+            "branches": get("/api/ai/branch-settings", []),
+            "policy": get("/api/Pricing/Policy", {}),
+            "impact": get("/api/ai/hub/impact?days=14", {}),
+            "approvals": get("/api/Pricing/Approvals", {}),
+            "changes": (get("/api/ai/price-changes?take=500", {}) or {}).get("changes") or [],
+            "tasks": get("/api/ai/hub/tasks", {})}
+
+
 def insight_handler(drv, acct, warehouse_ids: list, wording=None, cache_dir=None, per_kind: int = 12):
     """AI Insight run: plain-language notes on what the other AI features suggested and why. It reads what PesoWeb holds (batches that may expire
     unsold, price changes waiting for approval, what to count first, what to reorder), builds a standard sentence for each from the numbers, and
     posts them for the Intelligent Hub. A language model (`wording`, when one is connected) may only reword a sentence, and a figure it adds is
     thrown away (see missionai.insight). Nothing here decides or changes anything."""
-    from missionai import insight as ins
+    from missionai import analysis, insight as ins
 
     def run():
         notes, plan = [], []
@@ -371,13 +392,21 @@ def insight_handler(drv, acct, warehouse_ids: list, wording=None, cache_dir=None
                 notes.append(ins.build(kind, ref, facts, wording=wording, cache_dir=cache_dir))
             except (KeyError, TypeError, ValueError):
                 continue                    # a row missing a fact is left out rather than guessed
+        # how the AI is doing and what to improve in its setup: rules over what PesoWeb holds, reworded under the same figure check
+        try:
+            for f in analysis.analyze(insight_snapshot(drv, acct)):
+                notes.append(ins.reword(f["kind"], f["refKey"], f["headline"], f["body"], f["facts"], wording=wording, cache_dir=cache_dir))
+        except Exception:                 # a part of the analysis that fails must not stop the explanations
+            pass
         status, body = drv._call("POST", "/api/ai/insights", acct.token,
                                  json_body={"Items": [{"Kind": n["kind"], "RefKey": n["refKey"], "Headline": n["headline"], "Body": n["body"],
                                                        "Source": n["source"]} for n in notes]}, raw=True)
         if status != 200:
             raise RuntimeError(f"PesoWeb refused the insights: {status} {body}")
         reworded = sum(1 for n in notes if n["source"] == "model")
-        text = f"{len(notes)} plain-language note(s): {reworded} reworded by the language model, {len(notes) - reworded} in standard wording"
+        n_improve = sum(1 for n in notes if n["kind"] == "Improve")
+        text = (f"{len(notes)} plain-language note(s) ({n_improve} suggested improvement(s) to the AI setup): {reworded} reworded by the language model, "
+                f"{len(notes) - reworded} in standard wording")
         if wording is None:
             text += " (no language model connected)"
         return text
