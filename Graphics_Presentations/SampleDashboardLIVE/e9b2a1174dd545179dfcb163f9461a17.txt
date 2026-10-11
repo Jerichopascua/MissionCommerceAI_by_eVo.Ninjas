@@ -1,0 +1,15 @@
+(Transcribed by TurboScribe. Go Unlimited to remove this message.)
+
+In grocery, markdown pricing sits at the intersection of margin and waste. Too early, margin is lost. Too late, product is written off. 
+
+Most retailers still manage this manually with delayed data, inconsistent execution, and missed opportunities. dMall introduces an agentic pricing layer to automate markdown pricing. AI agents continuously ingest live signals, expiry timelines, inventory positions, rate of sale, competitor pricing at SKU and store level.
+
+These agents don't report. They decide, autonomously, and execute. Data is unified into a real-time decision engine that calculates optimal markdowns continuously throughout the day. 
+
+Commercial strategy is embedded directly into the system. Margin thresholds, waste targets, trading priorities. Every decision reflects both operational reality and commercial intent.
+
+As products approach end-of-life, prices are dynamically adjusted store-by-store, SKU-by-SKU, moment-by-moment. Execution is automatic. Price changes are pushed to electronic shelf labels, synchronized with e-commerce, and aligned with picking and fulfillment systems. 
+
+One decision, fully executed. The result? Lower waste, protected margin, and pricing that operates at the speed of the store. D-Mall, agentic retail in action.
+
+(Transcribed by TurboScribe. Go Unlimited to remove this message.)

@@ -1,0 +1,44 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="theme.css">
+<style>pre{font:600 14px/1.35 Consolas,"Courier New",monospace;color:#b9ffd6;white-space:pre}.st{position:absolute;width:176px;height:170px}.st h3{font-size:16px}.st p{font-size:14px}.st .num{width:26px;height:26px;line-height:26px;margin-bottom:4px}
+table{border-collapse:collapse;width:100%;font-size:15px}td,th{padding:2px 8px;border-bottom:1px solid rgba(61,255,143,.2);text-align:left}th{color:var(--o2)}</style></head><body>
+<div class="top"><div class="amd">AMD<span>▸</span> <span style="font-size:20px;color:#fff;letter-spacing:1px">DEVELOPER HACKATHON: <b style="color:var(--g)">ACT III</b></span></div><div class="evt">SAAS SIMULATION · <b>OWNER-FIRST WORLD</b></div></div>
+<h1>A SIMULATED OWNER <em>SIGNS UP</em></h1>
+<div class="sub">The first actor is the business owner. They register, pick a plan, and <b style="color:var(--g)">create the world</b> that shoppers then visit</div>
+
+<svg class="ov" viewBox="0 0 1600 900"><defs><marker id="a" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#3dff8f"/></marker></defs>
+<g stroke="#3dff8f" stroke-width="3" fill="none" marker-end="url(#a)"><path d="M216 265 L232 265"/><path d="M408 265 L424 265"/><path d="M600 265 L616 265"/><path d="M792 265 L808 265"/><path d="M984 265 L1000 265"/><path d="M1176 265 L1192 265"/><path d="M1368 265 L1384 265"/></g></svg>
+
+<div class="box st" style="left:40px;top:180px"><span class="num">1</span><h3 class="g">OWNER STORY</h3><p>LLM archetype: intent, capital, ambition, risk. “Rico, ex-mechanic, ₱300k saved.”</p></div>
+<div class="box st" style="left:232px;top:180px"><span class="num">2</span><h3 class="g">BUSINESS PLAN</h3><p>Vertical · branches · staff per branch · catalog size · margins · hours.</p></div>
+<div class="box st" style="left:424px;top:180px"><span class="num">3</span><h3 class="g">PICK A PLAN</h3><p>Lite / Pro / Business. Tier limits cap branches, users, products → downsize or upgrade.</p></div>
+<div class="box or st" style="left:616px;top:180px"><span class="num">4</span><h3>REGISTER</h3><p>Real <b>Auth/Register</b>: tenant created, owner logged in.</p></div>
+<div class="box or st" style="left:808px;top:180px"><span class="num">5</span><h3>BUILD</h3><p>AddWarehouse × N · AddUser × staff · categories &amp; products.</p></div>
+<div class="box or st" style="left:1000px;top:180px"><span class="num">6</span><h3>STOCK &amp; OPEN</h3><p>Opening stock via purchase receipt. Shift opens, shop goes live.</p></div>
+<div class="box st" style="left:1192px;top:180px"><span class="num">7</span><h3 class="g">SHOPPERS ARRIVE</h3><p>Missions fit the vertical. Staff + incidents injected.</p></div>
+<div class="box st" style="left:1384px;top:180px;width:176px"><span class="num">8</span><h3 class="g">LIFECYCLE</h3><p>Trial → paid → upgrade → churn. A real SaaS funnel.</p></div>
+
+<div class="box" style="left:40px;top:375px;width:760px;height:310px"><h3 class="g">VERTICAL TEMPLATES · DATA, NOT CODE</h3>
+<table><tr><th>Vertical</th><th>Depth</th><th>Expiry</th><th>Shopper missions</th></tr>
+<tr><td>Convenience</td><td><span class="tag">A · full</span></td><td>Yes</td><td>grab-and-go · after-work · late-night</td></tr>
+<tr><td>Grocery / Pharmacy</td><td><span class="tag">A · full</span></td><td>Yes</td><td>weekly restock · urgent medicine</td></tr>
+<tr><td>Motorcycle parts</td><td><span class="tag o">B · end-to-end</span></td><td>No</td><td>repair-urgent · maintenance · accessories</td></tr>
+<tr><td>Mixed store</td><td><span class="tag r">C · template</span></td><td>Partial</td><td>blend of two templates</td></tr>
+<tr><td>Sports</td><td><span class="tag r">C · template</span></td><td>No</td><td>event-driven · seasonal</td></tr></table>
+<p class="mut" style="margin-top:8px">Electronics = roadmap (serial / warranty logic). High-ticket shops show cash variance &amp; shrinkage at a different scale.</p></div>
+
+<div class="box or" style="left:820px;top:375px;width:740px;height:310px"><h3>ONE OWNER PLAN (LLM DRAFT → VALIDATED)</h3>
+<pre>owner: rico_motorcycle_parts   capital_band: mid
+vertical: motorcycle_parts     tier_wanted: business
+plan:    {branches: 3, staff_per_branch: [4, 3, 3],
+          catalog: 1800 SKUs, margin: 0.28}
+tier_check: business allows 5 branches / 10 users / 50k SKUs  OK
+           (on Lite: 1 branch / 1 user -> downsize or upgrade)
+validators: margin in vertical band · catalog vs capital ·
+            staff vs ticket volume · hours plausible
+onboarding: Register -> AddWarehouse x3 -> AddUser x10 -> AddProduct</pre></div>
+
+<div class="box" style="left:40px;top:705px;width:1520px;height:125px"><h3 class="g">HOW IT STAYS HUMAN-LIKE WITHOUT REAL DATA</h3>
+<p><span class="tag">LLM writes people &amp; plans</span><span class="tag">Models decide behaviour</span><span class="tag">Dice = small bounded noise</span><span class="tag">Plausibility validators</span><span class="tag">Diversity across owners</span><span class="tag o">Seed = replayable, not random personas</span></p>
+<p class="mut" style="margin-top:8px">Honest limit: plausible, not proven representative. Simulation demonstrates detection and scale, not real-market prediction.</p></div>
+<div class="foot" style="bottom:4px;border:none"><span></span><span style="font-size:13px">Tier values from the PesoWeb subscription spec (confirm in P0)</span></div>
+</body></html>

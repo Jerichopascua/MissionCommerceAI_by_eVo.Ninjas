@@ -1,0 +1,53 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="theme.css">
+<style>pre{font:600 14px/1.35 Consolas,"Courier New",monospace;color:#b9ffd6;white-space:pre}.st{position:absolute;width:300px;height:150px}.st h3{font-size:17px}.st p{font-size:14.5px}</style></head><body>
+<div class="top"><div class="amd">AMD<span>▸</span> <span style="font-size:20px;color:#fff;letter-spacing:1px">DEVELOPER HACKATHON: <b style="color:var(--g)">ACT III</b></span></div><div class="evt">AI SCENARIO GENERATOR · <b>REAL-LIFE ACTORS</b></div></div>
+<h1>HOW AI CREATES <em>REAL-LIFE ACTORS</em></h1>
+<div class="sub">The LLM designs the <b style="color:var(--o2)">story and structure</b> · statistical engines draw the <b style="color:var(--g)">numbers</b> · validators keep it realistic</div>
+
+<svg class="ov" viewBox="0 0 1600 900"><defs><marker id="a" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#3dff8f"/></marker></defs>
+<g stroke="#3dff8f" stroke-width="3" fill="none" marker-end="url(#a)"><path d="M340 255 L380 255"/><path d="M680 255 L720 255"/><path d="M1020 255 L1060 255"/><path d="M1360 255 L1400 255" /></g></svg>
+
+<div class="box st" style="left:40px;top:180px"><h3 class="g">① INPUTS</h3><p>Requirement text · branch type &amp; location · holiday/weather signals · past run results</p></div>
+<div class="box st" style="left:380px;top:180px"><h3 class="g">② LLM SCENARIO PLANNER</h3><p>vLLM on AMD, JSON-schema output: personas, missions, time windows, events, expected behaviour, metrics</p></div>
+<div class="box st" style="left:720px;top:180px"><h3 class="g">③ VALIDATOR</h3><p>Business constraints: stock, hours, price ranges, max uplift, no impossible baskets. Rejects &amp; retries.</p></div>
+<div class="box st" style="left:1060px;top:180px"><h3 class="g">④ BEHAVIOR ENGINE</h3><p>Samples counts, times, baskets from seeded distributions: deterministic &amp; replayable</p></div>
+<div class="box or" style="left:1400px;top:180px;width:160px;height:150px"><h3 style="font-size:16px">⑤ RUN</h3><p style="font-size:14px">Actors operate PesoWeb → score</p></div>
+
+<div class="box" style="left:40px;top:365px;width:500px;height:300px"><h3 class="g">1 OF ~150 CUSTOMER ARCHETYPES</h3>
+<pre>persona: office_worker_after_work
+mission: after_work_top_up
+window:  17:30-19:00 (weekdays)
+branch_types: [convenience, grocery]
+basket_template:
+  ready_meal: 0.7   drinks: 0.6
+  milk: 0.4         essentials: 0.3
+price_sensitivity: medium
+payment: {cash: .4, gcash: .5, card: .1}
+responds_to: [promo, stockout_substitute]</pre></div>
+
+<div class="box" style="left:560px;top:365px;width:500px;height:300px"><h3 class="g">ACTOR PERSONA (STAFF) + INCIDENT</h3>
+<pre>persona: cashier_shift_b
+throughput: 38 txn/hr (σ 6)
+injected_incident:
+  type: unexplained_cash_variance
+  how:  1 cash-out w/o record,
+        3 manual adjustments
+  amount: sampled 500-2,000
+ground_truth: logged @ injection
+expected: AI flags, PesoWeb misses</pre></div>
+
+<div class="box or" style="left:1080px;top:365px;width:480px;height:300px"><h3>SCENARIO FROM A REQUIREMENT</h3>
+<p class="mut">“Test a major supplier delay during a holiday surge.”</p>
+<pre style="margin-top:6px">scenario: SUPPLIER_DELAY_HOLIDAY_SURGE
+precondition: holiday=true, supplier=S-0042
+events:
+  - supplier_delay: 72h
+  - demand: {categories: selected, uplift: +40%}
+measure: [stockout_rate, lost_sales,
+          turnover, margin, ai_latency]</pre></div>
+
+<div class="box" style="left:40px;top:690px;width:1520px;height:140px"><h3 class="g">WHY THIS IS REALISTIC, NOT RANDOM</h3>
+<p><span class="tag">LLM never invents the numbers</span><span class="tag">Seeded distributions per branch type &amp; hour</span><span class="tag">Constraint validator</span><span class="tag">Ground truth recorded at injection</span><span class="tag">Same seed = same world</span><span class="tag o">Result scored: caught / AI-found / undetected</span></p>
+<p class="mut" style="margin-top:8px">Honest limit: simulated data tests detection and scale. It does not prove real-world accuracy. We say that on stage.</p></div>
+<div class="foot" style="bottom:4px;border:none"><span></span><span style="font-size:13px">Persona examples are illustrative templates</span></div>
+</body></html>

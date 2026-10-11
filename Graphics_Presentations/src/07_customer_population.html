@@ -1,0 +1,36 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="theme.css">
+<style>.ar{position:absolute;width:233px;height:150px}.ar h3{font-size:16px;margin-bottom:3px}.ar p{font-size:13.5px;line-height:1.3}.ar .tag{font-size:12px;padding:1px 7px}
+table{border-collapse:collapse;width:100%;font-size:14.5px}td,th{padding:4px 8px;border-bottom:1px solid rgba(61,255,143,.2);text-align:left;vertical-align:top}th{color:var(--o2)}td.s{color:var(--g)}td.f{color:var(--o2)}</style></head><body>
+<div class="top"><div class="amd">AMD<span>▸</span> <span style="font-size:20px;color:#fff;letter-spacing:1px">DEVELOPER HACKATHON: <b style="color:var(--g)">ACT III</b></span></div><div class="evt">CUSTOMER POPULATION · <b>MANY ACTORS, NOT ONE</b></div></div>
+<h1>A CROWD OF <em>REAL CUSTOMERS</em></h1>
+<div class="sub">~150 archetypes (templates) → thousands to millions of named individuals who remember, repeat and change</div>
+
+<div class="box ar" style="left:40px;top:180px"><h3 class="g">Student on a budget</h3><p>Mon–Fri 12:00 &amp; 16:30. Noodles, drinks, load. Price-sensitive, buys promo, cash.</p><span class="tag">convenience</span></div>
+<div class="box ar" style="left:283px;top:180px"><h3 class="g">Office worker, after work</h3><p>17:30–19:00. Ready meal, drink, milk. GCash. Substitutes if sold out.</p><span class="tag">convenience</span><span class="tag">grocery</span></div>
+<div class="box ar" style="left:526px;top:180px"><h3 class="g">Night-shift nurse</h3><p>22:00–05:00. Hot food, energy drink, essentials. Low price sensitivity, time-pressed.</p><span class="tag">late-night</span></div>
+<div class="box ar" style="left:40px;top:345px"><h3 class="g">Parent, weekly shop</h3><p>Sat 09:00–11:00. Big basket, 40+ items, compares price, uses coupons, card or cash.</p><span class="tag">grocery</span><span class="tag">supermarket</span></div>
+<div class="box ar" style="left:283px;top:345px"><h3 class="g">Senior, pharmacy regular</h3><p>Weekday mornings. Same medicines monthly. Brand loyal, asks for staff help.</p><span class="tag">pharmacy</span></div>
+<div class="box ar" style="left:526px;top:345px"><h3 class="g">Motorcycle commuter</h3><p>Repair-urgent after breakdown; oil &amp; tires on schedule. High ticket, rare visits.</p><span class="tag o">motorcycle</span></div>
+
+<div class="box" style="left:40px;top:510px;width:719px;height:162px"><h3 class="g">HOW AN ARCHETYPE LIBRARY IS BUILT</h3>
+<p>LLM fills a <b>coverage grid</b> cell by cell: <span class="tag">age</span><span class="tag">income</span><span class="tag">occupation</span><span class="tag">household</span><span class="tag">mobility</span><span class="tag">time pattern</span></p>
+<p style="margin-top:6px">Remove near-duplicates by text similarity · <b>fail the build</b> if cells are empty or archetypes cluster too tightly · cache and version the library.</p></div>
+
+<div class="box or" style="left:780px;top:180px;width:780px;height:492px"><h3>POPULATION PROFILES · SAME CODE, DIFFERENT NUMBERS</h3>
+<table><tr><th></th><th>STARTER (hackathon)</th><th>FULL (design target)</th></tr>
+<tr><td>Archetypes</td><td class="s">~40</td><td class="f">~150</td></tr>
+<tr><td>Day-to-Day world</td><td class="s">~3 tenants · ~6 branches</td><td class="f">~5 tenants · ~12 branches*</td></tr>
+<tr><td>Named individuals</td><td class="s">~3,000</td><td class="f">~10,000</td></tr>
+<tr><td>Hero actors (LLM day scripts)</td><td class="s">~100</td><td class="f">~300</td></tr>
+<tr><td>Supermarket branch</td><td class="s">~2k txns/day · ~5k regulars</td><td class="f">~10k txns/day · ~25k regulars</td></tr>
+<tr><td>Quick Sim individuals (GPU)</td><td class="s">~100,000</td><td class="f">~1–2 million</td></tr>
+<tr><td>Micro-store free tier</td><td class="s" colspan="2">archetype-mix counts only (aggregated, labelled)</td></tr></table>
+<p class="mut" style="margin-top:12px">*Sized from measured PesoWeb API throughput (P2). Starter caps LLM time and API load, not the model: every mission and incident works at either size.</p>
+<p style="margin-top:14px"><span class="tag o">regular pool ≈ daily txns × regular share × days between visits</span></p>
+<p class="mut" style="margin-top:6px">400 × 0.65 × 3 ≈ 780 regulars per branch. Share and interval are tunable parameters per vertical, not measured facts.</p></div>
+
+<div class="box" style="left:40px;top:692px;width:1520px;height:138px"><h3 class="g">WHY INDIVIDUALS MUST PERSIST</h3>
+<p><span class="tag">repeat visits</span><span class="tag">loyalty &amp; churn</span><span class="tag">wallet &amp; payday effect</span><span class="tag">substitution after stockout</span><span class="tag o">Mission Detection has real patterns to find</span><span class="tag o">Customer-flow &amp; waiting-time metrics</span></p>
+<p class="mut" style="margin-top:8px">Real supermarkets serve thousands of distinct people a day. The design supports that; the hackathon build runs the smaller profile.</p></div>
+<div class="foot" style="bottom:4px;border:none"><span></span><span style="font-size:13px">Archetype examples are illustrative templates</span></div>
+</body></html>

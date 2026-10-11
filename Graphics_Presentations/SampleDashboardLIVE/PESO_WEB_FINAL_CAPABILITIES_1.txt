@@ -1,0 +1,75 @@
+(Transcribed by TurboScribe. Go Unlimited to remove this message.)
+
+In grocery, markdown pricing sits at the intersection of margin and waste. Too early, margin is lost. Too late, product is written off. 
+
+Most retailers still manage this manually with delayed data, inconsistent execution, and missed opportunities. dMall introduces an agentic pricing layer to automate markdown pricing. AI agents continuously ingest live signals, expiry timelines, inventory positions, rate of sale, competitor pricing at SKU and store level.
+
+These agents don't report. They decide, autonomously, and execute. Data is unified into a real-time decision engine that calculates optimal markdowns continuously throughout the day. 
+
+Commercial strategy is embedded directly into the system. Margin thresholds, waste targets, trading priorities. Every decision reflects both operational reality and commercial intent.
+
+As products approach end-of-life, prices are dynamically adjusted store-by-store, SKU-by-SKU, moment-by-moment. Execution is automatic. Price changes are pushed to electronic shelf labels, synchronized with e-commerce, and aligned with picking and fulfillment systems. 
+
+One decision, fully executed. The result? Lower waste, protected margin, and pricing that operates at the speed of the store. D-Mall, agentic retail in action.
+
+
+Our Mission Commerce AI 
+- Models  are gathered and combined with our  accumulated product, transaction, 
+- and operational data to create intelligent analysis 
+- and decision support products for retail enterprises. 
+AI Agents, we embed model capabilities into core business processes like product 
+analysis, inventory management, marketing planning, and customer service, creating 
+a closed loop from data insight to strategy execution.
+
+1. AI Monitoring
+2. AI Pricing
+3. AI Product Loss  Prevention
+4. AI Replenish 
+5. AI Customer Mission
+6. AI Insight 
+
+
+# lito here some suggestions
+--shop simulator check this out .
+https://github.com/ShopAgent-Team/ShopSimulator
+https://www.futureatlas.ai/experiments/retail/methodology
+https://www.futureatlas.ai/experiments/retail/methodology
+https://www.futureatlas.ai/
+
+https://www.futureatlas.ai/experiments/retail
+
+
+Retail
+Three experiments exploring how agent-mediated commerce reshapes the retail value chain — from autonomous purchasing and negotiation, to invisible supply chains, to stores that learn. What happens when the customer becomes an agent?
+
+
+
+# RETAIL 
+Series 02
+
+Retail
+Three experiments exploring how agent-mediated commerce reshapes the retail value chain — from autonomous purchasing and negotiation, to invisible supply chains, to stores that learn. What happens when the customer becomes an agent?
+
+
+
+Experiment 01
+The Autonomous Purchase
+A 43-word request triggers 18 steps across 8 agents, 40 retailers, 2 rounds of negotiation, and a fulfillment crisis — all resolved with 14 minutes of customer involvement. An interactive exploration of how agent-mediated commerce could reshape retail.
+
+8 autonomous agents
+18 orchestrated steps
+
+
+Experiment 02
+Coming Soon
+The Invisible Supply Chain
+When AI agents manage inventory, predict demand, and reroute logistics in real time — what happens to the supply chain as a source of competitive advantage? An exploration of autonomous fulfillment.
+Notify me when this launches
+
+Experiment 03
+Coming Soon
+The Store That Learns
+When every customer interaction generates data, every shelf adapts in real time, and every associate is augmented by AI — what does the physical store become? An exploration of adaptive retail.
+
+
+Notify me when this launches

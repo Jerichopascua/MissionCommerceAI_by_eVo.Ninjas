@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MissionCommerce AI + Sim.PesoWeb | AMD ROCm Command Center</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js for High-Performance Real-Time Monitoring -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            bg: '#0B0F17',
+                            card: '#121824',
+                            border: '#1E293B',
+                            accent: '#00F2FE',
+                            blue: '#4FACFE',
+                            purple: '#9D4EDD',
+                            amd: '#ED1C24',
+                            emerald: '#10B981',
+                            crimson: '#EF4444',
+                            amber: '#F59E0B'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #0B0F17;
+            color: #E2E8F0;
+            font-family: 'Inter', sans-serif;
+            background-image: 
+                radial-gradient(rgba(0, 242, 254, 0.04) 1px, transparent 0),
+                linear-gradient(to right, rgba(255, 255, 255, 0.01) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.01) 1px, transparent 1px);
+            background-size: 24px 24px, 40px 40px, 40px 40px;
+            background-position: -1px -1px;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0B0F17;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1E293B;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #00F2FE;
+        }
+
+        /* Glowing Effects */
+        .glow-accent {
+            box-shadow: 0 0 15px rgba(0, 242, 254, 0.25);
+        }
+        .glow-crimson {
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);
+        }
+        .glow-amd {
+            box-shadow: 0 0 15px rgba(237, 28, 36, 0.3);
+        }
+
+        .border-glow-accent {
+            border-color: rgba(0, 242, 254, 0.4);
+        }
+
+        /* Scanline Animation Effect */
+        .scanline {
+            position: relative;
+            overflow: hidden;
+        }
+        .scanline::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
+            background-size: 100% 4px;
+            z-index: 2;
+            pointer-events: none;
+            opacity: 0.3;
+        }
+
+        /* Pulsing Status Dot */
+        @keyframes pulse-fast {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.9); }
+        }
+        .animate-pulse-fast {
+            animation: pulse-fast 1.2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        /* Log Entry Slide In */
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        .log-entry-anim {
+            animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-brand-accent selection:text-black">
+
+    <!-- TOP NAVIGATION & TENANT HIERARCHY BAR -->
+    <header class="border-b border-brand-border bg-brand-card/90 backdrop-blur-md sticky top-0 z-50">
+        <div class="max-w-[1920px] mx-auto px-4 py-2.5 flex flex-wrap items-center justify-between gap-4">
+            
+            <!-- LOGO & BRANDING -->
+            <div class="flex items-center gap-4">
+                <div class="flex items-center gap-2">
+                    <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-brand-accent via-brand-blue to-brand-purple p-0.5 flex items-center justify-center glow-accent">
+                        <div class="w-full h-full bg-brand-bg rounded-[7px] flex items-center justify-center">
+                            <i class="fa-solid fa-microchip text-brand-accent text-lg"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold text-lg tracking-wider text-white font-mono">MISSIONCOMMERCE<span class="text-brand-accent">.AI</span></span>
+                            <span class="text-[10px] bg-brand-amd/20 text-brand-amd px-1.5 py-0.5 rounded border border-brand-amd/40 font-mono font-semibold">ROCm ACCELERATED</span>
+                        </div>
+                        <p class="text-xs text-slate-400 font-mono">Sim.PesoWeb Synthetic Operating Environment v3.4</p>
+                    </div>
+                </div>
+
+                <div class="h-8 w-px bg-brand-border hidden md:block"></div>
+
+                <!-- CENTRAL HOLDING COMPANY PROFILE & TENANT PICKER -->
+                <div class="flex items-center gap-3">
+                    <div class="bg-brand-bg/80 border border-brand-border rounded-lg px-3 py-1.5 flex items-center gap-2">
+                        <i class="fa-solid fa-building-columns text-slate-400 text-xs"></i>
+                        <span class="text-xs text-slate-400 font-mono">Holding:</span>
+                        <select id="centralCompanySelect" onchange="switchCentralCompany(this.value)" class="bg-transparent text-xs font-semibold text-white focus:outline-none cursor-pointer">
+                            <option value="evo_holding" class="bg-brand-card text-white">Evo.Ninjas Retail Holding Corp</option>
+                            <option value="asia_pacific" class="bg-brand-card text-white">Asia-Pacific Enterprise Conglomerate</option>
+                        </select>
+                    </div>
+
+                    <i class="fa-solid fa-angle-right text-slate-600 text-xs"></i>
+
+                    <div class="bg-brand-bg/80 border border-brand-accent/40 rounded-lg px-3 py-1.5 flex items-center gap-2 glow-accent">
+                        <i class="fa-solid fa-store text-brand-accent text-xs"></i>
+                        <span class="text-xs text-slate-400 font-mono">Tenant:</span>
+                        <select id="tenantSelect" onchange="switchTenant(this.value)" class="bg-transparent text-xs font-bold text-brand-accent focus:outline-none cursor-pointer">
+                            <option value="metromart" class="bg-brand-card text-white">MetroMart Convenience Stores (8 Branches)</option>
+                            <option value="tricity" class="bg-brand-card text-white">TriCity Auto Parts Chain (5 Branches)</option>
+                            <option value="carepharma" class="bg-brand-card text-white">CarePharma Rx Outlets (12 Branches)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SIMULATION MODE & SPEED CONTROLS -->
+            <div class="flex items-center gap-3">
+                <div class="flex items-center bg-brand-bg border border-brand-border rounded-lg p-1 text-xs">
+                    <button id="modeQuick" onclick="setSimMode('quick')" class="px-2.5 py-1 rounded-md transition font-mono bg-brand-accent text-black font-bold">
+                        <i class="fa-solid fa-bolt mr-1"></i>Quick Sim
+                    </button>
+                    <button id="modeDay" onclick="setSimMode('day')" class="px-2.5 py-1 rounded-md transition font-mono text-slate-400 hover:text-white">
+                        <i class="fa-solid fa-calendar-day mr-1"></i>Day-to-Day
+                    </button>
+                    <button id="modeScenario" onclick="setSimMode('scenario')" class="px-2.5 py-1 rounded-md transition font-mono text-slate-400 hover:text-white">
+                        <i class="fa-solid fa-vial-circle-check mr-1"></i>Scenario
+                    </button>
+                </div>
+
+                <!-- SPEED MULTIPLIER -->
+                <div class="flex items-center bg-brand-bg border border-brand-border rounded-lg p-1 text-xs font-mono">
+                    <span class="px-2 text-slate-400 font-sans">Speed:</span>
+                    <button onclick="setSpeed(1)" id="btnSpeed1" class="px-2 py-0.5 rounded text-slate-400 hover:bg-slate-800">1x</button>
+                    <button onclick="setSpeed(10)" id="btnSpeed10" class="px-2 py-0.5 rounded bg-brand-blue text-black font-bold">10x</button>
+                    <button onclick="setSpeed(100)" id="btnSpeed100" class="px-2 py-0.5 rounded text-slate-400 hover:bg-slate-800">100x</button>
+                </div>
+
+                <!-- SIMULATION RUN CONTROLS -->
+                <button id="pauseToggleBtn" onclick="togglePause()" class="bg-brand-amber/20 text-brand-amber border border-brand-amber/40 hover:bg-brand-amber/30 px-3 py-1.5 rounded-lg text-xs font-mono font-bold flex items-center gap-1.5">
+                    <i id="pauseIcon" class="fa-solid fa-pause"></i> <span id="pauseText">PAUSE</span>
+                </button>
+
+                <div class="flex items-center gap-2 bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-lg font-mono text-xs">
+                    <span class="w-2 h-2 rounded-full bg-brand-emerald animate-pulse-fast"></span>
+                    <span class="text-slate-400">CLK:</span>
+                    <span id="simClock" class="text-white font-bold">18:42:09</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- BRANCH & WAREHOUSE SELECTION GRID ROW -->
+        <div class="bg-slate-950/80 border-t border-brand-border/60 px-4 py-2">
+            <div class="max-w-[1920px] mx-auto flex items-center gap-3 overflow-x-auto no-scrollbar py-0.5" id="branchSelectorContainer">
+                <!-- Dynamically Populated Branch Pills -->
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN COMMAND CENTER CONTENT GRID -->
+    <main class="max-w-[1920px] mx-auto px-4 py-4 flex-1 w-full grid grid-cols-1 xl:grid-cols-12 gap-4">
+
+        <!-- LEFT COLUMN: HARDWARE & TRANSACTION FLOW (SPAN 7) -->
+        <div class="xl:col-span-7 space-y-4 flex flex-col">
+
+            <!-- MODULE 1: AMD ROCm INSTINCT OS TASK MONITOR -->
+            <section class="bg-brand-card border border-brand-border rounded-xl p-4 scanline relative">
+                <div class="flex items-center justify-between mb-3 border-b border-brand-border/60 pb-2">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-server text-brand-amd text-base"></i>
+                        <h2 class="font-bold text-sm tracking-wide text-white font-mono">AMD ROCm™ INSTINCT OS HARDWARE MONITOR</h2>
+                        <span class="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded font-mono">Device: MI300X (64GB)</span>
+                    </div>
+                    <div class="flex items-center gap-4 text-xs font-mono">
+                        <span class="text-slate-400"><i class="fa-solid fa-temperature-half text-brand-amber mr-1"></i>GPU Temp: <span id="gpuTemp" class="text-white font-bold">58°C</span></span>
+                        <span class="text-slate-400"><i class="fa-solid fa-bolt text-brand-accent mr-1"></i>Power: <span id="gpuPower" class="text-white font-bold">342W</span></span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <!-- Gauge 1: GPU Compute -->
+                    <div class="bg-brand-bg/80 border border-brand-border rounded-lg p-3 flex flex-col justify-between">
+                        <div class="flex justify-between items-center text-xs font-mono text-slate-400">
+                            <span>ROCm Compute</span>
+                            <i class="fa-solid fa-microchip text-brand-accent"></i>
+                        </div>
+                        <div class="my-2">
+                            <div class="text-xl font-black font-mono text-white flex items-baseline gap-1">
+                                <span id="gpuUtil">92.4</span><span class="text-xs text-brand-accent">%</span>
+                            </div>
+                            <div class="w-full bg-slate-800 h-2 rounded-full mt-1.5 overflow-hidden">
+                                <div id="gpuBar" class="bg-gradient-to-r from-brand-blue to-brand-accent h-full transition-all duration-500" style="width: 92.4%"></div>
+                            </div>
+                        </div>
+                        <span class="text-[10px] text-slate-500 font-mono">304 Compute Units Active</span>
+                    </div>
+
+                    <!-- Gauge 2: vLLM Generation Token Rate -->
+                    <div class="bg-brand-bg/80 border border-brand-border rounded-lg p-3 flex flex-col justify-between">
+                        <div class="flex justify-between items-center text-xs font-mono text-slate-400">
+                            <span>vLLM Inference</span>
+                            <i class="fa-solid fa-brain text-brand-purple"></i>
+                        </div>
+                        <div class="my-2">
+                            <div class="text-xl font-black font-mono text-white flex items-baseline gap-1">
+                                <span id="vllmRate">94.8</span><span class="text-xs text-brand-purple">tok/s</span>
+                            </div>
+                            <div class="w-full bg-slate-800 h-2 rounded-full mt-1.5 overflow-hidden">
+                                <div id="vllmBar" class="bg-gradient-to-r from-brand-purple to-pink-500 h-full transition-all duration-300" style="width: 78%"></div>
+                            </div>
+                        </div>
+                        <span class="text-[10px] text-slate-500 font-mono">Model: Mission-Llama-3-8B</span>
+                    </div>
+
+                    <!-- Gauge 3: PyTorch Event Stream -->
+                    <div class="bg-brand-bg/80 border border-brand-border rounded-lg p-3 flex flex-col justify-between">
+                        <div class="flex justify-between items-center text-xs font-mono text-slate-400">
+                            <span>PyTorch Pipeline</span>
+                            <i class="fa-solid fa-network-wired text-brand-emerald"></i>
+                        </div>
+                        <div class="my-2">
+                            <div class="text-xl font-black font-mono text-white flex items-baseline gap-1">
+                                <span id="pytorchRate">14,280</span><span class="text-xs text-brand-emerald">evt/s</span>
+                            </div>
+                            <div class="w-full bg-slate-800 h-2 rounded-full mt-1.5 overflow-hidden">
+                                <div id="pytorchBar" class="bg-gradient-to-r from-emerald-600 to-brand-emerald h-full transition-all duration-300" style="width: 85%"></div>
+                            </div>
+                        </div>
+                        <span class="text-[10px] text-slate-500 font-mono">ROCm Tensor Parallelism</span>
+                    </div>
+
+                    <!-- Gauge 4: GPU VRAM Allocated -->
+                    <div class="bg-brand-bg/80 border border-brand-border rounded-lg p-3 flex flex-col justify-between">
+                        <div class="flex justify-between items-center text-xs font-mono text-slate-400">
+                            <span>VRAM Allocation</span>
+                            <i class="fa-solid fa-memory text-brand-amber"></i>
+                        </div>
+                        <div class="my-2">
+                            <div class="text-xl font-black font-mono text-white flex items-baseline gap-1">
+                                <span id="vramAlloc">29.4</span><span class="text-xs text-slate-400">/ 64 GB</span>
+                            </div>
+                            <div class="w-full bg-slate-800 h-2 rounded-full mt-1.5 overflow-hidden">
+                                <div id="vramBar" class="bg-brand-amber h-full transition-all duration-300" style="width: 46%"></div>
+                            </div>
+                        </div>
+                        <span class="text-[10px] text-slate-500 font-mono">KV Cache Allocation OK</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- MODULE 2: LIVE TRANSACTION MATRIX & MISSION FEED -->
+            <section class="bg-brand-card border border-brand-border rounded-xl p-4 flex-1 flex flex-col">
+                <div class="flex items-center justify-between mb-3 border-b border-brand-border/60 pb-2">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-cart-shopping text-brand-accent"></i>
+                        <h2 class="font-bold text-sm tracking-wide text-white font-mono">LIVE TRANSACTION STREAM & CUSTOMER MISSION MATRIX</h2>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="inline-flex items-center gap-1.5 text-xs bg-emerald-500/10 text-brand-emerald border border-brand-emerald/30 px-2 py-0.5 rounded font-mono">
+                            <span class="w-1.5 h-1.5 rounded-full bg-brand-emerald animate-ping"></span>
+                            Live POS Feed
+                        </span>
+                    </div>
+                </div>
+
+                <!-- REAL-TIME CHART OF SALES & MISSION THROUGHPUT -->
+                <div class="h-44 w-full bg-brand-bg/60 border border-brand-border rounded-lg p-2 mb-3">
+                    <canvas id="liveThroughputChart"></canvas>
+                </div>
+
+                <!-- LIVE TRANSACTION FEED STREAM TABLE -->
+                <div class="flex-1 overflow-hidden flex flex-col">
+                    <div class="text-xs font-mono text-slate-400 mb-2 flex justify-between items-center">
+                        <span>INCOMING POS BASKETS & AI MISSION DETECTION</span>
+                        <span id="activeBranchLabel" class="text-brand-accent">All Branches Filtered</span>
+                    </div>
+
+                    <div class="overflow-y-auto flex-1 bg-brand-bg/90 border border-brand-border rounded-lg font-mono text-xs">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="bg-slate-900/90 sticky top-0 border-b border-brand-border text-slate-400">
+                                <tr>
+                                    <th class="p-2">Time</th>
+                                    <th class="p-2">Branch / POS</th>
+                                    <th class="p-2">Shopper Archetype</th>
+                                    <th class="p-2">Items Basket</th>
+                                    <th class="p-2">Total</th>
+                                    <th class="p-2">AI Intent Mission</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transactionStreamBody" class="divide-y divide-slate-800/60">
+                                <!-- Dynamic Inserted Rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- RIGHT COLUMN: SCENARIOS, INCIDENT INVESTIGATOR & DUTY ROSTER (SPAN 5) -->
+        <div class="xl:col-span-5 space-y-4 flex flex-col">
+
+            <!-- MODULE 3: SCENARIO CHECKLIST & INJECTION CONTROL PANEL -->
+            <section class="bg-brand-card border border-brand-border rounded-xl p-4">
+                <div class="flex items-center justify-between mb-3 border-b border-brand-border/60 pb-2">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-flask text-brand-purple"></i>
+                        <h2 class="font-bold text-sm tracking-wide text-white font-mono">SCENARIO SIMULATOR & ANOMALY INJECTION</h2>
+                    </div>
+                    <span class="text-xs text-slate-400 font-mono">Ground Truth Benchmark</span>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
+                    <!-- Scenario Item 1 -->
+                    <button onclick="injectScenario('cash_leak')" class="text-left bg-brand-bg hover:bg-brand-border/40 border border-brand-border hover:border-brand-crimson/60 p-2.5 rounded-lg transition group">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="font-bold text-xs text-slate-200 group-hover:text-brand-crimson font-mono">1. Operational Leak</span>
+                            <i class="fa-solid fa-hand-holding-dollar text-brand-crimson opacity-70"></i>
+                        </div>
+                        <p class="text-[11px] text-slate-400 leading-tight">Inject Unexplained POS Cash Shortage (₱1,450 variance).</p>
+                    </button>
+
+                    <!-- Scenario Item 2 -->
+                    <button onclick="injectScenario('demand_spike')" class="text-left bg-brand-bg hover:bg-brand-border/40 border border-brand-border hover:border-brand-amber/60 p-2.5 rounded-lg transition group">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="font-bold text-xs text-slate-200 group-hover:text-brand-amber font-mono">2. Demand Surge</span>
+                            <i class="fa-solid fa-chart-line-up text-brand-amber opacity-70"></i>
+                        </div>
+                        <p class="text-[11px] text-slate-400 leading-tight">Surge evening "Grab-and-Go" breakfast & drink orders 300%.</p>
+                    </button>
+
+                    <!-- Scenario Item 3 -->
+                    <button onclick="injectScenario('supplier_delay')" class="text-left bg-brand-bg hover:bg-brand-border/40 border border-brand-border hover:border-brand-blue/60 p-2.5 rounded-lg transition group">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="font-bold text-xs text-slate-200 group-hover:text-brand-blue font-mono">3. Supplier Shortage</span>
+                            <i class="fa-solid fa-truck-ramp-box text-brand-blue opacity-70"></i>
+                        </div>
+                        <p class="text-[11px] text-slate-400 leading-tight">Short delivery delay on high-margin SKU lines.</p>
+                    </button>
+
+                    <!-- Scenario Item 4 -->
+                    <button onclick="injectScenario('expiry_batch')" class="text-left bg-brand-bg hover:bg-brand-border/40 border border-brand-border hover:border-brand-purple/60 p-2.5 rounded-lg transition group">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="font-bold text-xs text-slate-200 group-hover:text-brand-purple font-mono">4. Expiry Batch Risk</span>
+                            <i class="fa-solid fa-triangle-exclamation text-brand-purple opacity-70"></i>
+                        </div>
+                        <p class="text-[11px] text-slate-400 leading-tight">Flag perishable inventory batch expiring in 48 hrs.</p>
+                    </button>
+                </div>
+            </section>
+
+            <!-- MODULE 4: MISSIONCOMMERCE AI INVESTIGATOR & RECOMMENDATIONS PANEL -->
+            <section class="bg-brand-card border border-brand-border rounded-xl p-4 flex-1 flex flex-col">
+                <div class="flex items-center justify-between mb-3 border-b border-brand-border/60 pb-2">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-user-ninja text-brand-accent"></i>
+                        <h2 class="font-bold text-sm tracking-wide text-white font-mono">MISSIONCOMMERCE AI INVESTIGATOR</h2>
+                    </div>
+                    <span class="text-xs bg-brand-accent/10 text-brand-accent border border-brand-accent/30 px-2 py-0.5 rounded font-mono">
+                        vLLM Reasoning Engine
+                    </span>
+                </div>
+
+                <!-- REAL-TIME AI REASONING OUTPUT STREAM -->
+                <div class="bg-brand-bg border border-brand-border rounded-lg p-3 mb-3 font-mono text-xs space-y-2 max-h-56 overflow-y-auto" id="aiReasoningLog">
+                    <div class="text-slate-400 border-l-2 border-brand-accent pl-2">
+                        <span class="text-slate-500">[SYSTEM INIT]</span> AI Monitoring active across all tenant branches. Analyzing time, basket, and cash signals...
+                    </div>
+                </div>
+
+                <!-- AI COMMERCIAL RECOMMENDATIONS CARD -->
+                <div class="bg-gradient-to-br from-slate-900 to-brand-bg border border-brand-border/80 rounded-lg p-3 flex-1 flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-xs font-mono font-bold text-brand-accent"><i class="fa-solid fa-wand-magic-sparkles mr-1.5"></i>RECOMMENDED COMMERCIAL ACTIONS</span>
+                            <span class="text-[10px] text-slate-400 font-mono">Auto-Generated</span>
+                        </div>
+                        <div id="aiRecommendationsList" class="space-y-2 text-xs">
+                            <div class="p-2 bg-slate-900/80 border border-slate-800 rounded flex justify-between items-center">
+                                <div>
+                                    <span class="font-bold text-white block">Promotional Bundle: Breakfast Top-Up</span>
+                                    <span class="text-slate-400 text-[11px]">Bundle Cold Brew + Sandwich at Branch 01 (Est. +₱4,200 margin)</span>
+                                </div>
+                                <button onclick="executeAction(this)" class="bg-brand-accent text-black font-mono text-[10px] font-bold px-2.5 py-1 rounded hover:bg-cyan-300">EXECUTE</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- COVERAGE METRICS FOOTER -->
+                    <div class="mt-3 pt-2 border-t border-slate-800 grid grid-cols-3 gap-2 text-center text-[10px] font-mono">
+                        <div class="bg-slate-900 p-1.5 rounded">
+                            <span class="text-slate-400 block">POS Alert Coverage</span>
+                            <span id="metricPosCaught" class="text-brand-amber font-bold text-xs">42%</span>
+                        </div>
+                        <div class="bg-slate-900 p-1.5 rounded">
+                            <span class="text-slate-400 block">AI Detected Leaks</span>
+                            <span id="metricAiFound" class="text-brand-emerald font-bold text-xs">96%</span>
+                        </div>
+                        <div class="bg-slate-900 p-1.5 rounded">
+                            <span class="text-slate-400 block">Unresolved Risk</span>
+                            <span id="metricUnresolved" class="text-brand-crimson font-bold text-xs">4%</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- MODULE 5: STAFF ATTENDANCE & POS TERMINAL DUTY MONITOR -->
+            <section class="bg-brand-card border border-brand-border rounded-xl p-4">
+                <div class="flex items-center justify-between mb-2 border-b border-brand-border/60 pb-2">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-users-gear text-brand-blue"></i>
+                        <h2 class="font-bold text-sm tracking-wide text-white font-mono">STAFF DUTY & TERMINAL MONITOR</h2>
+                    </div>
+                    <span id="staffOnDutyCount" class="text-xs text-brand-emerald font-mono font-bold">14 Virtual Agents Active</span>
+                </div>
+
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-mono" id="staffRosterGrid">
+                    <!-- Dynamic Roster Cards Inserted Here -->
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- FOOTER SYSTEM STATUS BAR -->
+    <footer class="border-t border-brand-border bg-brand-card/90 px-4 py-2 text-xs font-mono text-slate-400 flex flex-wrap justify-between items-center gap-2">
+        <div class="flex items-center gap-4">
+            <span class="flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-brand-emerald"></span>
+                <span>Sim.PesoWeb Kernel: <strong class="text-white">ONLINE</strong></span>
+            </span>
+            <span>|</span>
+            <span>AMD ROCm Runtime: <strong class="text-brand-amd">v6.2.0 (HIP)</strong></span>
+            <span>|</span>
+            <span>vLLM Worker: <strong class="text-white">Active (Port 8000)</strong></span>
+        </div>
+        <div>
+            <span>Evo.Ninjas | AMD Developer Hackathon: Act III</span>
+        </div>
+    </footer>
+
+    <script>
+        // APP STATE
+        const state = {
+            currentCentralCompany: 'evo_holding',
+            currentTenant: 'metromart',
+            selectedBranch: 'all',
+            simMode: 'quick',
+            simSpeed: 10,
+            isPaused: false,
+            simTime: new Date(2026, 9, 5, 18, 42, 0),
+            
+            // Metrics
+            gpuUtil: 92.4,
+            vllmRate: 94.8,
+            pytorchRate: 14280,
+            vramAlloc: 29.4,
+            gpuTemp: 58,
+            gpuPower: 342,
+
+            posCaughtCount: 18,
+            aiFoundCount: 41,
+            unresolvedCount: 2
+        };
+
+        // TENANT & BRANCH DATA HIERARCHY
+        const tenantData = {
+            metromart: {
+                name: "MetroMart Convenience Stores",
+                branches: [
+                    { id: 'b1', name: 'Branch 01: Manila Flagship', staff: 4, posCount: 3, status: 'normal' },
+                    { id: 'b2', name: 'Branch 02: KL Sentral Hub', staff: 3, posCount: 2, status: 'warning' },
+                    { id: 'b3', name: 'Branch 03: QC Express', staff: 2, posCount: 2, status: 'normal' },
+                    { id: 'w1', name: 'Main Warehouse Alpha', staff: 5, posCount: 1, status: 'normal' }
+                ],
+                archetypes: ["After-Work Commuter", "Morning Rush Office Worker", "Late-Night Student", "Neighborhood Resident"],
+                missions: ["6 PM After-Work Top-Up", "7 AM Grab-and-Go Breakfast", "Midnight Snack Run", "Household Emergency Refill"]
+            },
+            tricity: {
+                name: "TriCity Auto Parts Chain",
+                branches: [
+                    { id: 'tc1', name: 'Central Auto Warehouse', staff: 6, posCount: 2, status: 'normal' },
+                    { id: 'tc2', name: 'Makati Parts Express', staff: 3, posCount: 2, status: 'normal' }
+                ],
+                archetypes: ["Fleet Mechanic", "DIY Motorcycle Rider", "Car Owner"],
+                missions: ["Emergency Heavy Repair", "Routine Oil Change Kit", "Custom Accessories Upgrade"]
+            },
+            carepharma: {
+                name: "CarePharma Rx Outlets",
+                branches: [
+                    { id: 'cp1', name: 'BGC Health Hub', staff: 4, posCount: 3, status: 'normal' },
+                    { id: 'cp2', name: 'Ortigas Care Outlet', staff: 3, posCount: 2, status: 'normal' }
+                ],
+                archetypes: ["Senior Citizen Caregiver", "Chronic Med Patient", "Daily Wellness Shopper"],
+                missions: ["Monthly Maintenance Maintenance", "First-Aid Emergency", "Daily Vitamin Top-Up"]
+            }
+        };
+
+        // STAFF ROSTER DATA
+        const staffDatabase = [
+            { id: 801, name: "Maria Santos", role: "Head Cashier", branch: "b1", status: "On Duty", terminal: "POS 1" },
+            { id: 802, name: "Juan Dela Cruz", role: "Junior Cashier", branch: "b2", status: "Unscheduled Cash-Out", terminal: "POS 1" },
+            { id: 803, name: "Ahmad Razak", role: "Inventory Officer", branch: "b2", status: "On Duty", terminal: "Handheld" },
+            { id: 804, name: "Elena Rostova", role: "Branch Manager", branch: "b1", status: "On Duty", terminal: "Admin Desktop" }
+        ];
+
+        let throughputChart = null;
+
+        function initThroughputChart() {
+            const ctx = document.getElementById('liveThroughputChart').getContext('2d');
+            
+            const labels = Array.from({length: 20}, (_, i) => `${i*2}s ago`).reverse();
+            const salesData = [12, 19, 15, 22, 30, 25, 35, 40, 28, 45, 50, 55, 48, 62, 70, 65, 80, 85, 90, 95];
+            const eventData = [120, 140, 130, 180, 220, 200, 290, 310, 250, 380, 410, 430, 390, 500, 560, 520, 610, 680, 720, 750];
+
+            throughputChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'POS Sales Volume (₱x100)',
+                            data: salesData,
+                            borderColor: '#00F2FE',
+                            backgroundColor: 'rgba(0, 242, 254, 0.08)',
+                            fill: true,
+                            tension: 0.4,
+                            borderWidth: 2,
+                            pointRadius: 0
+                        },
+                        {
+                            label: 'Simulated Events / Sec',
+                            data: eventData,
+                            borderColor: '#9D4EDD',
+                            backgroundColor: 'transparent',
+                            fill: false,
+                            tension: 0.4,
+                            borderWidth: 1.5,
+                            borderDash: [4, 4],
+                            pointRadius: 0
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: { color: '#94A3B8', font: { family: 'JetBrains Mono', size: 10 }, boxWidth: 12 }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            ticks: { color: '#64748B', font: { family: 'JetBrains Mono', size: 9 } }
+                        },
+                        y: {
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            ticks: { color: '#64748B', font: { family: 'JetBrains Mono', size: 9 } }
+                        }
+                    }
+                }
+            });
+        }
+
+        function switchCentralCompany(companyId) {
+            state.currentCentralCompany = companyId;
+            addAiLog(`[HOLDING SWITCH] Switched Central Holding Company context to: ${companyId.toUpperCase()}`);
+        }
+
+        function switchTenant(tenantKey) {
+            state.currentTenant = tenantKey;
+            state.selectedBranch = 'all';
+            renderBranchSelectors();
+            renderStaffRoster();
+            document.getElementById('activeBranchLabel').innerText = `${tenantData[tenantKey].name} (All Branches)`;
+            addAiLog(`[TENANT SWITCH] Switched active PesoWeb SaaS Tenant to: ${tenantData[tenantKey].name}`);
+        }
+
+        function renderBranchSelectors() {
+            const container = document.getElementById('branchSelectorContainer');
+            const tenant = tenantData[state.currentTenant];
+            
+            let html = `
+                <button onclick="filterBranch('all')" class="px-3 py-1 rounded-md text-xs font-mono font-semibold transition whitespace-nowrap ${state.selectedBranch === 'all' ? 'bg-brand-accent text-black glow-accent' : 'bg-brand-card text-slate-300 border border-brand-border hover:border-slate-600'}">
+                    <i class="fa-solid fa-cubes mr-1.5"></i>All Tenant Branches (${tenant.branches.length})
+                </button>
+            `;
+
+            tenant.branches.forEach(b => {
+                const isSelected = state.selectedBranch === b.id;
+                const statusDot = b.status === 'warning' ? 'bg-brand-amber animate-pulse-fast' : 'bg-brand-emerald';
+                html += `
+                    <button onclick="filterBranch('${b.id}')" class="px-3 py-1 rounded-md text-xs font-mono transition flex items-center gap-2 whitespace-nowrap ${isSelected ? 'bg-brand-blue text-black font-bold' : 'bg-brand-card text-slate-300 border border-brand-border hover:border-slate-600'}">
+                        <span class="w-2 h-2 rounded-full ${statusDot}"></span>
+                        <span>${b.name}</span>
+                    </button>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function filterBranch(branchId) {
+            state.selectedBranch = branchId;
+            renderBranchSelectors();
+            renderStaffRoster();
+            const label = branchId === 'all' ? 'All Branches Filtered' : `Filtered: ${branchId.toUpperCase()}`;
+            document.getElementById('activeBranchLabel').innerText = label;
+        }
+
+        function renderStaffRoster() {
+            const container = document.getElementById('staffRosterGrid');
+            const filtered = staffDatabase.filter(s => state.selectedBranch === 'all' || s.branch === state.selectedBranch);
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<p class="col-span-4 text-slate-500 text-xs font-mono">No active virtual agents found for this selection.</p>`;
+                return;
+            }
+
+            let html = '';
+            filtered.forEach(staff => {
+                const isWarning = staff.status.includes('Unscheduled');
+                const badgeColor = isWarning ? 'text-brand-crimson bg-crimson-500/10 border-brand-crimson/30' : 'text-brand-emerald bg-emerald-500/10 border-brand-emerald/30';
+                html += `
+                    <div class="bg-brand-bg/90 border border-brand-border rounded p-2 flex flex-col justify-between">
+                        <div class="flex justify-between items-start">
+                            <span class="font-bold text-white text-[11px]">${staff.name}</span>
+                            <span class="text-[9px] text-slate-400">ID #${staff.id}</span>
+                        </div>
+                        <span class="text-[10px] text-slate-400">${staff.role} (${staff.terminal})</span>
+                        <div class="mt-1 flex items-center justify-between">
+                            <span class="text-[9px] px-1.5 py-0.5 rounded border ${badgeColor}">${staff.status}</span>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+            document.getElementById('staffOnDutyCount').innerText = `${filtered.length} Virtual Agents Active`;
+        }
+
+        function setSimMode(mode) {
+            state.simMode = mode;
+            document.querySelectorAll('#modeQuick, #modeDay, #modeScenario').forEach(btn => {
+                btn.className = 'px-2.5 py-1 rounded-md transition font-mono text-slate-400 hover:text-white';
+            });
+            
+            if(mode === 'quick') document.getElementById('modeQuick').className = 'px-2.5 py-1 rounded-md transition font-mono bg-brand-accent text-black font-bold';
+            if(mode === 'day') document.getElementById('modeDay').className = 'px-2.5 py-1 rounded-md transition font-mono bg-brand-blue text-black font-bold';
+            if(mode === 'scenario') document.getElementById('modeScenario').className = 'px-2.5 py-1 rounded-md transition font-mono bg-brand-purple text-white font-bold';
+
+            addAiLog(`[MODE CHANGE] Simulation mode switched to: ${mode.toUpperCase()}`);
+        }
+
+        function setSpeed(spd) {
+            state.simSpeed = spd;
+            document.querySelectorAll('#btnSpeed1, #btnSpeed10, #btnSpeed100').forEach(b => {
+                b.className = 'px-2 py-0.5 rounded text-slate-400 hover:bg-slate-800';
+            });
+            document.getElementById(`btnSpeed${spd}`).className = 'px-2 py-0.5 rounded bg-brand-blue text-black font-bold';
+        }
+
+        function togglePause() {
+            state.isPaused = !state.isPaused;
+            const btn = document.getElementById('pauseToggleBtn');
+            const icon = document.getElementById('pauseIcon');
+            const text = document.getElementById('pauseText');
+
+            if(state.isPaused) {
+                btn.className = "bg-brand-emerald/20 text-brand-emerald border border-brand-emerald/40 px-3 py-1.5 rounded-lg text-xs font-mono font-bold flex items-center gap-1.5";
+                icon.className = "fa-solid fa-play";
+                text.innerText = "RESUME";
+            } else {
+                btn.className = "bg-brand-amber/20 text-brand-amber border border-brand-amber/40 px-3 py-1.5 rounded-lg text-xs font-mono font-bold flex items-center gap-1.5";
+                icon.className = "fa-solid fa-pause";
+                text.innerText = "PAUSE";
+            }
+        }
+
+        // GENERATE RANDOM POS TRANSACTIONS
+        function generateLiveTransaction() {
+            if(state.isPaused) return;
+
+            const tenant = tenantData[state.currentTenant];
+            const branch = tenant.branches[Math.floor(Math.random() * tenant.branches.length)];
+            
+            if(state.selectedBranch !== 'all' && branch.id !== state.selectedBranch) return;
+
+            const archetype = tenant.archetypes[Math.floor(Math.random() * tenant.archetypes.length)];
+            const mission = tenant.missions[Math.floor(Math.random() * tenant.missions.length)];
+            const total = (Math.random() * 450 + 50).toFixed(2);
+            const itemCount = Math.floor(Math.random() * 5) + 1;
+
+            const timeStr = state.simTime.toTimeString().split(' ')[0];
+
+            const tbody = document.getElementById('transactionStreamBody');
+            const row = document.createElement('tr');
+            row.className = 'hover:bg-slate-800/50 transition border-b border-slate-800/40 log-entry-anim';
+            
+            row.innerHTML = `
+                <td class="p-2 text-slate-400">${timeStr}</td>
+                <td class="p-2 font-bold text-white">${branch.name.split(':')[0]}</td>
+                <td class="p-2 text-brand-blue">${archetype}</td>
+                <td class="p-2 text-slate-300">${itemCount} items</td>
+                <td class="p-2 font-bold text-brand-emerald">₱${total}</td>
+                <td class="p-2"><span class="bg-brand-purple/20 text-brand-purple border border-brand-purple/30 px-2 py-0.5 rounded text-[10px]">${mission}</span></td>
+            `;
+
+            tbody.insertBefore(row, tbody.firstChild);
+
+            if(tbody.children.length > 15) {
+                tbody.removeChild(tbody.lastChild);
+            }
+
+            // Update Chart
+            if(throughputChart) {
+                const dataSales = throughputChart.data.datasets[0].data;
+                const dataEvents = throughputChart.data.datasets[1].data;
+                dataSales.shift();
+                dataEvents.shift();
+                dataSales.push(Math.floor(total / 10));
+                dataEvents.push(Math.floor(Math.random() * 100 + 600));
+                throughputChart.update();
+            }
+        }
+
+        function injectScenario(type) {
+            let alertTitle = "";
+            let alertDetail = "";
+            let recommendation = "";
+
+            if(type === 'cash_leak') {
+                alertTitle = "CRITICAL OPERATIONAL LEAK: ₱1,450 Unexplained POS Cash Shortage";
+                alertDetail = "Branch 02 (POS Terminal 01) cash drawer close mismatch. AI cross-referenced cashier audit logs vs shelf inventory.";
+                recommendation = "Audit Cashier #802 transaction history; lock terminal supervisor key override.";
+                state.unresolvedCount++;
+                state.aiFoundCount++;
+            } else if(type === 'demand_spike') {
+                alertTitle = "DEMAND SURGE DETECTED: Evening Grab-and-Go Rush (+280%)";
+                alertDetail = "High density of '6 PM After-Work Top-Up' missions detected at Manila Flagship. Ready-to-Eat stock falling rapidly.";
+                recommendation = "Issue Instant Stock Transfer from Main Warehouse Alpha (Eta: 25 mins).";
+            } else if(type === 'supplier_delay') {
+                alertTitle = "SUPPLIER SHORTAGE ALERT: Distributor Delivery Delayed 48 Hours";
+                alertDetail = "Primary dairy and beverage supplier delayed shipment #4092. Projected out-of-stock risk in 12 hours.";
+                recommendation = "Auto-generate Purchase Order to Secondary Supplier B with price-matching constraint.";
+            } else if(type === 'expiry_batch') {
+                alertTitle = "BATCH EXPIRY RISK: 48-Hour Perishable Threshold Reached";
+                alertDetail = "Batch #8821 (Sandwiches) expiring in 2 days across 3 MetroMart outlets.";
+                recommendation = "Auto-apply 25% Flash Discount Bundle for 'Late-Night Student' shoppers.";
+            }
+
+            // Trigger Visual Alerts
+            addAiLog(`<span class="text-brand-crimson font-bold">[INJECTED ANOMALY] ${alertTitle}</span>`);
+            addAiLog(`<span class="text-slate-300">└─ Root Cause (vLLM on ROCm): ${alertDetail}</span>`);
+
+            // Update Commercial Recommendations Card
+            const recContainer = document.getElementById('aiRecommendationsList');
+            const recBox = document.createElement('div');
+            recBox.className = "p-2 bg-brand-crimson/10 border border-brand-crimson/30 rounded flex justify-between items-center log-entry-anim";
+            recBox.innerHTML = `
+                <div>
+                    <span class="font-bold text-brand-crimson block">${alertTitle.split(':')[0]}</span>
+                    <span class="text-slate-300 text-[11px]">${recommendation}</span>
+                </div>
+                <button onclick="executeAction(this)" class="bg-brand-crimson text-white font-mono text-[10px] font-bold px-2.5 py-1 rounded hover:bg-red-600">EXECUTE</button>
+            `;
+            recContainer.insertBefore(recBox, recContainer.firstChild);
+
+            updateMetricsDisplay();
+        }
+
+        function executeAction(btn) {
+            btn.innerText = "EXECUTED";
+            btn.className = "bg-brand-emerald text-black font-mono text-[10px] font-bold px-2.5 py-1 rounded cursor-default";
+            btn.disabled = true;
+            addAiLog(`<span class="text-brand-emerald font-bold">[ACTION EXECUTED] Commercial recommendation applied to live PesoWeb SaaS instance.</span>`);
+        }
+
+        function addAiLog(htmlContent) {
+            const container = document.getElementById('aiReasoningLog');
+            const entry = document.createElement('div');
+            entry.className = "text-slate-300 border-l-2 border-brand-purple pl-2 text-[11px] log-entry-anim";
+            const time = state.simTime.toTimeString().split(' ')[0];
+            entry.innerHTML = `<span class="text-slate-500">[${time}]</span> ${htmlContent}`;
+            container.insertBefore(entry, container.firstChild);
+        }
+
+        function updateMetricsDisplay() {
+            document.getElementById('metricPosCaught').innerText = `${state.posCaughtCount}`;
+            document.getElementById('metricAiFound').innerText = `${state.aiFoundCount}`;
+            document.getElementById('metricUnresolved').innerText = `${state.unresolvedCount}`;
+        }
+
+        function startHardwareLoop() {
+            setInterval(() => {
+                if(state.isPaused) return;
+
+                // Advance Clock
+                state.simTime.setSeconds(state.simTime.getSeconds() + (1 * state.simSpeed / 5));
+                document.getElementById('simClock').innerText = state.simTime.toTimeString().split(' ')[0];
+
+                // Fluctuate Hardware Metrics
+                state.gpuUtil = (88 + Math.random() * 7).toFixed(1);
+                state.vllmRate = (90 + Math.random() * 10).toFixed(1);
+                state.pytorchRate = Math.floor(13800 + Math.random() * 1000);
+                state.vramAlloc = (28.5 + Math.random() * 2).toFixed(1);
+
+                document.getElementById('gpuUtil').innerText = state.gpuUtil;
+                document.getElementById('gpuBar').style.width = `${state.gpuUtil}%`;
+
+                document.getElementById('vllmRate').innerText = state.vllmRate;
+                document.getElementById('vllmBar').style.width = `${(state.vllmRate/120)*100}%`;
+
+                document.getElementById('pytorchRate').innerText = state.pytorchRate.toLocaleString();
+                document.getElementById('vramAlloc').innerText = state.vramAlloc;
+
+                // Generate simulated transaction events
+                generateLiveTransaction();
+            }, 600);
+        }
+
+        window.onload = function() {
+            initThroughputChart();
+            renderBranchSelectors();
+            renderStaffRoster();
+            startHardwareLoop();
+            
+            // Initial Log
+            addAiLog(`[ROCm INIT] AMD Instinct MI300X HIP Backend Ready. Memory Pool Allocated.`);
+            addAiLog(`[SIMULATION READY] Sim.PesoWeb synthetic tenant MetroMart loaded with 4 operational branches.`);
+        };
+    </script>
+</body>
+</html>

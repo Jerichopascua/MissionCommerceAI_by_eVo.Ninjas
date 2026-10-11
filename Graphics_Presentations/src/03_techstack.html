@@ -1,0 +1,34 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="theme.css">
+<style>.box{height:200px}.box h3{font-size:19px}</style></head><body>
+<div class="top"><div class="amd">AMD<span>▸</span> <span style="font-size:20px;color:#fff;letter-spacing:1px">DEVELOPER HACKATHON: <b style="color:var(--g)">ACT III</b></span></div><div class="evt">TECH STACK · <b>WHAT WE WILL USE</b></div></div>
+<h1>THE <em>TECH STACK</em></h1>
+<div class="sub">Reuse what PesoWeb already runs · put every AI and scale workload on AMD</div>
+
+<div class="box" style="left:40px;top:180px;width:495px"><h3 class="g">PESOWEB (EXISTING + ADDITIONS)</h3>
+<p><span class="tag">ASP.NET Core Web API</span><span class="tag">Angular</span><span class="tag">EF Core</span><span class="tag">SQL Server</span><span class="tag">Swagger/OpenAPI</span><span class="tag">PWA offline sync</span></p><p class="mut" style="margin-top:8px">New: CashShift, SaleEvent, StockCount, Exception, BusinessEvent outbox, /api/ai/*</p></div>
+
+<div class="box" style="left:552px;top:180px;width:495px"><h3 class="g">SIM.PESOWEB SERVICE</h3>
+<p><span class="tag">Python 3.11</span><span class="tag">FastAPI</span><span class="tag">asyncio + httpx</span><span class="tag">Pydantic</span><span class="tag">YAML scenarios</span><span class="tag">NumPy</span></p><p class="mut" style="margin-top:8px">Seeded RNG · virtual users call real PesoWeb REST · run ledger</p></div>
+
+<div class="box or" style="left:1065px;top:180px;width:495px"><h3>AMD COMPUTE</h3>
+<p><span class="tag o">AMD Developer Cloud</span><span class="tag o">Instinct GPU</span><span class="tag o">ROCm</span><span class="tag o">PyTorch (ROCm)</span><span class="tag o">vLLM (ROCm)</span><span class="tag o">rocm-smi</span></p><p class="mut" style="margin-top:8px">Serves the LLM, trains/runs models, generates events on GPU</p></div>
+
+<div class="box or" style="left:40px;top:402px;width:495px"><h3>AI / ML MODELS</h3>
+<p><span class="tag o">Demand forecast: LightGBM / PyTorch time-series</span><span class="tag o">Mission detection: clustering + classifier</span><span class="tag o">Anomaly: isolation / residual models</span></p><p class="mut" style="margin-top:8px">LLM is explainer + orchestrator only (hackathon rule: not LLM-only forecasting)</p></div>
+
+<div class="box or" style="left:552px;top:402px;width:495px"><h3>LLM LAYER</h3>
+<p><span class="tag o">Open LLM via vLLM</span><span class="tag o">OpenAI-compatible endpoint</span><span class="tag o">Function calling / JSON schema</span><span class="tag o">Kuya Pedro</span></p><p class="mut" style="margin-top:8px">Investigator · scenario planner · recommendations · swappable endpoint (local fallback)</p></div>
+
+<div class="box" style="left:1065px;top:402px;width:495px"><h3 class="g">DATA &amp; SCALE LANE</h3>
+<p><span class="tag">Parquet</span><span class="tag">DuckDB</span><span class="tag">Polars / PyArrow</span><span class="tag">SQL Server (live lane)</span></p><p class="mut" style="margin-top:8px">Aggregated Quick Sim output, labelled as aggregated; same models score it</p></div>
+
+<div class="box" style="left:40px;top:624px;width:495px;height:210px"><h3 class="g">UI / UX</h3>
+<p><span class="tag">Angular</span><span class="tag">Sim control panel</span><span class="tag">Caught/Missed scorecard</span><span class="tag">Charts (traffic · customers · txns)</span></p><p class="mut" style="margin-top:8px">Same UI kit reused in live PesoWeb (pick Sim or Live environment)</p></div>
+
+<div class="box" style="left:552px;top:624px;width:495px;height:210px"><h3 class="g">DEVOPS &amp; QUALITY</h3>
+<p><span class="tag">Docker + compose</span><span class="tag">xUnit</span><span class="tag">pytest</span><span class="tag">GitHub (public, MIT)</span><span class="tag">env-var secrets</span></p><p class="mut" style="margin-top:8px">Golden-run scoring test · seed determinism hash · E2E rehearsal script</p></div>
+
+<div class="box" style="left:1065px;top:624px;width:495px;height:210px"><h3 class="g">PARTNER (OPTIONAL)</h3>
+<p><span class="tag">Evolus workspace</span><span class="tag">Dockerfile + README that runs</span></p><p class="mut" style="margin-top:8px">Decision pending: enter Evolus Business Agents prize track?</p></div>
+<div class="foot"><span>Model names are chosen at P0 after the ROCm / vLLM smoke test</span><span>AMD | Evolus</span></div>
+</body></html>

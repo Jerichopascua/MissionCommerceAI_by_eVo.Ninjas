@@ -1,0 +1,32 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="theme.css">
+<style>.st{position:absolute;width:236px;height:190px}.st .num{margin-bottom:6px}.st h3{font-size:18px}.st p{font-size:15px}</style></head><body>
+<div class="top"><div class="amd">AMD<span>▸</span> <span style="font-size:20px;color:#fff;letter-spacing:1px">DEVELOPER HACKATHON: <b style="color:var(--g)">ACT III</b></span></div><div class="evt">PROCESS FLOW · <b>FROM SIMULATED WORLD TO BUSINESS ACTION</b></div></div>
+<h1>END-TO-END <em>PROCESS FLOW</em></h1>
+<div class="sub">One seeded run, two outcomes: what we <b style="color:var(--g)">grow</b> and what we <b style="color:#ff8a93">protect</b></div>
+
+<svg class="ov" viewBox="0 0 1600 900"><defs><marker id="a" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#3dff8f"/></marker><marker id="o" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#ff6a2b"/></marker></defs>
+<g stroke="#3dff8f" stroke-width="3" fill="none" marker-end="url(#a)">
+<path d="M276 275 L318 275"/><path d="M554 275 L596 275"/><path d="M832 275 L874 275"/><path d="M1110 275 L1152 275"/><path d="M1388 275 L1470 275 L1470 330"/>
+</g>
+<g stroke="#ff6a2b" stroke-width="3" fill="none" marker-end="url(#o)">
+<path d="M1392 500 L1408 500"/>
+</g>
+</svg>
+
+<div class="box st" style="left:40px;top:180px"><span class="num">1</span><h3 class="g">DEFINE WORLD</h3><p>Pick tenants, branches, products, users, seed, dates. Load trend signals (holidays, weather).</p></div>
+<div class="box st" style="left:318px;top:180px"><span class="num">2</span><h3 class="g">PLAN SCENARIO</h3><p>Normal + random + critical + defined events. LLM drafts YAML; validator enforces limits.</p></div>
+<div class="box st" style="left:596px;top:180px"><span class="num">3</span><h3 class="g">GENERATE ACTORS</h3><p>Customers with hidden missions, cashiers, managers, suppliers sampled from distributions.</p></div>
+<div class="box st" style="left:874px;top:180px"><span class="num">4</span><h3 class="g">OPERATE PESOWEB</h3><p>Virtual users log in and act through real APIs. Incidents injected, ground truth logged.</p></div>
+<div class="box st" style="left:1152px;top:180px"><span class="num">5</span><h3 class="g">CAPTURE</h3><p>BusinessEvent stream · ledger · shifts · exceptions · queue &amp; waiting time.</p></div>
+
+<div class="box" style="left:40px;top:395px;width:700px;height:210px"><h3 class="g">◀ GROWTH LOOP · MISSIONS</h3>
+<p><b>6a</b> Signal Engine (time × basket × branch) → <b>Mission Detection</b> (Grab-and-Go · After-Work Top-Up · Late-Night)<br><b>7a</b> Forecast demand (statistical/ML) → LLM turns it into actions<br><b>8a</b> Assortment · stock · price · bundle · transfer · PO suggestion<br><b>9a</b> Apply in sim → run <b>Week 3</b> on same seed → compare to <b>Week 0</b></p><p style="margin-top:6px"><span class="tag">Sales</span><span class="tag">Waste</span><span class="tag">Margin</span><span class="tag">Mission precision/recall</span></p></div>
+<div class="box rd" style="left:760px;top:395px;width:630px;height:210px"><h3 style="color:#ff9aa2">PROTECTION LOOP · INCIDENTS ▶</h3>
+<p><b>6b</b> Exception Center (basic rules) → <span class="tag">System caught</span><br><b>7b</b> Anomaly models + LLM investigator → <span class="tag r">AI discovered</span><br><b>8b</b> Explain evidence: voids, refunds, cash-outs, ledger gap, batch expiry<br><b>9b</b> Remaining gaps → <span class="tag o">Undetected</span> → new detection rule → rerun</p></div>
+<div class="box or" style="left:1410px;top:330px;width:150px;height:190px"><h3 style="font-size:17px">SCORE</h3><p style="font-size:14px">Coverage %<br>KPI delta<br>AMD throughput</p></div>
+
+<div class="box" style="left:40px;top:630px;width:1520px;height:160px"><h3 class="g">WHAT THE JUDGES SEE (ALL NUMBERS FROM REAL RUNS)</h3>
+<p><span class="tag">Live: log in as manager, watch the day</span><span class="tag">Scorecard: caught vs missed vs AI-found</span><span class="tag">Before/After: Week 0 vs Week 3</span><span class="tag o">rocm-smi + events/sec on AMD</span><span class="tag o">Investigator: “Why is this cashier short?”</span></p>
+<p class="mut" style="margin-top:10px">Example question the AI answers with evidence: “₱ variance on shift — 3 manual adjustments and 1 cash-out without a supporting record” (wording: <b>unexplained variance</b>, never “theft”).</p></div>
+<div class="foot" style="bottom:4px;border:none"><span></span><span style="font-size:13px">Feedback: detection gaps (9b) become new rules, then simulate again</span></div>
+</body></html>

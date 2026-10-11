@@ -1,0 +1,55 @@
+AI Technology Empowers Retail Industry Upgrading
+- Data Assetization,Intelligent Decision-making, and Operational 
+Automation
+
+- AI application system based on industry data, powered 
+by large model capabilities, and grounded in retail scenarios.
+
+Our main AI 
+implementation paths include leveraging compliant large models combined with our 
+accumulated product, transaction, and operational data to create intelligent analysis 
+and decision support products for retail enterprises. By building industry-specific 
+AI Agents, we embed model capabilities into core business processes like product 
+analysis, inventory management, marketing planning, and customer service, creating 
+a closed loop from data insight to strategy execution.
+
+AI Agents, we embed model capabilities into core business processes like product 
+analysis, inventory management, marketing planning, and customer service, creating 
+a closed loop from data insight to strategy execution.
+
+- Customer Support by Understanding for Better Service
+- AI Replenish ( Knoow which product have expiry, Know What Product to Place/Volume how much, Product Price Sale/Markdown, and Others )
+- AI Insight 
+- AI Pricing
+- AI Dispatch deliver
+- AI Loss Prevention
+- AI Monitor ALL in one dashboard (stake holder would be to vew)
+
+Our Mission Commerce will be next generation retail system.
+- Process Driven
+- Data-driven,
+- Task-Oriented Intelligent Platform.
+
+ Leverage by AI technology as the engine to drive dual innovation in efficiency and experience
+
+--SAMPLE VIDEO DASHBOARD AND SEE FILES 
+
+https://www.youtube.com/watch?v=y7O57vn9X_o&list=PLxuBYEpUjhDuAfwWMEgnYirso6UXMzPB9&index=19
+file:///D:/git/AMD/hackathon_amd_act3/Presentations/file546d.pdf
+https://www.youtube.com/watch?v=lGo4mNMjJ8g&list=PLxuBYEpUjhDuAfwWMEgnYirso6UXMzPB9&index=8
+https://www.youtube.com/watch?v=2btS31AU3Iw&list=PLxuBYEpUjhDuAfwWMEgnYirso6UXMzPB9
+https://www.youtube.com/watch?v=LlHshm02qyI
+https://www.youtube.com/watch?v=_NVnw72zwco
+https://www.youtube.com/watch?v=_YnmM4SmVHI
+https://www.youtube.com/watch?v=_YnmM4SmVHI
+https://www.youtube.com/watch?v=kOpVHOPQrAM
+
+--DMALL
+https://www.futureatlas.ai/experiments/retail
+ 
+The Store That Learns
+When every customer interaction generates data, every shelf adapts in real time, and every associate is augmented by AI — what does the physical store become? An exploration of adaptive retail.
+
+https://en.dmall.com/news/30201
+
+D:\git\AMD\hackathon_amd_act3\MissionCommerceAI_by_eVo.Ninjas\ui\demo\start-demo.ps1
