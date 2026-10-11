@@ -1,0 +1,105 @@
+From 5046773978dbbd1694fe4ba63a193c5c0970e593 Mon Sep 17 00:00:00 2001
+From: unknown <jericho.pascua@gmail.com>
+Date: Sun, 11 Oct 2026 03:09:21 +0800
+Subject: [PATCH] Product list: Expiry tracking filter (all, perishable, not
+ perishable)
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+---
+ .../productlist/productlist.component.html        | 15 +++++++++++++++
+ .../products/productlist/productlist.component.ts |  4 ++++
+ Controllers/InventoryController.cs                | 12 +++++++++++-
+ 3 files changed, 30 insertions(+), 1 deletion(-)
+
+diff --git a/ClientApp/src/app/inventory/products/productlist/productlist.component.html b/ClientApp/src/app/inventory/products/productlist/productlist.component.html
+index 39a0cac..7aacb31 100644
+--- a/ClientApp/src/app/inventory/products/productlist/productlist.component.html
++++ b/ClientApp/src/app/inventory/products/productlist/productlist.component.html
+@@ -80,6 +80,21 @@
+ 							</ng-option>
+ 						</ng-select>
+ 					</div>
++					<!-- Expiry tracking filter: perishable products -->
++					<div class="col-md-3 form-group">
++						<label for="expiry"
++							class="control-label">
++							{{app.Localize("Expiry tracking")}}
++						</label>
++						<select [(ngModel)]="filterOptions.expiry"
++							name="expiry"
++							id="expiry"
++							class="form-select">
++							<option value="">{{app.Localize('All products')}}</option>
++							<option value="tracked">{{app.Localize('Perishable (expiry monitored)')}}</option>
++							<option value="untracked">{{app.Localize('Not perishable')}}</option>
++						</select>
++					</div>
+ 					<!-- Filter button -->
+ 					<div class="col-md-3 form-group">
+ 						<label class="w-100 d-none d-md-inline-block">&nbsp;</label>
+diff --git a/ClientApp/src/app/inventory/products/productlist/productlist.component.ts b/ClientApp/src/app/inventory/products/productlist/productlist.component.ts
+index f98c3d6..028fdce 100644
+--- a/ClientApp/src/app/inventory/products/productlist/productlist.component.ts
++++ b/ClientApp/src/app/inventory/products/productlist/productlist.component.ts
+@@ -24,6 +24,7 @@ export class ProductListComponent implements OnInit, AfterViewInit, OnDestroy {
+   public filterOptions = {
+     category: null,
+     brand: null,
++    expiry: '',
+     submitted: false,
+     validated: false,
+   }
+@@ -188,10 +189,12 @@ export class ProductListComponent implements OnInit, AfterViewInit, OnDestroy {
+     const sortDirection = dataTablesParameters.order[0].dir;
+     const category = this.filterOptions.category ?? '';
+     const brand = this.filterOptions.brand ?? '';
++    const expiry = this.filterOptions.expiry ?? '';
+ 
+     return {
+       category: category,
+       brand: brand,
++      expiry: expiry,
+       page: page,
+       pageSize: pageSize,
+       searchValue: searchValue,
+@@ -210,6 +213,7 @@ export class ProductListComponent implements OnInit, AfterViewInit, OnDestroy {
+     const safeParams: Record<string, string> = {
+       category: String(params.category ?? ''),
+       brand: String(params.brand ?? ''),
++      expiry: String(params.expiry ?? ''),
+       page: String(params.page ?? 1),
+       pageSize: String(params.pageSize ?? 25),
+       searchValue: String(params.searchValue ?? ''),
+diff --git a/Controllers/InventoryController.cs b/Controllers/InventoryController.cs
+index 6f84425..0419570 100644
+--- a/Controllers/InventoryController.cs
++++ b/Controllers/InventoryController.cs
+@@ -1544,7 +1544,7 @@ namespace GoPosify.Controllers
+         // Get a list of products with optional filtering, sorting, and pagination.
+         [HttpGet]
+         [Authorize(Policy = "Inventory.ProductList")]
+-        public async Task<IActionResult> Products(int? category, int? brand, int? warehouse = null, int page = 1, int pageSize = 10, string searchValue = null, int sortColumn = 0, string sortDirection = "asc")
++        public async Task<IActionResult> Products(int? category, int? brand, int? warehouse = null, int page = 1, int pageSize = 10, string searchValue = null, int sortColumn = 0, string sortDirection = "asc", string expiry = null)
+         {
+             try
+             {
+@@ -1611,6 +1611,16 @@ namespace GoPosify.Controllers
+                     query = query.Where(product => product.BrandId == brand.Value);
+                 }
+ 
++                // Expiry tracking filter: "tracked" = perishable products (expiry monitored), "untracked" = the rest
++                if (string.Equals(expiry, "tracked", StringComparison.OrdinalIgnoreCase))
++                {
++                    query = query.Where(product => product.MonitorExpiry);
++                }
++                else if (string.Equals(expiry, "untracked", StringComparison.OrdinalIgnoreCase))
++                {
++                    query = query.Where(product => !product.MonitorExpiry);
++                }
++
+                 // Get total records count for pagination (if required)
+                 int totalRecords = await query.CountAsync();
+ 
+-- 
+2.46.0.windows.1
+

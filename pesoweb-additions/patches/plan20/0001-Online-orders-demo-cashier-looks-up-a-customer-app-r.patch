@@ -1,0 +1,461 @@
+From 785cdee7435a88de0ccd615f18b103dec18cae86 Mon Sep 17 00:00:00 2001
+From: unknown <jericho.pascua@gmail.com>
+Date: Sun, 11 Oct 2026 04:11:20 +0800
+Subject: [PATCH] Online orders (demo): cashier looks up a customer app
+ reservation by reference in the POS, and the customer app downloads prices
+ and offers
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+---
+ .../src/app/sales/pos/pos.component.html      |  95 ++++++++++++++
+ ClientApp/src/app/sales/pos/pos.component.ts  |  59 +++++++++
+ Controllers/OnlineOrdersController.cs         | 122 ++++++++++++++++++
+ Retailo.Tests/CustomerAppDemoTests.cs         |  43 ++++++
+ Services/CustomerAppDemo.cs                   |  45 +++++++
+ appsettings.Development.json                  |   3 +
+ 6 files changed, 367 insertions(+)
+ create mode 100644 Controllers/OnlineOrdersController.cs
+ create mode 100644 Retailo.Tests/CustomerAppDemoTests.cs
+ create mode 100644 Services/CustomerAppDemo.cs
+
+diff --git a/ClientApp/src/app/sales/pos/pos.component.html b/ClientApp/src/app/sales/pos/pos.component.html
+index c99c354..b5f77a9 100644
+--- a/ClientApp/src/app/sales/pos/pos.component.html
++++ b/ClientApp/src/app/sales/pos/pos.component.html
+@@ -15,6 +15,12 @@
+ 									class="btn btn-warning btn-sm">
+ 									<i class="fa fa-camera me-1"></i>{{app.Localize('Camera')}}
+ 								</button>
++								<button (click)="showOnlineOrderModal()"
++									type="button"
++									class="btn btn-light btn-sm"
++									title="Online order">
++									<i class="fa fa-mobile-screen"></i>
++								</button>
+ 								<button (click)="showCustomerModal()"
+ 									type="button"
+ 									class="btn btn-light btn-sm"
+@@ -300,6 +306,12 @@
+ 							{{sale.warehouseName}}
+ 							<i class="fa fa-edit"></i>
+ 						</a>
++						<a (click)="showOnlineOrderModal()"
++							href="javascript:void(0);"
++							class="btn-link">
++							<i class="fa fa-mobile-screen"></i>
++							{{app.Localize('Online order')}}
++						</a>
+ 						<a (click)="showCustomerModal()"
+ 							href="javascript:void(0);"
+ 							class="btn-link">
+@@ -612,6 +624,89 @@
+ 			class="modal-backdrop"></div>
+ 	</div>
+ 	<!-- Warehouse modal end -->
++	<!-- Online order modal start -->
++	<div [ngClass]="{'show': onlineOrder.show}"
++		class="modal fade"
++		role="dialog"
++		tabindex="-1"
++		aria-hidden="true">
++		<div class="modal-dialog modal-lg"
++			role="document">
++			<div class="modal-content">
++				<div class="modal-header">
++					<h5 class="modal-title w-100">
++						{{app.Localize('Online order')}}
++					</h5>
++					<button (click)="closeOnlineOrderModal()"
++						type="button"
++						class="btn btn-light">
++						x
++					</button>
++				</div>
++				<div class="modal-body">
++					<div class="input-group mb-3">
++						<input [(ngModel)]="onlineOrder.reference"
++							(keyup.enter)="lookupOnlineOrder()"
++							[ngModelOptions]="{standalone: true}"
++							type="text"
++							class="form-control"
++							placeholder="{{app.Localize('Reference number (from the customer app)')}}">
++						<button (click)="lookupOnlineOrder()"
++							[disabled]="onlineOrder.loading"
++							type="button"
++							class="btn btn-primary">
++							<i class="fa fa-search me-1"></i>{{app.Localize('Find order')}}
++						</button>
++					</div>
++					<div *ngIf="onlineOrder.error"
++						class="alert alert-danger">{{onlineOrder.error}}</div>
++					<div *ngIf="onlineOrder.data">
++						<div class="mb-2">
++							<b>{{onlineOrder.data.customerName}}</b>
++							<span class="text-muted ms-2">{{onlineOrder.data.customerPhone}}</span>
++							<span class="badge bg-info ms-2">{{onlineOrder.data.paymentMode}}</span>
++						</div>
++						<table class="table">
++							<thead>
++								<tr>
++									<th>{{app.Localize('Product')}}</th>
++									<th class="text-end">{{app.Localize('Qty')}}</th>
++									<th class="text-end">{{app.Localize('Price')}}</th>
++									<th class="text-end">{{app.Localize('Total')}}</th>
++								</tr>
++							</thead>
++							<tbody>
++								<tr *ngFor="let l of onlineOrder.data.lines">
++									<td>{{l.productName}}
++										<span *ngIf="l.regularPrice > l.price"
++											class="text-muted ms-1"><s>{{l.regularPrice | number:'1.2-2'}}</s></span>
++									</td>
++									<td class="text-end">{{l.quantity}}</td>
++									<td class="text-end">{{l.price | number:'1.2-2'}}</td>
++									<td class="text-end">{{l.price * l.quantity | number:'1.2-2'}}</td>
++								</tr>
++							</tbody>
++							<tfoot>
++								<tr>
++									<th colspan="3"
++										class="text-end">{{app.Localize('Total')}}</th>
++									<th class="text-end">{{onlineOrder.data.total | number:'1.2-2'}}</th>
++								</tr>
++							</tfoot>
++						</table>
++						<button (click)="loadOnlineOrder()"
++							type="button"
++							class="btn btn-success w-100">
++							<i class="fa fa-check me-1"></i>{{app.Localize('Load into this sale')}}
++						</button>
++					</div>
++				</div>
++			</div>
++		</div>
++		<div *ngIf="onlineOrder.show"
++			class="modal-backdrop"></div>
++	</div>
++	<!-- Online order modal end -->
+ 	<!-- Customer modal start -->
+ 	<div [ngClass]="{'show': customerModal.show}"
+ 		class="modal fade"
+diff --git a/ClientApp/src/app/sales/pos/pos.component.ts b/ClientApp/src/app/sales/pos/pos.component.ts
+index 5fe4fee..f943b64 100644
+--- a/ClientApp/src/app/sales/pos/pos.component.ts
++++ b/ClientApp/src/app/sales/pos/pos.component.ts
+@@ -92,6 +92,9 @@ export class POSComponent implements OnInit, OnDestroy {
+   public warehouses: any[] = [];
+   public taxRates: any[] = [];
+   public customers: any[] = [];
++
++  // Online order (customer app reservation) looked up by reference
++  public onlineOrder: any = { show: false, reference: '', loading: false, error: '', data: null };
+   public customer: any = {};
+   public defaultCustomerId: any = null;
+   public customerIsSubmitted = false;
+@@ -1279,6 +1282,62 @@ export class POSComponent implements OnInit, OnDestroy {
+     this.customerModal.isAddCustomer = !this.customerModal.isAddCustomer;
+   }
+ 
++  public showOnlineOrderModal(): void {
++    this.onlineOrder = { show: true, reference: '', loading: false, error: '', data: null };
++  }
++
++  public closeOnlineOrderModal(): void {
++    this.onlineOrder.show = false;
++  }
++
++  // The cashier keys in the reference the customer shows; the customer and the reserved items come back
++  public lookupOnlineOrder(): void {
++    const reference = String(this.onlineOrder.reference || '').trim();
++    if (!reference) { return; }
++    this.onlineOrder.loading = true;
++    this.onlineOrder.error = '';
++    this.onlineOrder.data = null;
++    const warehouse = this.sale.warehouseId > 0 ? `?warehouse=${this.sale.warehouseId}` : '';
++    this.http.get<any>(`${this.baseUrl}api/online-orders/${encodeURIComponent(reference)}${warehouse}`).subscribe({
++      next: (data) => { this.onlineOrder.loading = false; this.onlineOrder.data = data; },
++      error: (e) => {
++        this.onlineOrder.loading = false;
++        this.onlineOrder.error = e?.error?.message || this.app.Localize('No online order with that reference.');
++      }
++    });
++  }
++
++  // Put the online order into the sale exactly like items rung up by hand: customer, items, prices
++  public loadOnlineOrder(): void {
++    const order = this.onlineOrder.data;
++    if (!order) { return; }
++    if (order.customerId) {
++      if (!this.customers.find((c: any) => c.id === order.customerId)) {
++        this.customers.push({ id: order.customerId, customerName: order.customerName, availablePoints: 0 });
++      }
++      this.selectCustomer(order.customerId);
++    } else {
++      this.sale.customerName = order.customerName;
++    }
++    this.cartItems.splice(0, this.cartItems.length);
++    for (const l of order.lines) {
++      this.cartItems.push({
++        id: 0,
++        productId: l.productId,
++        variantId: 0,
++        productName: l.productName,
++        imageUrl: '',
++        price: l.price,
++        quantity: String(l.quantity),
++        availableQuantity: l.availableQuantity ?? 9999,
++        unit: ''
++      });
++    }
++    this.calculateTotal();
++    this.closeOnlineOrderModal();
++    this.app.SuccessMessage(this.app.Localize('Online order loaded'), `${order.reference} - ${order.customerName}`);
++  }
++
+   public selectCustomer(id: any) {
+     const selectedCustomer = this.customers.find((c: any) => c.id === id);
+     if (!selectedCustomer) {
+diff --git a/Controllers/OnlineOrdersController.cs b/Controllers/OnlineOrdersController.cs
+new file mode 100644
+index 0000000..b235c1b
+--- /dev/null
++++ b/Controllers/OnlineOrdersController.cs
+@@ -0,0 +1,122 @@
++using GoPosify.Data;
++using GoPosify.Services;
++using Microsoft.AspNetCore.Authorization;
++using Microsoft.AspNetCore.Mvc;
++using Microsoft.EntityFrameworkCore;
++
++namespace GoPosify.Controllers
++{
++    // DEMO ONLY: the customer app's price feed and the cashier's lookup of an online reservation by reference.
++    // Both are read-only; neither changes stock, prices or sales.
++    [ApiController]
++    public class OnlineOrdersController : BaseController
++    {
++        private readonly IConfiguration _config;
++
++        public OnlineOrdersController(AppDBContext dbContext, IConfiguration config) : base(dbContext)
++        {
++            _config = config;
++        }
++
++        // GET: api/customer-app/offers  (public, read-only: the catalog and prices a shopper could see in the store anyway)
++        // Off unless CustomerApp:TenantId names the company whose prices are published.
++        [HttpGet("~/api/customer-app/offers")]
++        [AllowAnonymous]
++        public async Task<IActionResult> Offers()
++        {
++            Response.Headers["Access-Control-Allow-Origin"] = "*";
++            var tenantId = _config.GetValue<int>("CustomerApp:TenantId");
++            if (tenantId <= 0) return NotFound();
++
++            var now = DateTime.Now;
++            var products = await _dbContext.Products.IgnoreQueryFilters().AsNoTracking()
++                .Where(p => p.TenantID == tenantId && p.Price > 0)
++                .OrderBy(p => p.ProductName).Take(1000)
++                .Select(p => new { p.Id, p.ProductName, p.Price }).ToListAsync();
++
++            // Real markdowns first (what the AI proposed and the owner approved); the fixed demo offers fill in for the rest.
++            var live = await _dbContext.ActiveMarkdowns.IgnoreQueryFilters().AsNoTracking()
++                .Where(m => m.TenantID == tenantId && m.IsActive && m.StartsAt <= now && (m.EndsAt == null || m.EndsAt > now))
++                .Select(m => new { m.ProductId, m.Price, m.EndsAt }).ToListAsync();
++            var liveByProduct = live.GroupBy(m => m.ProductId).ToDictionary(g => g.Key, g => g.OrderBy(m => m.Price).First());
++            var demo = CustomerAppDemo.Offers.ToDictionary(o => o.ProductId);
++
++            var rows = products.Select(p =>
++            {
++                object offer = null;
++                if (liveByProduct.TryGetValue(p.Id, out var m) && m.Price < p.Price)
++                {
++                    var pct = Math.Round((p.Price - m.Price) / p.Price * 100m, 0);
++                    offer = new
++                    {
++                        kind = CustomerAppDemo.Kind(pct), percentOff = pct, price = m.Price, source = "pesoweb",
++                        daysLeft = m.EndsAt.HasValue ? Math.Max(0, (int)Math.Ceiling((m.EndsAt.Value - now).TotalDays)) : 7,
++                        note = "Price drop"
++                    };
++                }
++                else if (demo.TryGetValue(p.Id, out var d))
++                {
++                    offer = new
++                    {
++                        kind = CustomerAppDemo.Kind(d.PercentOff), percentOff = d.PercentOff, price = CustomerAppDemo.OfferPrice(p.Price, d.PercentOff),
++                        source = "demo", daysLeft = d.DaysLeft, note = d.Note
++                    };
++                }
++                return new { id = p.Id, name = p.ProductName, price = p.Price, offer };
++            }).ToList();
++
++            return Ok(new { generatedAt = now, products = rows });
++        }
++
++        // GET: api/online-orders/R4821  (the cashier keys in the reference the customer shows)
++        [HttpGet("~/api/online-orders/{reference}")]
++        [Authorize]
++        public async Task<IActionResult> Lookup(string reference, int? warehouse = null)
++        {
++            if (!CustomerAppDemo.IsDemoReference(reference))
++                return NotFound(new { message = "No online order with that reference." });
++
++            var ids = CustomerAppDemo.Basket.Select(l => l.ProductId).ToList();
++            var products = await _dbContext.Products.AsNoTracking().Where(p => ids.Contains(p.Id))
++                .Select(p => new { p.Id, p.ProductName, p.Price }).ToListAsync();
++            var stock = warehouse.HasValue
++                ? await _dbContext.ProductWarehouses.AsNoTracking().Where(w => w.WarehouseId == warehouse.Value && ids.Contains(w.ProductId))
++                    .GroupBy(w => w.ProductId).Select(g => new { ProductId = g.Key, Qty = g.Sum(w => w.Quantity) }).ToListAsync()
++                : null;
++            var offers = CustomerAppDemo.Offers.ToDictionary(o => o.ProductId);
++
++            var lines = new List<object>();
++            decimal total = 0;
++            foreach (var l in CustomerAppDemo.Basket)
++            {
++                var p = products.FirstOrDefault(x => x.Id == l.ProductId);
++                if (p == null) continue;                                         // not a product of this company: left out
++                var price = offers.TryGetValue(l.ProductId, out var o) ? CustomerAppDemo.OfferPrice(p.Price, o.PercentOff) : p.Price;
++                total += price * l.Quantity;
++                lines.Add(new
++                {
++                    productId = p.Id, productName = p.ProductName, quantity = l.Quantity, price, regularPrice = p.Price,
++                    availableQuantity = stock?.FirstOrDefault(s => s.ProductId == p.Id)?.Qty
++                });
++            }
++            if (lines.Count == 0) return NotFound(new { message = "The products of this online order are not in this company." });
++
++            var phone = CustomerAppDemo.CustomerPhone;
++            var customer = await _dbContext.Customers.AsNoTracking()
++                .Where(c => c.Phone == phone || c.CustomerName == CustomerAppDemo.CustomerName)
++                .Select(c => new { c.Id, c.CustomerName }).FirstOrDefaultAsync();
++
++            return Ok(new
++            {
++                reference = CustomerAppDemo.Reference,
++                demo = true,
++                customerId = customer?.Id,
++                customerName = customer?.CustomerName ?? CustomerAppDemo.CustomerName,
++                customerPhone = CustomerAppDemo.CustomerPhone,
++                paymentMode = "Pay at the store",
++                lines,
++                total
++            });
++        }
++    }
++}
+diff --git a/Retailo.Tests/CustomerAppDemoTests.cs b/Retailo.Tests/CustomerAppDemoTests.cs
+new file mode 100644
+index 0000000..0389e79
+--- /dev/null
++++ b/Retailo.Tests/CustomerAppDemoTests.cs
+@@ -0,0 +1,43 @@
++using GoPosify.Services;
++using Xunit;
++
++namespace Retailo.Tests;
++
++public class CustomerAppDemoTests
++{
++    [Theory]
++    [InlineData("R4821")]
++    [InlineData(" r-4821 ")]
++    [InlineData("r 4821")]
++    public void The_demo_reference_is_recognised_however_it_is_keyed(string typed)
++        => Assert.True(CustomerAppDemo.IsDemoReference(typed));
++
++    [Theory]
++    [InlineData("")]
++    [InlineData(null)]
++    [InlineData("R4822")]
++    public void Any_other_reference_is_not_found(string typed)
++        => Assert.False(CustomerAppDemo.IsDemoReference(typed));
++
++    [Fact]
++    public void An_offer_price_is_the_current_price_less_the_percent_rounded_to_centavos()
++    {
++        Assert.Equal(52.50m, CustomerAppDemo.OfferPrice(105m, 50));
++        Assert.Equal(63.75m, CustomerAppDemo.OfferPrice(85m, 25));
++        Assert.Equal(53.90m, CustomerAppDemo.OfferPrice(98m, 45));
++    }
++
++    [Fact]
++    public void Thirty_percent_and_more_is_clearance_the_rest_is_sale()
++    {
++        Assert.Equal("clearance", CustomerAppDemo.Kind(30));
++        Assert.Equal("sale", CustomerAppDemo.Kind(29));
++    }
++
++    [Fact]
++    public void Every_product_in_the_demo_basket_has_an_offer_so_the_cashier_sees_the_clearance_prices()
++    {
++        var offered = CustomerAppDemo.Offers.Select(o => o.ProductId).ToHashSet();
++        Assert.All(CustomerAppDemo.Basket, l => Assert.Contains(l.ProductId, offered));
++    }
++}
+diff --git a/Services/CustomerAppDemo.cs b/Services/CustomerAppDemo.cs
+new file mode 100644
+index 0000000..89d4be3
+--- /dev/null
++++ b/Services/CustomerAppDemo.cs
+@@ -0,0 +1,45 @@
++namespace GoPosify.Services
++{
++    // DEMO ONLY. The fixed offers, customer and reservation used to show the customer app and the cashier lookup working together.
++    // The real version reads offers from ActiveMarkdowns and reservations from a table; the response shapes stay the same.
++    public static class CustomerAppDemo
++    {
++        public const string Reference = "R4821";
++        public const string CustomerName = "Juan Dela Cruz";
++        public const string CustomerPhone = "09171234567";
++        public const decimal ClearanceFrom = 30m;       // a markdown of this percent or more is shown as "clearance"
++
++        public sealed record DemoOffer(int ProductId, decimal PercentOff, int DaysLeft, string Note);
++        public sealed record DemoLine(int ProductId, int Quantity);
++
++        // Product ids are 520 Minimart (company 6) product ids.
++        public static readonly DemoOffer[] Offers =
++        {
++            new(1362, 50, 2, "Best before soon - rush to the store"),
++            new(1421, 45, 2, "Best before soon - rush to the store"),
++            new(1393, 40, 1, "Last day"),
++            new(1385, 35, 3, "Clearance"),
++            new(1066, 30, 3, "Clearance"),
++            new(1406, 25, 3, "Weekend sale"),
++            new(1404, 20, 5, "Weekend sale"),
++            new(1485, 18, 6, "Sale"),
++            new(1468, 15, 5, "Weekend sale"),
++            new(1012, 12, 7, "Sale"),
++            new(1401, 10, 7, "Sale"),
++        };
++
++        // What the demo customer reserved in the app (the "Add demo basket" button there adds exactly this).
++        public static readonly DemoLine[] Basket =
++        {
++            new(1362, 2), new(1421, 1), new(1406, 2), new(1385, 1),
++        };
++
++        public static decimal OfferPrice(decimal price, decimal percentOff) => Math.Round(price * (100m - percentOff) / 100m, 2, MidpointRounding.AwayFromZero);
++
++        public static string Kind(decimal percentOff) => percentOff >= ClearanceFrom ? "clearance" : "sale";
++
++        public static string Normalize(string reference) => (reference ?? "").Trim().ToUpperInvariant().Replace(" ", "").Replace("-", "");
++
++        public static bool IsDemoReference(string reference) => Normalize(reference) == Reference;
++    }
++}
+diff --git a/appsettings.Development.json b/appsettings.Development.json
+index 17eb59a..49f0ae2 100644
+--- a/appsettings.Development.json
++++ b/appsettings.Development.json
+@@ -12,5 +12,8 @@
+   },
+   "Swagger": {
+     "Enabled": true
++  },
++  "CustomerApp": {
++    "TenantId": 6
+   }
+ }
+-- 
+2.46.0.windows.1
+

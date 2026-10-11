@@ -152,6 +152,17 @@ A top-level menu group "Intelligent Hub" (under Dashboard, in the side menu and 
 
 `patches/plan18` (tag `plan18-complete`): the `CountSuggestions` table gains a kind (Count or SellFast) and the expiry-risk fields (migration `AddCountSuggestionKinds`, script `scripts/20261011_count_suggestion_kinds.sql`); `?kind=` filter on `GET /api/ai/count-suggestions`; a "SellFast" task kind for the store lane; the Loss prevention tab (menu item renamed from Count first) with a Sell fast section. Agent side: `expiry_findings` and the extended `loss_prevention_handler` in `sim/simpeso/agent_service.py` (units unsold at expiry by FEFO and rate of sale, discount from `missionai.optimizer.choose`, markdown proposed for batches 1 to 3 days from expiry, not re-proposed on a repeat run). Tests: 4 more PesoWeb tests (292 in all), `sim/tests/test_expiry_risk.py` (9); live `sim/scripts/expiry_risk_check.py` (13 checks).
 
+## Plans 19 to 22 (the shopper's phone app, put on sale, AI Insight)
+
+| Plan (tag) | What it added |
+|---|---|
+| `patches/plan19` (`plan19-complete`) | Product list filter "Expiry tracking" (perishable products); the DMALL blue theme in Theme Setting, with DMALL-inspired icons and Intelligent Hub illustrations |
+| `patches/plan20` (`plan20-complete`) | **Put on sale**: a manager puts a product on sale (percent off until a date) under the pricing rules; the POS lists and charges the sale price (`ProductSales` table, migration `AddProductSales`, script `scripts/20261011_product_sales.sql`); the cashier's **Online order** lookup in the POS; the public price feed `GET /api/customer-app/offers` (`CustomerApp:TenantId`) |
+| `patches/plan21` (`plan21-complete`) | **The shopper's accounts**: first-time registration (name, phone, password), login by phone or user ID, change phone and password, reservations the cashier looks up by code, messages to registered customers; the **Rush sale** button on the AI Sell fast list (tables `CustomerAppAccounts`, `CustomerCampaigns`, `CustomerReservations`; migration `AddCustomerReservations`, script `scripts/20261011_customer_app.sql`) |
+| `patches/plan22` (`plan22-complete`) | **AI Insight** built: plain-language notes (expiry rush sales, price changes, counts, reorders) with every figure checked against the data; `AiInsights` table (migration `AddAiInsights`, script `scripts/20261011_ai_insights.sql`); the Hub overview section "What the AI did, and why" |
+
+The shopper's phone app itself is in this repo: `customer-app/`. PesoWeb tests: 311 pass. Live checks: `sim/scripts/product_sale_check.py` (10), `customer_app_check.py` (18), `insight_check.py` (7).
+
 ## Live verification environment (no admin rights needed)
 
 PesoWeb databases come from a backup plus SQL scripts, not from running every EF migration (an old migration has a foreign-key cycle, and the history is incomplete). To get a throwaway database on SQL Server LocalDB:

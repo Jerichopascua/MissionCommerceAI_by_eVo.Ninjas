@@ -1,0 +1,29 @@
+From 8d62e97b7d767f47b25286117f40c51a6422600c Mon Sep 17 00:00:00 2001
+From: unknown <jericho.pascua@gmail.com>
+Date: Sun, 11 Oct 2026 05:46:41 +0800
+Subject: [PATCH] Customer app price feed: CustomerApp:TenantId 6 in
+ appsettings so any restart keeps it on (set your own company on a hosted
+ server)
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+---
+ appsettings.json | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/appsettings.json b/appsettings.json
+index ae4c679..5d007b5 100644
+--- a/appsettings.json
++++ b/appsettings.json
+@@ -27,6 +27,9 @@
+   "Swagger": {  
+     "Enabled": true
+   },
++  "CustomerApp": {
++    "TenantId": 6
++  },
+   "DefaultCustomerId": 1,
+   "AllowedHosts": "*"
+ }
+-- 
+2.46.0.windows.1
+

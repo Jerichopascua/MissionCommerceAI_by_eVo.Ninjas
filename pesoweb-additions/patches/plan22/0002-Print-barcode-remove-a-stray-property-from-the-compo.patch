@@ -1,0 +1,28 @@
+From c54ea68c75eab41a0d1d8992833dcd1c1088907f Mon Sep 17 00:00:00 2001
+From: unknown <jericho.pascua@gmail.com>
+Date: Sun, 11 Oct 2026 13:53:56 +0800
+Subject: [PATCH] Print barcode: remove a stray property from the component
+ decorator
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+---
+ .../src/app/inventory/printbarcode/printbarcode.component.ts   | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/ClientApp/src/app/inventory/printbarcode/printbarcode.component.ts b/ClientApp/src/app/inventory/printbarcode/printbarcode.component.ts
+index 452d573..421e931 100644
+--- a/ClientApp/src/app/inventory/printbarcode/printbarcode.component.ts
++++ b/ClientApp/src/app/inventory/printbarcode/printbarcode.component.ts
+@@ -7,8 +7,7 @@ import { BarcodeFormat, Result } from '@zxing/library';
+ 
+ @Component({
+   selector: 'app-printbarcode',
+-  templateUrl: './printbarcode.component.html',
+-  templatebarcodeAdhoUrl: './printbarcode_template_adhoc.html'
++  templateUrl: './printbarcode.component.html'
+ })
+ export class PrintBarcodeComponent implements OnInit {
+ 
+-- 
+2.46.0.windows.1
+
