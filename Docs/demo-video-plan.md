@@ -74,7 +74,7 @@ The rule: *a meaningful part of the workload on AMD infrastructure, as part of t
 
 **Capture session (about 2 hours, plan Oct 14, destroy the server afterwards):**
 
-1. Create the server and connect: `Docs/amd-setup-guide.md` Parts 2 to 4. (Remove the private-key block from that file first.)
+1. Follow **[amd-session-runbook.md](amd-session-runbook.md)** step by step (it covers the server, the container, the model, the collector and the recordings). The sections below are the summary.
 2. Start the model server (Test 0 in the guide): `python -m vllm.entrypoints.openai.api_server --model Qwen/Qwen2.5-7B-Instruct --host 127.0.0.1 --port 8000`.
 3. Collect the evidence in one run:
    `python scripts/amd_session_collect.py --out ../results/amd-session.json --llm-base http://127.0.0.1:8000 --llm-model Qwen/Qwen2.5-7B-Instruct`
