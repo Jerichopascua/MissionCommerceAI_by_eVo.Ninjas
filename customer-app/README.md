@@ -31,16 +31,22 @@ A very small web app a customer can put on a phone. It is a separate folder and 
 3. The pricing rules apply. Never more than the maximum discount, never below cost plus the minimum margin; otherwise it says why it was refused.
 4. At once: the POS lists and charges the sale price, and the customer app shows it under **Sale** (30% and over as **Clearance**). **End sale** brings the normal price back.
 
-## The demo (customer app, then the cashier)
+## The demo (first-time customer, then the cashier)
 
-PesoWeb must be running with the price feed on for company 520 Minimart (`CustomerApp__TenantId=6`).
+PesoWeb must be running with the price feed on for company 520 Minimart (`CustomerApp:TenantId` in `appsettings.json`), and `SERVE.cmd` running.
 
-1. **Phone:** open the app, log in as `juan` / `demo123`. It opens on **Sale**, clearance items first. The line under the banner says "Prices from the store system".
-2. Press **Reserve it** on the demo basket (4 items). The app shows reference **R4821** and a QR code.
-3. **Cashier:** in PesoWeb open **POS**, press the phone icon (**Online order**), key in `R4821`, press **Find order**. It shows **Juan Dela Cruz** and the 4 items at the sale prices (total 73.08).
-4. Press **Load into this sale**. The sale is rung up at the sale prices, like any other sale.
+1. **Phone:** open the app and press **New customer**. Enter a name, a mobile number and a password, then **Register**. She is now a registered customer: the store has a Customer record for her.
+2. **Sale:** the app opens on **Sale**: the store's rush sale messages at the top, clearance items first.
+3. **Reserve:** add items, open **Basket**, press **Reserve and pay at the store**. The app shows a reference (for example R6619) and a QR code.
+4. **Cashier:** in PesoWeb open **POS**, press the phone icon (**Online order**), key in the reference, press **Find order**. It shows her name and the items at the sale prices. **Load into this sale** puts them in the cart; once the sale is saved the reservation is marked as taken.
 
-Any other reference gives "No online order with that reference".
+The fixed demo reference `R4821` (Juan Dela Cruz) still works when no real reservation has that code.
+
+## From the AI to the customer
+
+1. **Intelligent Hub, Loss prevention:** the AI lists batches that will expire unsold, with the discount that would clear them.
+2. **Rush sale** (button on a row): opens **Put on sale** with the product, discount and last day filled in. Tick **Tell registered customers** and press **Put on sale**.
+3. The register charges the sale price at once, and the message appears in the customer app under **From the store**. The Put on sale screen lists what was sent and to how many customers. SMS and other channels are next.
 
 ## Install it on a phone as an app
 

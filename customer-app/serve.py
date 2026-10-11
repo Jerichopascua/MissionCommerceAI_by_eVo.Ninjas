@@ -1,7 +1,8 @@
-"""Serves the customer app and forwards only the price feed to PesoWeb, so a phone needs just this one address and port.
+"""Serves the customer app and forwards only the customer-app part of PesoWeb's API, so a phone needs just this one address and port.
 
     python serve.py            (app on http://0.0.0.0:8090, PesoWeb expected on http://127.0.0.1:5071)
 """
+import os
 import sys
 import urllib.error
 import urllib.request
@@ -14,27 +15,43 @@ FORWARD = "/api/customer-app/"                       # nothing else of PesoWeb i
 
 
 class Handler(SimpleHTTPRequestHandler):
+    def _forward(self):
+        body = None
+        length = int(self.headers.get("Content-Length") or 0)
+        if length:
+            body = self.rfile.read(length)
+        req = urllib.request.Request(PESOWEB + self.path, data=body, method=self.command)
+        for h in ("Content-Type", "Authorization"):
+            if self.headers.get(h):
+                req.add_header(h, self.headers[h])
+        try:
+            with urllib.request.urlopen(req, timeout=20) as r:
+                payload, status, ctype = r.read(), r.status, r.headers.get("Content-Type", "application/json")
+        except urllib.error.HTTPError as e:
+            payload, status, ctype = e.read(), e.code, "application/json"
+        except Exception:
+            payload, status, ctype = b'{"message":"The store system is not reachable."}', 502, "application/json"
+        self.send_response(status)
+        self.send_header("Content-Type", ctype)
+        self.send_header("Content-Length", str(len(payload)))
+        self.send_header("Cache-Control", "no-store")
+        self.end_headers()
+        self.wfile.write(payload)
+
     def do_GET(self):
         if self.path.startswith(FORWARD):
-            try:
-                with urllib.request.urlopen(PESOWEB + self.path, timeout=15) as r:
-                    body = r.read()
-                    self.send_response(r.status)
-                    self.send_header("Content-Type", r.headers.get("Content-Type", "application/json"))
-            except urllib.error.HTTPError as e:
-                body = e.read()
-                self.send_response(e.code)
-                self.send_header("Content-Type", "application/json")
-            except Exception:
-                body = b'{"message":"The store system is not reachable."}'
-                self.send_response(502)
-                self.send_header("Content-Type", "application/json")
-            self.send_header("Content-Length", str(len(body)))
-            self.send_header("Cache-Control", "no-store")
-            self.end_headers()
-            self.wfile.write(body)
-            return
+            return self._forward()
         super().do_GET()
+
+    def do_POST(self):
+        if self.path.startswith(FORWARD):
+            return self._forward()
+        self.send_error(404)
+
+    def do_PUT(self):
+        if self.path.startswith(FORWARD):
+            return self._forward()
+        self.send_error(404)
 
     def end_headers(self):
         if not self.path.startswith(FORWARD):
@@ -46,7 +63,6 @@ class Handler(SimpleHTTPRequestHandler):
 
 
 if __name__ == "__main__":
-    import os
     os.chdir(Path(__file__).resolve().parent)
-    print(f"Customer app on http://0.0.0.0:{PORT}  (price feed from {PESOWEB})")
+    print(f"Customer app on http://0.0.0.0:{PORT}  (store API from {PESOWEB})")
     ThreadingHTTPServer(("0.0.0.0", PORT), Handler).serve_forever()

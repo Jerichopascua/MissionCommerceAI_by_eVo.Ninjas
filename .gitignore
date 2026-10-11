@@ -12,3 +12,5 @@ sim/customer_data/
 
 # every login in one place for the local test bench; plain text, never committed
 RUN/CREDENTIALS.txt
+video/frames/
+video/*.mp4

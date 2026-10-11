@@ -45,3 +45,7 @@ nav .dot { position: absolute; top: 4px; right: 22%; min-width: 18px; height: 18
 .qr { display: flex; justify-content: center; padding: 10px; }
 .qr svg, .qr img { width: 220px; height: 220px; }
 .note { background: #fff8e6; border: 1px solid #f5d98b; border-radius: 12px; padding: 10px 12px; font-size: 13px; color: #7a5b00; margin-bottom: 12px; }
+.seg { display: flex; background: #fff; border: 1px solid var(--primary-light); border-radius: 12px; padding: 3px; margin-bottom: 12px; }
+.seg button { flex: 1; border: 0; background: none; padding: 9px; border-radius: 9px; font-weight: 600; color: var(--muted); cursor: pointer; }
+.seg button.on { background: linear-gradient(135deg, #3880f8, #0058f8); color: #fff; }
+.card.msg { border-left: 4px solid var(--primary); }
