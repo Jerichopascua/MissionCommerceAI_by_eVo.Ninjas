@@ -1,0 +1,810 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sim.PesoWeb 3D Customer Simulation – Sample</title>
+<style>
+  :root{--bg:#e6edf8;--panel:rgba(255,255,255,.93);--panel2:#f1f5fb;--line:#dbe3ef;--text:#1b2740;--mute:#6b7a93;--acc:#2f6bff;--warn:#c47d00;--bad:#e5484d;--good:#1fa463;--blue:#2f6bff;--shadow:0 8px 24px rgba(30,50,90,.14)}
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font:13px/1.4 "Inter",system-ui,Segoe UI,Roboto,sans-serif;overflow:hidden}
+  button{font:inherit;color:var(--text);background:#fff;border:1px solid var(--line);border-radius:8px;padding:5px 10px;cursor:pointer}
+  button:hover{border-color:var(--acc);color:var(--acc)} button.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+  button.primary{background:var(--acc);color:#fff;font-weight:600;border-color:var(--acc)} button.primary:hover{color:#fff;filter:brightness(1.08)}
+  button:disabled{opacity:.4;cursor:not-allowed}
+  .mono{font-family:ui-monospace,Consolas,monospace}
+  .mute{color:var(--mute)} .tag{display:inline-block;padding:1px 8px;border-radius:10px;font-size:11px;border:1px solid var(--line);background:var(--panel2)}
+  .tag.ok{color:var(--good);border-color:#bfe6d1;background:#eaf8f0} .tag.warn{color:var(--warn);border-color:#f0dcae;background:#fff6e0} .tag.bad{color:var(--bad);border-color:#f3c3c5;background:#fdecec}
+  .fcard{background:var(--panel);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.8);border-radius:14px;box-shadow:var(--shadow)}
+
+  /* ---------- wizard ---------- */
+  #wizard{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 25% 15%,#f5f9ff,#dfe8f6 65%);z-index:10}
+  #wizard .card{width:min(760px,94vw);max-height:92vh;overflow:auto;background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:24px}
+  #wizard h1{font-size:19px;margin:0 0 2px} #wizard h2{font-size:12px;margin:16px 0 8px;color:var(--mute);text-transform:uppercase;letter-spacing:.07em}
+  .crumbs{display:flex;gap:6px;margin:10px 0 4px;flex-wrap:wrap}
+  .crumbs span{padding:2px 10px;border-radius:12px;background:var(--panel2);border:1px solid var(--line);color:var(--mute)}
+  .crumbs span.cur{color:#fff;background:var(--acc);border-color:var(--acc)} .crumbs span.done{color:var(--text)}
+  .list{display:grid;gap:8px}
+  .item{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:#fff;cursor:pointer}
+  .item:hover{border-color:var(--acc);box-shadow:0 2px 10px rgba(47,107,255,.15)} .item b{font-size:14px}
+  .kv{display:grid;grid-template-columns:150px 1fr;gap:4px 12px;margin:8px 0} .kv div:nth-child(odd){color:var(--mute)}
+  .err{border:1px solid #f3c3c5;background:#fdecec;border-radius:10px;padding:10px 12px;margin:10px 0}
+  .steps li{padding:2px 0;color:var(--mute)} .steps li.done{color:var(--good)} .steps li.cur{color:var(--text)}
+  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+
+  /* ---------- app: full-bleed 3D with floating cards ---------- */
+  #app{position:fixed;inset:0;display:none}
+  #stage{position:absolute;inset:0} #stage canvas{display:block;width:100%;height:100%}
+  #top{position:absolute;top:12px;left:12px;right:12px;display:flex;gap:12px;align-items:center;pointer-events:none;z-index:3}
+  #top>*{pointer-events:auto}
+  .brand{display:flex;align-items:center;gap:9px;padding:7px 14px;font-weight:700;font-size:15px}
+  .brand i{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:7px;background:var(--acc);color:#fff;font-style:normal;font-size:14px}
+  .ctx{display:flex;gap:16px;padding:6px 16px;margin:0 auto}
+  .ctx small,.lbl{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--mute)}
+  .ctx b.srcv{color:var(--warn)}
+  .live{display:flex;align-items:center;gap:8px;padding:7px 14px;font-weight:600}
+  .live::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--good);box-shadow:0 0 0 3px #1fa46333}
+  #kpis{position:absolute;top:66px;left:12px;display:flex;gap:10px;z-index:2}
+  .kpi{padding:8px 14px;min-width:132px} .kpi b{display:block;font-size:20px;line-height:1.15} .kpi span{font-size:11px;color:var(--mute)}
+  #left{position:absolute;left:12px;top:140px;bottom:256px;width:250px;overflow:auto;padding:12px;z-index:2}
+  #right{position:absolute;right:12px;top:66px;bottom:256px;width:300px;overflow:auto;padding:12px;z-index:2}
+  #timeline{position:absolute;left:12px;bottom:12px;width:min(620px,calc(100% - 340px));height:232px;overflow:auto;padding:8px 12px;z-index:2}
+  #timeline .ev{display:flex;gap:10px;padding:2px 4px;border-radius:5px;cursor:pointer} #timeline .ev:hover{background:var(--panel2)}
+  #timeline .ev .t{color:var(--mute);width:62px;flex:none}
+  #controls{position:absolute;right:12px;bottom:12px;width:300px;height:232px;overflow:auto;padding:10px 12px;z-index:2}
+  h3{margin:0 0 6px;font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--mute)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .stat{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:6px 9px}
+  .stat b{display:block;font-size:16px} .stat span{font-size:10px;color:var(--mute);text-transform:uppercase;letter-spacing:.05em}
+  .bar{height:6px;background:#e3eaf5;border-radius:4px;overflow:hidden;margin:3px 0 8px} .bar i{display:block;height:100%;background:var(--acc);border-radius:4px}
+  .na{color:var(--mute);font-style:italic}
+  .chip{display:inline-block;margin:1px 3px 1px 0;padding:1px 8px;border-radius:10px;background:var(--panel2);border:1px solid var(--line);font-size:11px}
+  .chip.got{border-color:#bfe6d1;color:var(--good);background:#eaf8f0} .chip.rej{border-color:#f3c3c5;color:var(--bad);background:#fdecec} .chip.sub{border-color:#f0dcae;color:var(--warn);background:#fff6e0}
+  #layoutNote{position:absolute;left:50%;transform:translateX(-50%);bottom:12px;max-width:34%;background:#ffffffcc;border:1px solid var(--line);border-radius:8px;padding:4px 10px;font-size:11px;color:var(--mute);text-align:center;z-index:2}
+  #diag{position:absolute;left:50%;transform:translateX(-50%);top:66px;background:#ffffffb0;border:1px solid var(--line);border-radius:8px;padding:5px 10px;font-size:10px;color:var(--mute);white-space:pre;z-index:2}
+  @media (max-width:1150px){#diag{display:none}#layoutNote{display:none}}
+</style>
+</head>
+<body>
+
+<!-- ============ ENTRY WIZARD: Tenant -> Branch -> Scenario -> Summary -> Load ============ -->
+<div id="wizard"><div class="card" id="wizcard"></div></div>
+
+<!-- ============ APP (full-bleed 3D scene + floating cards) ============ -->
+<div id="app">
+  <div id="stage"></div>
+  <div id="top"></div>
+  <div id="kpis"></div>
+  <div id="diag" class="mono"></div>
+  <div id="left" class="fcard"></div>
+  <div id="right" class="fcard"></div>
+  <div id="timeline" class="fcard"></div>
+  <div id="controls" class="fcard"></div>
+  <div id="layoutNote"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+'use strict';
+/* =====================================================================
+   Sim.PesoWeb 3D Customer Simulation – plain HTML sample
+   Layers (mirrors the planned src/ layout):
+     1. contracts   – SimulationScenarioV1 shape + validator
+     2. api         – SimulationDataProvider interface, MockSimulationDataProvider
+     3. simulation  – ScenarioSimulationEngine (no DOM, no THREE)
+     4. world3d     – Three.js renderer (reads engine state, never mutates source data)
+     5. ui          – wizard, dashboard, customer panel, timeline
+   Sim.PesoWeb is the source of truth; everything below "api" only sees
+   what a provider returns. The mock exists only for local development.
+   ===================================================================== */
+
+/* ---------------------------------------------------------------- 1. CONTRACT */
+const SUPPORTED_CONTRACT = 'SimulationScenarioV1';
+function validateScenario(sc, tenantId, branchId){
+  const errs = [], warns = [];
+  if(sc.contractVersion !== SUPPORTED_CONTRACT) errs.push(`Unsupported scenario version "${sc.contractVersion}" (expected ${SUPPORTED_CONTRACT}).`);
+  if(sc.tenant?.id !== tenantId) errs.push('Tenant consistency: scenario tenant does not match selected tenant.');
+  if(sc.branch?.id !== branchId) errs.push('Branch consistency: scenario branch does not match selected branch.');
+  if(!sc.meta?.id) errs.push('Missing scenario ID.');
+  if(!sc.params) errs.push('Missing simulation parameters.');
+  if(!sc.products?.length) errs.push('Missing product data.');
+  if(!sc.customers?.length) errs.push('Missing customer data.');
+  const pids = new Set((sc.products||[]).map(p=>p.id));
+  const stockIds = new Set((sc.inventory||[]).map(i=>i.productId));
+  (sc.products||[]).forEach(p=>{ if(!stockIds.has(p.id)) errs.push(`Inventory reference missing for product ${p.id}.`); });
+  (sc.customers||[]).forEach(c=>{
+    (c.mission?.productIds||[]).forEach(id=>{ if(!pids.has(id)) errs.push(`Customer ${c.id}: mission references unknown product ${id}.`); });
+  });
+  if(!sc.layout) warns.push('Missing layout data – default visualization layout will be used.');
+  return {errs, warns};
+}
+
+/* ---------------------------------------------------------------- 2. API LAYER */
+/* SimulationDataProvider interface (documented by duck-typing in this sample):
+     getTenants() / getBranches(tenantId) / getScenarios(tenantId, branchId) / getScenario(tenantId, branchId, scenarioId)
+   RealSimulationDataProvider would implement the same four methods against a configurable base URL.
+   It is NOT implemented here: no real Sim.PesoWeb endpoint contract has been supplied yet. */
+const CONFIG = { dataSource: 'mock' /* 'api' | 'mock' – never silently fall back */, apiBaseUrl: '' };
+
+class RealSimulationDataProvider {
+  label(){ return 'SIM.PESOWEB API'; }
+  async _na(){ throw new Error('Unable to load Sim.PesoWeb data. The real API contract has not been supplied/configured (VITE_SIMULATION_API_BASE_URL).'); }
+  getTenants(){return this._na();} getBranches(){return this._na();} getScenarios(){return this._na();} getScenario(){return this._na();}
+}
+
+class MockSimulationDataProvider {   // ---- LOCAL DEVELOPMENT ONLY ----
+  label(){ return 'LOCAL MOCK'; }
+  _delay(v, ms=350){ return new Promise(r=>setTimeout(()=>r(structuredClone(v)), ms)); }
+
+  async getTenants(){ return this._delay(MOCK.tenants.map(t=>({...t, branchCount: MOCK.branches.filter(b=>b.tenantId===t.id).length}))); }
+  async getBranches(tenantId){ return this._delay(MOCK.branches.filter(b=>b.tenantId===tenantId).map(b=>({...b, scenarioCount: MOCK.scenarios.filter(s=>s.branchId===b.id).length}))); }
+  async getScenarios(tenantId, branchId){ return this._delay(MOCK.scenarios.filter(s=>s.tenantId===tenantId && s.branchId===branchId).map(s=>s.meta ? {...s.meta, id:s.id, tenantId, branchId, params:s.params} : s)); }
+  async getScenario(tenantId, branchId, scenarioId){
+    const s = MOCK.scenarios.find(x=>x.id===scenarioId && x.tenantId===tenantId && x.branchId===branchId);
+    if(!s) throw new Error('Scenario not found for this tenant/branch.');
+    return this._delay(buildScenarioPayload(s), 700);
+  }
+}
+
+/* ---- mock fixtures (mock-only; seeded so runs are repeatable) ---- */
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+
+const MOCK = (()=>{
+  const tenants = [
+    {id:'T-ABC', name:'ABC Grocery Corporation', status:'ACTIVE'},
+    {id:'T-KOP', name:'Kopi Kita Retail Group', status:'ACTIVE'},
+    {id:'T-MBS', name:'Mabuhay Supermart', status:'TRIAL'},
+  ];
+  const branches = [
+    {id:'B-ABC-MNL', tenantId:'T-ABC', name:'Manila Main Branch', location:'Manila, PH', status:'OPEN', storeType:'Supermarket'},
+    {id:'B-ABC-KL',  tenantId:'T-ABC', name:'KL Main Branch', location:'Kuala Lumpur, MY', status:'OPEN', storeType:'Supermarket'},
+    {id:'B-ABC-CEB', tenantId:'T-ABC', name:'Cebu Express', location:'Cebu, PH', status:'OPEN', storeType:'Convenience'},
+    {id:'B-KOP-001', tenantId:'T-KOP', name:'Kopi Kita Central', location:'Quezon City, PH', status:'OPEN', storeType:'Grocery'},
+    {id:'B-KOP-002', tenantId:'T-KOP', name:'Kopi Kita Makati', location:'Makati, PH', status:'RENOVATING', storeType:'Grocery'},
+    {id:'B-MBS-001', tenantId:'T-MBS', name:'Mabuhay Davao', location:'Davao, PH', status:'OPEN', storeType:'Supermarket'},
+  ];
+  const mk = (tenantId, branchId, sfx, name, type, desc, objective, customers, pop, days, params)=>({
+    id:`S-${branchId}-${sfx}`, tenantId, branchId, params,
+    meta:{ name, type, description:desc, objective, customerPopulation:pop, productCount:2431, expectedTransactions:Math.round(pop*0.82),
+           days, startDate:'2026-03-14', status:'READY', dataVersion:'v1.4', configVersion:'c7', sampleCustomers:customers }
+  });
+  const scenarios = [];
+  branches.forEach(b=>{
+    scenarios.push(mk(b.tenantId,b.id,'RUSH','Weekend Grocery Rush','WEEKEND_GROCERY_RUSH',
+      'Saturday traffic surge: large weekly-shop baskets arrive in a compressed window.','Check checkout throughput and mission completion under peak load.',
+      80,12540,7,{arrivalWindowSec:2700,stockMult:1,competitorPressure:0,stockOverrides:{},seed:11}));
+    scenarios.push(mk(b.tenantId,b.id,'COMP','Competitor Price Reduction','COMPETITOR_PRICE_REDUCTION',
+      'A nearby competitor cut staple prices ~10%. Bargain-hunters compare harder and reject more.','Measure conversion and basket loss to price-sensitive segments.',
+      60,12540,7,{arrivalWindowSec:3600,stockMult:1,competitorPressure:0.45,stockOverrides:{},seed:23}));
+    scenarios.push(mk(b.tenantId,b.id,'OOS','Inventory Stockout','PRODUCT_STOCKOUT',
+      'Supplier delay leaves Rice, Chicken and Milk critically low.','Quantify failed missions caused by unavailable products.',
+      70,12540,7,{arrivalWindowSec:3000,stockMult:1,competitorPressure:0.1,stockOverrides:{'P-RICE':6,'P-CHKN':5,'P-MILK':8},seed:37}));
+  });
+  return {tenants, branches, scenarios};
+})();
+
+const CATEGORY_COLORS = {Grains:0xd9b44a,Meat:0xd2554f,Pantry:0xa96b3a,Dairy:0x7fb7e6,Bakery:0xe8a96b,Beverage:0x5aa469,Produce:0x7bc86c,Household:0x9a7fd1};
+// slot: row z, stand z (where a customer stands), x. zone: aisle id
+const PRODUCTS = [
+  ['P-RICE','Rice 5kg','Grains',250,200,-12.5,-9,-7.6],['P-OIL','Cooking Oil 1L','Pantry',95,75,-7.5,-9,-7.6],
+  ['P-SUGR','Sugar 1kg','Pantry',85,68,-2.5,-9,-7.6],['P-SOY','Soy Sauce','Pantry',30,22,2.5,-9,-7.6],
+  ['P-NOOD','Instant Noodles','Pantry',15,11,7.5,-9,-7.6],['P-SARD','Canned Sardines','Pantry',28,21,12.5,-9,-7.6],
+  ['P-COFE','Coffee 3in1','Beverage',60,45,-10,-4,-5.4],['P-BISC','Biscuits','Pantry',25,17,-5,-4,-5.4],
+  ['P-DETG','Detergent','Household',85,62,0,-4,-5.4],['P-SOAP','Bath Soap','Household',40,28,5,-4,-5.4],
+  ['P-WATR','Water 6L','Beverage',55,38,10,-4,-5.4],
+  ['P-MILK','Milk 1L','Dairy',120,95,-10,1,-0.4],['P-EGGS','Eggs Tray','Dairy',210,170,-5,1,-0.4],
+  ['P-BRED','Bread Loaf','Bakery',65,45,0,1,-0.4],['P-BANA','Bananas 1kg','Produce',70,50,5,1,-0.4],
+  ['P-CHKN','Chicken 1kg','Meat',190,150,10,1,-0.4],
+].map(([id,name,category,price,cost,x,rowZ,standZ])=>({id,name,category,price,cost,slot:{x,rowZ,standZ}}));
+
+const DEFAULT_LAYOUT_SLOTS = Object.fromEntries(PRODUCTS.map(p=>[p.id,p.slot]));   // documented default visualization layout
+
+const SEGMENTS = [
+  {id:'FAMILY', name:'Weekly Family',   mission:'Weekly Grocery', items:[6,8], budgetMult:1.25, color:0x58a6ff, compare:0.3, weight:0.35},
+  {id:'BARGAIN',name:'Bargain Hunter',  mission:'Bargain Run',    items:[4,6], budgetMult:1.05, color:0xe3b341, compare:0.9, weight:0.30},
+  {id:'QUICK',  name:'Quick Trip',      mission:'Quick Top-up',   items:[2,3], budgetMult:1.6,  color:0x56d364, compare:0.1, weight:0.25},
+  {id:'PREMIUM',name:'Premium Shopper', mission:'Premium Basket', items:[4,5], budgetMult:1.7,  color:0xc58af9, compare:0.2, weight:0.10},
+];
+
+function buildScenarioPayload(s){
+  const rnd = mulberry32(s.params.seed), n = s.meta.sampleCustomers;
+  const stock = PRODUCTS.map(p=>({productId:p.id, onHand: s.params.stockOverrides[p.id] ?? Math.round(30*s.params.stockMult)}));
+  const customers = [];
+  for(let i=0;i<n;i++){
+    let r=rnd(), seg=SEGMENTS[0]; for(const g of SEGMENTS){ if((r-=g.weight)<=0){seg=g;break;} }
+    const count = seg.items[0] + Math.floor(rnd()*(seg.items[1]-seg.items[0]+1));
+    const pool = [...PRODUCTS].sort(()=>rnd()-.5).slice(0,count);
+    const need = pool.reduce((a,p)=>a+p.price,0);
+    customers.push({
+      id:'C'+String(1001+i), segmentId:seg.id,
+      arriveAtSec: Math.floor(rnd()*s.params.arrivalWindowSec),
+      budget: Math.round(need*seg.budgetMult*(0.8+rnd()*0.4)),
+      loyaltyTier: ['None','Silver','Gold'][Math.floor(rnd()*3)],
+      mission:{name:seg.mission, productIds:pool.map(p=>p.id)},
+      // NOTE: purchaseHistory is deliberately absent -> UI must show "Not available in scenario data."
+    });
+  }
+  customers.sort((a,b)=>a.arriveAtSec-b.arriveAtSec);
+  const tenant = MOCK.tenants.find(t=>t.id===s.tenantId), branch = MOCK.branches.find(b=>b.id===s.branchId);
+  return {
+    contractVersion:'SimulationScenarioV1',
+    tenant:{id:tenant.id,name:tenant.name}, branch:{id:branch.id,name:branch.name},
+    meta:{id:s.id, name:s.meta.name, type:s.meta.type, description:s.meta.description, objective:s.meta.objective, startDate:s.meta.startDate,
+          dataVersion:s.meta.dataVersion, configVersion:s.meta.configVersion, status:s.meta.status},
+    params:s.params, segments:SEGMENTS.map(({id,name,compare})=>({id,name,compare})),
+    products:PRODUCTS.map(({id,name,category,price,cost})=>({id,name,category,price,cost})),
+    inventory:stock, customers,
+    layout:null, // mock supplies no layout -> renderer uses the documented default visualization layout
+  };
+}
+
+/* ---------------------------------------------------------------- 3. SIMULATION ENGINE */
+/* Independent of DOM/THREE. Clones source data; never mutates the loaded snapshot. */
+const WALK_SPEED = 1.4; // world units per scenario second
+const SIDE_X = 16.2, DOOR_Z = 12.5, SPAWN_Z = 15.5, FRONT_Z = 5;
+const COUNTERS = [-9,-4.5,0].map(x=>({x, z:8.2, queue:0}));
+
+function zoneOf(z){ return z < -3.9 ? 1 : (z < 1.0 ? 2 : 3); }  // 1 = back aisle, 2 = middle aisle, 3 = front/open area
+function route(from, to){
+  if(zoneOf(from.z)===zoneOf(to.z)) return [[to.x,to.z]];
+  const side = (from.x+to.x)/2 >= 0 ? SIDE_X : -SIDE_X;
+  return [[side,from.z],[side,to.z],[to.x,to.z]];
+}
+const fmtClock = s => { const d=Math.floor(s/86400), t=Math.floor(s%86400)+8*3600, h=Math.floor(t/3600)%24, m=Math.floor(t/60)%60, sec=t%60;
+  return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0'); };
+
+class ScenarioSimulationEngine {
+  constructor(scenario){ this.source = scenario; this.listeners = []; this.reset(); }
+  on(fn){ this.listeners.push(fn); }
+  reset(){
+    const sc = this.source;
+    this.t = 0; this.evSeq = 0; this.events = []; this.rnd = mulberry32(sc.params.seed*7+1);
+    // shelf slot comes from scenario layout when supplied, otherwise from the default visualization layout
+    this.products = new Map(sc.products.map(p=>[p.id,{...p, slot: sc.layout?.slots?.[p.id] ?? DEFAULT_LAYOUT_SLOTS[p.id]}]));
+    this.stock = new Map(sc.inventory.map(i=>[i.productId,i.onHand]));
+    this.stockedOut = new Set();
+    this.counters = COUNTERS.map(c=>({...c,queue:0}));
+    this.customers = sc.customers.map(c=>({
+      src:c, id:c.id, seg:c.segmentId, state:'PENDING', pos:{x:0,z:SPAWN_Z}, last:{x:0,z:SPAWN_Z},
+      speed:WALK_SPEED*(0.8+((this.rnd())*0.4)), queue:[], phase:'items', itemIdx:0, wait:0,
+      basket:[], viewed:[], selected:[], rejected:[], substituted:[], outcome:null,
+      decision:'Waiting to enter store', explain:'—', paid:0, satisfaction:null,
+    }));
+    this.m = {entered:0, completed:0, failed:0, abandoned:0, revenue:0, cogs:0, purchases:0, items:0, processed:0};
+    this.emit('ScenarioReset',null,null,`Scenario "${sc.meta.name}" ready – ${this.customers.length} seed customers, ${this.products.size} products.`);
+  }
+  emit(type, c, pid, text, extra={}){
+    const ev = {id:++this.evSeq, t:this.t, type, tenantId:this.source.tenant.id, branchId:this.source.branch.id, scenarioId:this.source.meta.id,
+      customerId:c?.id, productId:pid, text, ...extra};
+    this.events.push(ev); if(this.events.length>5000) this.events.shift();
+    this.m.processed++; this.listeners.forEach(f=>f(ev));
+  }
+  pname(id){ return this.products.get(id)?.name ?? id; }
+  segDef(c){ return SEGMENTS.find(s=>s.id===c.seg); }
+  segName(c){ return this.source.segments.find(s=>s.id===c.seg).name; }
+
+  /* ---- planning helpers ---- */
+  walkTo(c, to, state){ route(c.last,to).forEach(p=>c.queue.push({k:'walk',x:p[0],z:p[1],state})); c.last={x:to.x,z:to.z}; }
+  nextStage(c){
+    const sc = this.source;
+    if(c.phase==='items'){
+      if(c.itemIdx < c.src.mission.productIds.length){
+        const pid = c.src.mission.productIds[c.itemIdx++], p = this.products.get(pid);
+        c.queue.push({k:'note',state:'BROWSING',onStart:()=>{c.decision=`Heading to ${p.name}`;}});
+        this.walkTo(c,{x:p.slot.x, z:p.slot.standZ},'BROWSING');
+        c.queue.push({k:'wait',s:5,state:'VIEWING_PRODUCT',onStart:()=>{ c.viewed.push(pid); c.decision=`Looking at ${p.name}`; this.emit('CustomerViewedProduct',c,pid,`Customer ${c.id} viewed ${p.name}.`); }});
+        if(this.rnd() < this.segDef(c).compare + sc.params.competitorPressure*0.3)
+          c.queue.push({k:'wait',s:4,state:'COMPARING',onStart:()=>{ c.decision=`Comparing ${p.name} price`; this.emit('CustomerComparedProduct',c,pid,`Customer ${c.id} compared ${p.name} (₱${p.price}).`); }});
+        c.queue.push({k:'wait',s:2,state:'SELECTING',onStart:()=>this.decide(c,pid)});
+      } else c.phase='checkout';
+    }
+    if(c.phase==='checkout'){
+      c.phase='exit';
+      if(!c.basket.length){ this.finish(c,'ABANDONED'); }
+      else {
+        const ctr = this.counters.reduce((a,b)=>a.queue<=b.queue?a:b); ctr.queue++;
+        this.walkTo(c,{x:ctr.x,z:6.4},'CHECKOUT');
+        c.queue.push({k:'wait',s:8+ctr.queue*4,state:'CHECKOUT',onStart:()=>{ c.decision='Waiting at checkout'; this.emit('CustomerEnteredCheckout',c,null,`Customer ${c.id} entered checkout ${this.counters.indexOf(ctr)+1}.`); },
+          onEnd:()=>{ ctr.queue=Math.max(0,ctr.queue-1); this.purchase(c); }});
+      }
+      return;
+    }
+    if(c.phase==='exit'){
+      c.phase='gone';
+      this.walkTo(c,{x:0,z:DOOR_Z},c.outcome||'COMPLETED'); c.queue.push({k:'walk',x:0,z:SPAWN_Z,state:c.outcome||'COMPLETED',vanish:true});
+    }
+  }
+
+  /* ---- decisions ---- */
+  decide(c,pid){
+    const sc=this.source; let p=this.products.get(pid); const seg=this.segDef(c);
+    if((this.stock.get(pid)||0)<=0){
+      if(!this.stockedOut.has(pid)){ this.stockedOut.add(pid); this.emit('ProductStockout',c,pid,`${p.name} is out of stock.`); }
+      const alt=[...this.products.values()].filter(q=>q.category===p.category && q.id!==pid && (this.stock.get(q.id)||0)>0);
+      if(alt.length && this.rnd()<0.6){
+        const q=alt[Math.floor(this.rnd()*alt.length)];
+        this.take(c,q.id); c.substituted.push({from:pid,to:q.id});
+        c.decision=`Substituted ${p.name} → ${q.name}`; c.explain=`${p.name} unavailable; accepted a same-category substitute.`;
+        this.emit('CustomerSubstitutedProduct',c,q.id,`Customer ${c.id} substituted ${p.name} with ${q.name}.`);
+      } else {
+        c.rejected.push(pid); c.decision=`${p.name} unavailable – skipped`; c.explain=`${p.name} was out of stock and no acceptable substitute was taken.`;
+        this.emit('CustomerRejectedProduct',c,pid,`Customer ${c.id} could not get ${p.name} (out of stock).`);
+      }
+      return;
+    }
+    const rejectProb = seg.id==='BARGAIN' ? 0.12+sc.params.competitorPressure : 0.05+sc.params.competitorPressure*0.25;
+    if(this.rnd()<rejectProb){
+      c.rejected.push(pid); c.decision=`Rejected ${p.name} (price)`; c.explain=`${seg.name} segment judged ₱${p.price} too high${sc.params.competitorPressure?' versus competitor':''}.`;
+      this.emit('CustomerRejectedProduct',c,pid,`Customer ${c.id} rejected ${p.name} at ₱${p.price}.`); return;
+    }
+    this.take(c,pid); c.decision=`Selected ${p.name}`; c.explain=`${p.name} is on the mission list and within acceptable price.`;
+    this.emit('CustomerSelectedProduct',c,pid,`Customer ${c.id} selected ${p.name}.`);
+    this.emit('CustomerAddedToBasket',c,pid,`${p.name} added to basket of ${c.id}.`);
+    // budget guard
+    let total=c.basket.reduce((a,id)=>a+this.products.get(id).price,0);
+    if(total>c.src.budget){
+      const worst=[...c.basket].sort((a,b)=>this.products.get(b).price-this.products.get(a).price)[0];
+      c.basket.splice(c.basket.indexOf(worst),1); this.stock.set(worst,(this.stock.get(worst)||0)+1);
+      c.rejected.push(worst); c.selected=c.selected.filter(x=>x!==worst);
+      c.decision=`Removed ${this.pname(worst)} (over budget)`; c.explain=`Basket exceeded budget ₱${c.src.budget}.`;
+      this.emit('CustomerRemovedFromBasket',c,worst,`Customer ${c.id} removed ${this.pname(worst)} (over budget).`);
+    }
+  }
+  take(c,pid){ this.stock.set(pid,this.stock.get(pid)-1); c.basket.push(pid); c.selected.push(pid);
+    this.emit('InventoryUpdated',c,pid,`${this.pname(pid)} on hand: ${this.stock.get(pid)}.`,{onHand:this.stock.get(pid)}); }
+  purchase(c){
+    const total=c.basket.reduce((a,id)=>a+this.products.get(id).price,0), cost=c.basket.reduce((a,id)=>a+this.products.get(id).cost,0);
+    c.paid=total; this.m.revenue+=total; this.m.cogs+=cost; this.m.purchases++; this.m.items+=c.basket.length;
+    const txn='TX'+String(this.m.purchases).padStart(5,'0');
+    this.emit('CustomerCompletedPurchase',c,null,`Customer ${c.id} paid ₱${total} (${c.basket.length} items).`,{transactionId:txn});
+    const need=c.src.mission.productIds.length, got=c.basket.length;
+    this.finish(c, got>=Math.ceil(need*0.75) ? 'COMPLETED' : 'FAILED');
+  }
+  finish(c,outcome){
+    c.outcome=outcome; const need=c.src.mission.productIds.length;
+    c.satisfaction=Math.round(100*Math.min(1,c.basket.length/need)*(c.substituted.length?0.92:1));
+    if(outcome==='COMPLETED'){ this.m.completed++; this.emit('CustomerCompletedMission',c,null,`Customer ${c.id} completed mission "${c.src.mission.name}" (${c.basket.length}/${need}).`); }
+    else if(outcome==='FAILED'){ this.m.failed++; this.emit('CustomerFailedMission',c,null,`Customer ${c.id} failed mission "${c.src.mission.name}" (${c.basket.length}/${need}).`); }
+    else { this.m.abandoned++; this.emit('CustomerAbandonedBasket',c,null,`Customer ${c.id} left with an empty basket.`); }
+    c.decision=outcome==='COMPLETED'?'Mission completed':outcome==='FAILED'?'Mission failed':'Abandoned – left without purchase';
+  }
+
+  /* ---- clock tick ---- */
+  step(dt){
+    this.t+=dt;
+    for(const c of this.customers){
+      if(c.state==='PENDING'){
+        if(this.t>=c.src.arriveAtSec){
+          c.state='ENTERING'; this.m.entered++; c.decision='Entering store';
+          this.emit('CustomerEnteredStore',c,null,`Customer ${c.id} (${this.segName(c)}) entered store.`);
+          this.walkTo(c,{x:0,z:FRONT_Z},'ENTERING');
+        }
+        continue;
+      }
+      if(c.state==='GONE') continue;
+      this.advance(c,dt);
+    }
+  }
+  advance(c,dt){
+    if(!c.queue.length) this.nextStage(c);
+    const st=c.queue[0]; if(!st) return;
+    if(!st.started){ st.started=true; c.state=st.state; st.onStart&&st.onStart(); }
+    if(st.k==='walk'){
+      const dx=st.x-c.pos.x, dz=st.z-c.pos.z, d=Math.hypot(dx,dz), mv=c.speed*dt;
+      c.heading=Math.atan2(dx,dz);
+      if(d<=mv){ c.pos.x=st.x; c.pos.z=st.z; c.queue.shift(); if(st.vanish){ c.state='GONE'; } }
+      else { c.pos.x+=dx/d*mv; c.pos.z+=dz/d*mv; }
+    } else if(st.k==='wait'){
+      c.wait+=dt; if(c.wait>=st.s){ c.wait=0; c.queue.shift(); st.onEnd&&st.onEnd(); }
+    } else c.queue.shift();
+  }
+
+  /* ---- analytics (derived only from loaded data + simulation state) ---- */
+  metrics(){
+    const m=this.m, cs=this.customers, active=cs.filter(c=>c.state!=='PENDING'&&c.state!=='GONE');
+    const done=m.completed+m.failed+m.abandoned, sats=cs.filter(c=>c.satisfaction!=null).map(c=>c.satisfaction);
+    const avgSat=sats.length?sats.reduce((a,b)=>a+b,0)/sats.length:null, success=done?m.completed/done:null;
+    const avail=1-this.stockedOut.size/this.products.size;
+    // SAMPLE formula – placeholder weights, not a validated MissionCommerce definition
+    const score=done?Math.round(100*(0.5*success+0.3*(avgSat/100)+0.2*avail)):null;
+    return {
+      active:active.length, entering:active.filter(c=>c.state==='ENTERING').length,
+      shopping:active.filter(c=>['BROWSING','VIEWING_PRODUCT','COMPARING','SELECTING'].includes(c.state)).length,
+      checkout:active.filter(c=>c.state==='CHECKOUT').length,
+      completed:m.completed, failed:m.failed, abandoned:m.abandoned, revenue:m.revenue, gross:m.revenue-m.cogs,
+      avgBasket:m.purchases?m.revenue/m.purchases:null, conversion:m.entered?m.purchases/m.entered:null,
+      stockouts:this.stockedOut.size, entered:m.entered, avgSat, score, success, processed:m.processed,
+      lowStock:[...this.stock.entries()].filter(([,v])=>v>0&&v<=5).length,
+    };
+  }
+}
+
+/* ---------------------------------------------------------------- 4. 3D WORLD */
+/* Light, stylised isometric look: orthographic camera, pastel palette, cut-away walls. */
+const STATE_COLORS = {PENDING:0x000000,ENTERING:0x9aa7b8,BROWSING:0x9aa7b8,VIEWING_PRODUCT:0x2f6bff,COMPARING:0xf5a524,SELECTING:0x12b5a5,
+  CHECKOUT:0x9b6bff,COMPLETED:0x1fa463,FAILED:0xe5484d,ABANDONED:0xf0883e,GONE:0x000000};
+const ISO_DIR = new THREE.Vector3(1,0.95,1).normalize();   // camera direction for the isometric overview
+
+class StoreWorld {
+  constructor(container, engine){
+    this.engine=engine; this.container=container; this.meshes=new Map(); this.slotMats=new Map(); this.selectedId=null; this.followId=null; this.cam=null;
+    this.viewH=44;
+    const w=container.clientWidth, h=container.clientHeight;
+    this.renderer=new THREE.WebGLRenderer({antialias:true}); this.renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+    this.renderer.setSize(w,h); this.renderer.shadowMap.enabled=true; this.renderer.shadowMap.type=THREE.PCFSoftShadowMap; container.prepend(this.renderer.domElement);
+    this.scene=new THREE.Scene(); this.scene.background=new THREE.Color(0xe6edf8);
+    this.camera=new THREE.OrthographicCamera(-1,1,1,-1,-300,600); this.updateOrtho();
+    this.controls=new THREE.OrbitControls(this.camera,this.renderer.domElement); this.controls.enableDamping=true; this.controls.maxPolarAngle=Math.PI*0.49;
+    this.controls.minZoom=0.5; this.controls.maxZoom=6;
+    this.buildStore(); this.buildCustomers(); this.setCamera('overview',true);
+    this.ray=new THREE.Raycaster(); this.ptr=new THREE.Vector2(); this.downAt=null;
+    const el=this.renderer.domElement;
+    el.addEventListener('pointerdown',e=>this.downAt=[e.clientX,e.clientY]);
+    el.addEventListener('pointerup',e=>{ if(this.downAt && Math.hypot(e.clientX-this.downAt[0],e.clientY-this.downAt[1])<4) this.pick(e); });
+    this._onResize=()=>{ this.renderer.setSize(container.clientWidth,container.clientHeight); this.updateOrtho(); };
+    addEventListener('resize',this._onResize);
+  }
+  updateOrtho(){
+    const a=this.container.clientWidth/Math.max(1,this.container.clientHeight), v=this.viewH;
+    Object.assign(this.camera,{left:-v*a/2,right:v*a/2,top:v/2,bottom:-v/2}); this.camera.updateProjectionMatrix();
+  }
+  dispose(){ removeEventListener('resize',this._onResize); this.renderer.dispose(); this.renderer.domElement.remove(); }
+
+  label(text,w=4,h=0.9,color='#1b2740',bg='rgba(255,255,255,.96)'){
+    const c=document.createElement('canvas'); c.width=320; c.height=80; const g=c.getContext('2d');
+    g.fillStyle=bg; g.strokeStyle='#d3ddee'; g.lineWidth=3; g.beginPath();
+    const r=26,x=4,y=8,W=312,H=60; g.moveTo(x+r,y); g.arcTo(x+W,y,x+W,y+H,r); g.arcTo(x+W,y+H,x,y+H,r); g.arcTo(x,y+H,x,y,r); g.arcTo(x,y,x+W,y,r); g.closePath(); g.fill(); g.stroke();
+    g.fillStyle=color; g.font='600 30px system-ui'; g.textAlign='center'; g.textBaseline='middle'; g.fillText(text,160,39);
+    const s=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),transparent:true,depthTest:false})); s.scale.set(w*1.25,h*1.25,1); s.renderOrder=10; return s;
+  }
+  box(w,h,d,color,x,y,z,opts={}){
+    const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),new THREE.MeshStandardMaterial({color,roughness:.9,...opts}));
+    m.position.set(x,y,z); m.castShadow=true; m.receiveShadow=true; this.scene.add(m); return m;
+  }
+  tree(x,z,s=1){
+    const t=new THREE.Mesh(new THREE.CylinderGeometry(.18*s,.22*s,1.2*s,8),new THREE.MeshStandardMaterial({color:0x9a7b5a})); t.position.set(x,.6*s,z); t.castShadow=true; this.scene.add(t);
+    const l=new THREE.Mesh(new THREE.SphereGeometry(1*s,14,12),new THREE.MeshStandardMaterial({color:0x6cc08b,roughness:.8})); l.position.set(x,1.9*s,z); l.castShadow=true; this.scene.add(l);
+  }
+  truck(x,z,body=0xffffff,cab=0x2f6bff){
+    const g=new THREE.Group();
+    const mk=(w,h,d,c,px,py,pz)=>{const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),new THREE.MeshStandardMaterial({color:c,roughness:.7}));m.position.set(px,py,pz);m.castShadow=true;g.add(m);return m;};
+    mk(2.6,2.4,6,body,0,1.7,-1); mk(2.6,1.9,1.9,cab,0,1.45,2.9); mk(2.4,.8,.1,0xbfe3ff,0,1.9,3.88);
+    mk(2.7,.35,.9,0xe3eaf6,0,.5,-2.6); mk(2.7,.35,.9,0xe3eaf6,0,.5,2.6);
+    [[-1.3,-2.6],[1.3,-2.6],[-1.3,2.8],[1.3,2.8]].forEach(([wx,wz])=>{const w=new THREE.Mesh(new THREE.CylinderGeometry(.5,.5,.35,14),new THREE.MeshStandardMaterial({color:0x2b3345}));w.rotation.z=Math.PI/2;w.position.set(wx,.5,wz);g.add(w);});
+    g.position.set(x,0,z); this.scene.add(g); return g;
+  }
+  buildStore(){
+    const S=this.scene;
+    S.add(new THREE.HemisphereLight(0xffffff,0xb7c6e0,0.95));
+    const sun=new THREE.DirectionalLight(0xffffff,0.75); sun.position.set(-20,45,30); sun.castShadow=true;
+    Object.assign(sun.shadow.camera,{left:-45,right:45,top:45,bottom:-45,far:150}); sun.shadow.mapSize.set(2048,2048); sun.shadow.bias=-0.0005; S.add(sun);
+    // ground, lot, road
+    this.box(160,0.1,160,0xe3ebf7,0,-0.4,0);
+    this.box(60,0.1,22,0xd4deee,0,-0.05,27);
+    for(let i=-4;i<=4;i++) this.box(0.2,0.02,5,0xf5f8fd,i*5.5,0.02,27);
+    this.box(160,0.12,8,0xcfd9ea,0,-0.03,42); this.box(160,0.02,.3,0xf5f8fd,0,0.05,42);
+    // store floor (light) + cut-away walls with blue trim
+    this.box(36,0.2,26,0xf7f9fd,0,-0.1,-0.5);
+    const trim=0x2f6bff, wall=0xdbe6fb, H=1.4;
+    this.box(36.4,H,0.4,wall,0,H/2,-13.4); this.box(0.4,H,26.4,wall,-18.2,H/2,-0.5); this.box(0.4,H,26.4,wall,18.2,H/2,-0.5);
+    this.box(15,H,0.4,wall,-10.5,H/2,12.8); this.box(15,H,0.4,wall,10.5,H/2,12.8);
+    this.box(36.4,0.15,0.5,trim,0,H,-13.4); this.box(0.5,0.15,26.4,trim,-18.2,H,-0.5); this.box(0.5,0.15,26.4,trim,18.2,H,-0.5);
+    this.box(15,0.15,0.5,trim,-10.5,H,12.8); this.box(15,0.15,0.5,trim,10.5,H,12.8);
+    const door=this.label('ENTRANCE / EXIT',5.4,1.1,'#2f6bff'); door.position.set(0,3.2,12.8); S.add(door);
+    // shelves + coloured product strips + labels
+    const rows=[...new Set(PRODUCTS.map(p=>p.slot.rowZ))];
+    rows.forEach(rz=>this.box(30,1.5,1,0xb4c4e2,0,0.75,rz));
+    const sc=this.engine.source;
+    sc.products.forEach(p=>{
+      const def=PRODUCTS.find(q=>q.id===p.id), {x,rowZ}=def.slot;
+      const m=this.box(4.2,0.7,0.95,CATEGORY_COLORS[p.category],x,1.85,rowZ,{emissive:0x000000});
+      this.slotMats.set(p.id,m.material); m.material.userData={base:CATEGORY_COLORS[p.category]};
+      const sp=this.label(p.name,3.4,0.85); sp.position.set(x,3.0,rowZ); S.add(sp);
+    });
+    // checkout counters + cashiers
+    COUNTERS.forEach((c,i)=>{
+      this.box(3,1,1.2,0x2f6bff,c.x,0.5,c.z+1.2); this.box(3.1,0.12,1.3,0xffffff,c.x,1.05,c.z+1.2);
+      const cl=this.label('Checkout '+(i+1),2.8,0.75); cl.position.set(c.x,2.6,c.z+1.2); S.add(cl);
+      const e=new THREE.Mesh(new THREE.CylinderGeometry(.3,.3,1.2,12),new THREE.MeshStandardMaterial({color:0x2f6bff}));
+      e.position.set(c.x,0.6,c.z+2.3); e.castShadow=true; S.add(e);
+      const h=new THREE.Mesh(new THREE.SphereGeometry(.25,12,12),new THREE.MeshStandardMaterial({color:0xf2c9a0})); h.position.set(c.x,1.45,c.z+2.3); S.add(h);
+    });
+    // receiving (with delivery truck at the back wall) + storage
+    this.box(6,0.3,5,0xf3d9a8,13,0.15,-10.5); const rl=this.label('RECEIVING',3.6,.85,'#c47d00'); rl.position.set(13,2.6,-10.5); S.add(rl);
+    for(let i=0;i<3;i++) this.box(1.4,1.1,1.1,0xd9a45b,11.5+i*1.5,0.85,-10.5);
+    this.truck(13,-19.5,0xffffff,0x2f6bff).rotation.y=Math.PI;
+    this.box(5,2,4,0xc9d6ee,-14,1,-10.5); const sl=this.label('STORAGE',3.6,.85,'#6b7a93'); sl.position.set(-14,3.4,-10.5); S.add(sl);
+    // carts near door
+    for(let i=0;i<4;i++) this.box(1.1,.8,0.7,0xaebbd3,6+i*1.3,.5,10.6);
+    // scenery: trees and a passing truck on the road
+    [[-24,-8],[-24,6],[24,-8],[24,6],[-30,24],[30,24],[-21,34],[21,34],[-28,-18],[-8,-18]].forEach(([x,z],i)=>this.tree(x,z,0.9+(i%3)*0.2));
+    this.truck(-14,42.5,0xffffff,0x12b5a5).rotation.y=Math.PI/2;
+    document.getElementById('layoutNote').textContent = sc.layout ? 'Layout: from Sim.PesoWeb scenario' :
+      'Layout: DEFAULT VISUALIZATION LAYOUT – not actual store geography (scenario has no layout data)';
+    // selection ring
+    this.ring=new THREE.Mesh(new THREE.RingGeometry(.55,.78,32),new THREE.MeshBasicMaterial({color:0x2f6bff,side:THREE.DoubleSide,depthTest:false}));
+    this.ring.rotation.x=-Math.PI/2; this.ring.position.y=0.06; this.ring.visible=false; this.ring.renderOrder=9; S.add(this.ring);
+  }
+  buildCustomers(){
+    // One Group per customer is fine for ~100 customers. Production (10k) should switch to InstancedMesh.
+    const geo=new THREE.CylinderGeometry(.28,.34,1.1,12), head=new THREE.SphereGeometry(.24,12,12), cartG=new THREE.BoxGeometry(.7,.45,.5);
+    const dotG=new THREE.SphereGeometry(.15,10,10);
+    for(const c of this.engine.customers){
+      const col=SEGMENTS.find(s=>s.id===c.seg).color, g=new THREE.Group();
+      const body=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({color:col,roughness:.6})); body.position.y=.55; body.castShadow=true;
+      const h=new THREE.Mesh(head,new THREE.MeshStandardMaterial({color:0xf2c9a0})); h.position.y=1.35; h.castShadow=true;
+      const cart=new THREE.Mesh(cartG,new THREE.MeshStandardMaterial({color:0x8fa0bb})); cart.position.set(0,.5,.7); cart.visible=false; cart.castShadow=true;
+      const dot=new THREE.Mesh(dotG,new THREE.MeshBasicMaterial({color:0xffffff,depthTest:false})); dot.position.y=1.9; dot.renderOrder=8;
+      [body,h,cart,dot].forEach(m=>{m.userData.cid=c.id; g.add(m);});
+      g.userData={body,cart,dot}; g.visible=false; this.scene.add(g); this.meshes.set(c.id,g);
+    }
+  }
+  pick(e){
+    const r=this.renderer.domElement.getBoundingClientRect();
+    this.ptr.set(((e.clientX-r.left)/r.width)*2-1,-((e.clientY-r.top)/r.height)*2+1);
+    this.ray.setFromCamera(this.ptr,this.camera);
+    const hits=this.ray.intersectObjects([...this.meshes.values()].filter(g=>g.visible),true).filter(h=>h.object.userData.cid);
+    UI.select(hits.length?hits[0].object.userData.cid:null);
+  }
+  setSelected(id){ this.selectedId=id; if(!id) this.followId=null; this.refreshHighlights(); }
+  refreshHighlights(){
+    const c=this.selectedId&&this.engine.customers.find(x=>x.id===this.selectedId);
+    const need=new Set(c?c.src.mission.productIds.filter(p=>!c.selected.includes(p)&&!c.rejected.includes(p)):[]);
+    this.slotMats.forEach((mat,pid)=>{
+      const out=(this.engine.stock.get(pid)||0)<=0;
+      mat.color.setHex(out?0xe9a3a6:mat.userData.base);
+      mat.emissive.setHex(need.has(pid)?0xffb800:0x000000); mat.emissiveIntensity=need.has(pid)?0.85:0;
+    });
+  }
+  setCamera(mode,instant){
+    const iso=ISO_DIR.clone().multiplyScalar(60);
+    const presets={overview:[iso.toArray(),[0,0,0],1], top:[[0,90,0.01],[0,0,0],1], free:null};
+    if(mode==='follow'){ if(!this.selectedId) return; this.followId=this.selectedId; this.mode='follow'; this.cam=null; return; }
+    this.followId=null; this.mode=mode; const p=presets[mode]; if(!p) return;
+    const to={pos:new THREE.Vector3(...p[0]),tgt:new THREE.Vector3(...p[1]),zoom:p[2]};
+    if(instant){ this.camera.position.copy(to.pos); this.controls.target.copy(to.tgt); this.camera.zoom=to.zoom; this.camera.updateProjectionMatrix(); this.controls.update(); }
+    else this.cam={from:{pos:this.camera.position.clone(),tgt:this.controls.target.clone(),zoom:this.camera.zoom},to,k:0};
+  }
+  render(dt){
+    if(this.cam){ this.cam.k=Math.min(1,this.cam.k+dt/0.8); const e=this.cam.k*this.cam.k*(3-2*this.cam.k);
+      this.camera.position.lerpVectors(this.cam.from.pos,this.cam.to.pos,e); this.controls.target.lerpVectors(this.cam.from.tgt,this.cam.to.tgt,e);
+      this.camera.zoom=this.cam.from.zoom+(this.cam.to.zoom-this.cam.from.zoom)*e; this.camera.updateProjectionMatrix(); if(this.cam.k>=1) this.cam=null; }
+    const now=performance.now()/1000;
+    for(const c of this.engine.customers){
+      const g=this.meshes.get(c.id), vis=c.state!=='PENDING'&&c.state!=='GONE'; g.visible=vis; if(!vis) continue;
+      g.position.set(c.pos.x,0,c.pos.z); if(c.heading!==undefined) g.rotation.y=c.heading;
+      g.userData.cart.visible=c.basket.length>0;
+      const bob=['BROWSING','ENTERING'].includes(c.state)||c.state==='COMPLETED'||c.state==='FAILED'||c.state==='ABANDONED';
+      g.userData.body.position.y=.55+(bob?Math.abs(Math.sin(now*6+c.src.arriveAtSec))*0.06:0);
+      g.userData.dot.material.color.setHex(STATE_COLORS[c.state]??0xffffff);
+    }
+    const sel=this.selectedId&&this.engine.customers.find(x=>x.id===this.selectedId);
+    if(sel&&sel.state!=='PENDING'&&sel.state!=='GONE'){
+      this.ring.visible=true; this.ring.position.set(sel.pos.x,0.06,sel.pos.z); this.ring.scale.setScalar(1+Math.sin(now*5)*0.08);
+      if(this.followId===sel.id){
+        const d=new THREE.Vector3(sel.pos.x,1,sel.pos.z).sub(this.controls.target).multiplyScalar(Math.min(1,dt*6));
+        this.controls.target.add(d); this.camera.position.add(d);
+        this.camera.zoom+=(2.6-this.camera.zoom)*Math.min(1,dt*3); this.camera.updateProjectionMatrix();
+      }
+    } else this.ring.visible=false;
+    this.controls.update(); this.renderer.render(this.scene,this.camera);
+  }
+}
+
+/* ---------------------------------------------------------------- 5. UI */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const peso=n=>n==null?'—':'₱'+Math.round(n).toLocaleString();
+const pct=n=>n==null?'—':Math.round(n*100)+'%';
+const provider = CONFIG.dataSource==='api' ? new RealSimulationDataProvider() : new MockSimulationDataProvider();
+
+const UI = {
+  wiz:{step:0, tenants:null, tenant:null, branches:null, branch:null, scenarios:null, scenario:null, error:null, loading:null, report:null},
+  engine:null, world:null, running:false, speed:10, selectedId:null, dirtyTl:true, filter:'ALL', lastTl:0, fps:0, evRate:0,
+
+  /* ----- wizard ----- */
+  crumbs(){
+    const w=this.wiz, names=['Tenant','Branch','Scenario','Summary'];
+    return `<div class="crumbs">${names.map((n,i)=>`<span class="${i===w.step?'cur':i<w.step?'done':''}">${i+1}. ${n}</span>`).join('')}</div>`;
+  },
+  header(){ return `<h1>Sim.PesoWeb 3D Customer Simulation</h1>
+    <div class="row mute">DATA SOURCE: <span class="tag ${provider.label()==='LOCAL MOCK'?'warn':'ok'}">${provider.label()}</span>
+    <span>Sim.PesoWeb owns the data · this client owns the visualization.</span></div>${this.crumbs()}`; },
+  async wizRender(){
+    const w=this.wiz, el=$('#wizcard'); let h=this.header();
+    if(w.error) h+=`<div class="err"><b>Unable to load Sim.PesoWeb data.</b><div class="mute" style="margin-top:4px">${esc(w.error)}</div>
+      <div class="row" style="margin-top:8px"><button onclick="UI.wiz.error=null;UI.wizStart()">Retry</button>${CONFIG.dataSource==='api'?'<button onclick="location.search=\'?source=mock\'">Switch to LOCAL MOCK (dev)</button>':''}</div></div>`;
+    if(w.report) h+=`<div class="err"><b>Scenario validation failed – simulation not started.</b><ul>${w.report.errs.map(e=>`<li>${esc(e)}</li>`).join('')}</ul>
+      <button onclick="UI.wiz.report=null;UI.wizRender()">Back</button></div>`;
+    if(w.loading) h+=`<h2>${esc(w.loading.title)}</h2><ul class="steps">${w.loading.steps.map((s,i)=>`<li class="${i<w.loading.i?'done':i===w.loading.i?'cur':''}">${i<w.loading.i?'✓':i===w.loading.i?'…':'·'} ${s}</li>`).join('')}</ul>`;
+    else if(!w.error&&!w.report){
+      if(w.step===0){
+        h+='<h2>Select tenant</h2>';
+        h+= w.tenants ? `<div class="list">${w.tenants.map(t=>`<div class="item" onclick="UI.pickTenant('${t.id}')"><div><b>${esc(t.name)}</b><div class="mute mono">${t.id}</div></div>
+          <div class="mute">${t.branchCount} branches <span class="tag ${t.status==='ACTIVE'?'ok':'warn'}">${t.status}</span></div></div>`).join('')}</div>` : '<div class="mute">Loading tenants…</div>';
+      } else if(w.step===1){
+        h+=`<h2>Select branch · ${esc(w.tenant.name)}</h2>`;
+        h+= w.branches ? `<div class="list">${w.branches.map(b=>`<div class="item" ${b.status==='OPEN'?`onclick="UI.pickBranch('${b.id}')"`:'style="opacity:.5;cursor:not-allowed"'}><div><b>${esc(b.name)}</b>
+          <div class="mute">${esc(b.location)} · ${esc(b.storeType)}</div></div><div class="mute">${b.scenarioCount} scenarios <span class="tag ${b.status==='OPEN'?'ok':'warn'}">${b.status}</span></div></div>`).join('')}</div>
+          <div class="row" style="margin-top:10px"><button onclick="UI.back(0)">← Tenant</button></div>` : '<div class="mute">Loading branches…</div>';
+      } else if(w.step===2){
+        h+=`<h2>Available Sim.PesoWeb scenarios · ${esc(w.branch.name)}</h2>`;
+        h+= w.scenarios ? `<div class="list">${w.scenarios.map(s=>`<div class="item" onclick="UI.pickScenario('${s.id}')"><div><b>${esc(s.name)}</b>
+          <div class="mute">${s.customerPopulation.toLocaleString()} customers · ${s.productCount.toLocaleString()} products · ${s.days} days</div></div>
+          <div><span class="tag ok">${s.status}</span></div></div>`).join('')}</div>
+          <div class="row" style="margin-top:10px"><button onclick="UI.back(1)">← Branch</button></div>` : '<div class="mute">Loading scenarios…</div>';
+      } else {
+        const s=w.scenario;
+        h+=`<h2>Scenario summary</h2><b style="font-size:16px">${esc(s.name)}</b> <span class="tag ok">${s.status}</span>
+        <p class="mute">${esc(s.description)}</p>
+        <div class="kv"><div>Tenant</div><div>${esc(w.tenant.name)}</div><div>Branch</div><div>${esc(w.branch.name)}</div>
+        <div>Scenario type</div><div class="mono">${s.type}</div><div>Objective</div><div>${esc(s.objective)}</div>
+        <div>Simulation period</div><div>${s.startDate} · ${s.days} days</div>
+        <div>Customer population</div><div>${s.customerPopulation.toLocaleString()} <span class="mute">(this sample renders ${s.sampleCustomers} seed customers)</span></div>
+        <div>Products</div><div>${s.productCount.toLocaleString()} <span class="mute">(sample store stocks ${PRODUCTS.length})</span></div>
+        <div>Expected transactions</div><div>${s.expectedTransactions.toLocaleString()}</div>
+        <div>Important parameters</div><div class="mono">arrival window ${s.params.arrivalWindowSec/60|0} min · competitor pressure ${s.params.competitorPressure}${Object.keys(s.params.stockOverrides).length?' · stock overrides '+Object.entries(s.params.stockOverrides).map(([k,v])=>k.replace('P-','')+'='+v).join(','):''}</div>
+        <div>Simulation speeds</div><div>1× 5× 10× 50× 100×</div><div>Data / config version</div><div class="mono">${s.dataVersion} / ${s.configVersion}</div></div>
+        <div class="row"><button onclick="UI.back(2)">← Scenarios</button><button class="primary" onclick="UI.loadScenario()">LOAD SCENARIO</button></div>`;
+      }
+    }
+    el.innerHTML=h;
+  },
+  wizStart(){ this.wiz.step=0; this.wiz.error=null; this.wiz.tenants=null; this.wizRender();
+    provider.getTenants().then(t=>{this.wiz.tenants=t;this.wizRender();}).catch(e=>{this.wiz.error=e.message;this.wizRender();}); },
+  back(step){ const w=this.wiz; w.step=step; w.report=null; if(step===0){w.tenant=null;} this.wizRender(); },
+  async pickTenant(id){ const w=this.wiz; w.tenant=w.tenants.find(t=>t.id===id); w.step=1; w.branches=null; this.wizRender();
+    try{ w.branches=await provider.getBranches(id); }catch(e){w.error=e.message;} this.wizRender(); },
+  async pickBranch(id){ const w=this.wiz; w.branch=w.branches.find(b=>b.id===id); w.step=2; w.scenarios=null; this.wizRender();
+    try{ w.scenarios=await provider.getScenarios(w.tenant.id,id); }catch(e){w.error=e.message;} this.wizRender(); },
+  pickScenario(id){ const w=this.wiz; w.scenario=w.scenarios.find(s=>s.id===id); w.step=3; this.wizRender(); },
+  async loadScenario(){
+    const w=this.wiz, steps=['Loading scenario…','Validating scenario…','Building 3D world…','Initializing customers…','Starting simulation…'];
+    const tick=async(i)=>{ w.loading={title:'Loading '+w.scenario.name,steps,i}; await this.wizRender(); await new Promise(r=>setTimeout(r,120)); };
+    try{
+      await tick(0);
+      const sc=await provider.getScenario(w.tenant.id,w.branch.id,w.scenario.id);
+      await tick(1);
+      const rep=validateScenario(sc,w.tenant.id,w.branch.id);
+      if(rep.errs.length){ w.loading=null; w.report=rep; return this.wizRender(); }
+      await tick(2); this.engine=new ScenarioSimulationEngine(sc);
+      $('#wizard').style.display='none'; $('#app').style.display='grid';
+      this.world=new StoreWorld($('#stage'),this.engine);
+      await tick(3); this.engine.on(ev=>{ this.dirtyTl=true; if(ev.type==='ProductStockout'||ev.type==='InventoryUpdated') this.world.refreshHighlights(); });
+      await tick(4); w.loading=null; this.buildApp(rep.warns); this.start();
+    }catch(e){ w.loading=null; w.error=e.message; $('#wizard').style.display='flex'; $('#app').style.display='none'; this.wizRender(); }
+  },
+
+  /* ----- app ----- */
+  buildApp(warns){
+    const sc=this.engine.source;
+    $('#top').innerHTML=`
+      <div class="brand fcard"><i>◈</i>Sim.PesoWeb 3D</div>
+      <div class="ctx fcard">
+        <div><span class="lbl">Data source</span><b class="srcv">${provider.label()}</b></div>
+        <div><span class="lbl">Tenant</span><b>${esc(sc.tenant.name)}</b></div>
+        <div><span class="lbl">Branch</span><b>${esc(sc.branch.name)}</b></div>
+        <div><span class="lbl">Scenario</span><b>${esc(sc.meta.name)}</b></div>
+        <div><span class="lbl">Mode</span><span class="tag ok">SIMULATE</span></div>
+        <div><span class="lbl">Data version</span>${sc.meta.dataVersion}</div>
+      </div>
+      <div class="live fcard"><span id="liveClk" class="mono">--:--:--</span></div>
+      <button class="fcard" style="padding:8px 14px" onclick="UI.exit()">⟵ Change scenario</button>`;
+    $('#controls').innerHTML=`
+      <h3>Simulation clock</h3>
+      <div class="mono" style="font-size:20px" id="clk">—</div><div class="mute" id="clkSub"></div>
+      <div class="row" style="margin:6px 0"><button class="primary" id="btnRun" onclick="UI.toggle()">▶ Start</button><button onclick="UI.stepOnce()">Step +30s</button><button onclick="UI.resetSim()">Reset</button></div>
+      <div class="row" id="speeds">${[1,5,10,50,100].map(s=>`<button data-s="${s}" onclick="UI.setSpeed(${s})">${s}×</button>`).join('')}</div>
+      <h3 style="margin-top:10px">Camera</h3>
+      <div class="row"><button onclick="UI.world.setCamera('overview')">Overview</button><button onclick="UI.world.setCamera('top')">Top-down</button><button onclick="UI.world.setCamera('free')">Free</button><button id="btnFollow" onclick="UI.follow()" disabled>Follow</button></div>
+      <div class="mute" style="margin-top:8px;font-size:11px">Drag = orbit · wheel = zoom · right-drag = pan · click a customer to inspect.</div>`;
+    this.setSpeed(this.speed); this.renderLeft(); this.renderRight();
+    if(warns.length) $('#layoutNote').textContent += ' · '+warns.join(' ');
+  },
+  exit(){ this.running=false; cancelAnimationFrame(this.raf); this.world.dispose(); this.world=null; this.engine=null; this.selectedId=null;
+    $('#app').style.display='none'; $('#wizard').style.display='flex'; this.wiz.step=2; this.wiz.scenario=null; this.wizRender(); },
+  start(){ this.last=performance.now(); const loop=now=>{ this.raf=requestAnimationFrame(loop); const dt=Math.min((now-this.last)/1000,0.1); this.last=now; this.fps=this.fps*.9+(1/Math.max(dt,.001))*.1;
+      if(this.running){ let rem=dt*this.speed; while(rem>0){ const h=Math.min(rem,0.25); this.engine.step(h); rem-=h; } }
+      this.world.render(dt); if(now-this.lastUi>250||!this.lastUi){ this.lastUi=now; this.tickUi(); } }; this.lastUi=0; this.raf=requestAnimationFrame(loop); },
+  toggle(){ this.running=!this.running; $('#btnRun').textContent=this.running?'⏸ Pause':'▶ '+(this.engine.t>0?'Resume':'Start'); },
+  stepOnce(){ this.running=false; $('#btnRun').textContent='▶ Resume'; for(let i=0;i<120;i++) this.engine.step(0.25); this.tickUi(true); },
+  resetSim(){ this.running=false; this.engine.reset(); this.world.refreshHighlights(); this.dirtyTl=true; $('#btnRun').textContent='▶ Start'; this.tickUi(true); },
+  setSpeed(s){ this.speed=s; document.querySelectorAll('#speeds button').forEach(b=>b.classList.toggle('on',+b.dataset.s===s)); },
+  follow(){ this.world.setCamera('follow'); },
+  select(id){ this.selectedId=id; this.world.setSelected(id); $('#btnFollow').disabled=!id; this.renderRight(); },
+
+  tickUi(force){
+    const e=this.engine; if(!e) return;
+    $('#clk').textContent=fmtClock(e.t); $('#clkSub').textContent=`Day ${Math.floor(e.t/86400)+1} · ${e.source.meta.startDate} · elapsed ${Math.floor(e.t/60)} min · ${this.speed}×`;
+    $('#liveClk').textContent=fmtClock(e.t);
+    this.renderLeft(); if(this.selectedId) this.renderRight(true);
+    if(this.dirtyTl||force) this.renderTimeline();
+    const m=e.metrics();
+    $('#kpis').innerHTML=[['Revenue',peso(m.revenue),`${m.completed} missions completed`],['Customers in store',m.active,`${m.entered} / ${e.customers.length} entered`],
+      ['Mission success',pct(m.success),m.score==null?'MissionCommerce score —':'MissionCommerce score '+m.score]]
+      .map(([l,v,s])=>`<div class="kpi fcard"><span>${l}</span><b>${v}</b><span>${s}</span></div>`).join(''); const r=(m.processed-(this._lp||0))*4; this._lp=m.processed; this.evRate=this.evRate*.6+r*.4;
+    $('#diag').textContent=`source ${provider.label()}\nscenario ${e.source.meta.id}\ncontract ${e.source.contractVersion}\ncustomers ${e.customers.length} · products ${e.products.size}\nevents ${m.processed} (${this.evRate.toFixed(0)}/s)\nfps ${this.fps.toFixed(0)}`;
+  },
+  renderLeft(){
+    const m=this.engine.metrics(), sc=this.engine.source, tot=this.engine.customers.length;
+    const st=(l,v)=>`<div class="stat"><span>${l}</span><b>${v}</b></div>`;
+    const stockRows=[...this.engine.products.values()].map(p=>{ const q=this.engine.stock.get(p.id); return `<div style="display:flex;justify-content:space-between"><span class="${q<=0?'':'mute'}" style="${q<=0?'color:var(--bad)':''}">${esc(p.name)}</span><span class="mono" style="color:${q<=0?'var(--bad)':q<=5?'var(--warn)':'var(--text)'}">${q}</span></div>`; }).join('');
+    $('#left').innerHTML=`<h3>Branch command center</h3><div style="margin-bottom:8px"><b>${esc(sc.branch.name)}</b></div>
+      <div class="grid2">${st('Active',m.active)}${st('Entering',m.entering)}${st('Shopping',m.shopping)}${st('At checkout',m.checkout)}
+      ${st('Completed',m.completed)}${st('Failed / aband.',m.failed+' / '+m.abandoned)}${st('Revenue',peso(m.revenue))}${st('Gross profit',peso(m.gross))}
+      ${st('Avg basket',peso(m.avgBasket))}${st('Conversion',pct(m.conversion))}${st('Stockouts',m.stockouts)}${st('Satisfaction',m.avgSat==null?'—':Math.round(m.avgSat))}</div>
+      <h3 style="margin-top:12px">MissionCommerce score <span class="tag warn">sample formula</span></h3>
+      <div style="font-size:26px;font-weight:700;color:var(--acc)">${m.score??'—'}</div>
+      <div class="bar"><i style="width:${m.score||0}%"></i></div>
+      <h3>Progress</h3><div class="mute">${m.entered} / ${tot} customers entered · ${m.completed+m.failed+m.abandoned} outcomes</div>
+      <div class="bar"><i style="width:${(m.entered/tot)*100}%"></i></div>
+      <h3 style="margin-top:10px">Inventory on hand</h3><div style="font-size:12px">${stockRows}</div>`;
+  },
+  renderRight(soft){
+    const el=$('#right'), id=this.selectedId;
+    if(!id){ el.innerHTML=`<h3>Customer inspector</h3><div class="mute">Click a customer in the 3D world (or an event in the timeline) to inspect their mission and decisions.</div>
+      <h3 style="margin-top:14px">Legend</h3>${SEGMENTS.map(s=>`<div><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#${s.color.toString(16).padStart(6,'0')}"></span> ${s.name}</div>`).join('')}
+      <div class="mute" style="margin-top:8px;font-size:11px">Dot above head = current state: grey browsing · blue viewing · yellow comparing · teal selecting · purple checkout · green done · red failed.</div>`; return; }
+    const e=this.engine, c=e.customers.find(x=>x.id===id), sc=e.source, seg=e.segName(c), need=c.src.mission.productIds;
+    const chip=(pid,cls)=>`<span class="chip ${cls}">${esc(e.pname(pid))}</span>`;
+    const loc=c.state==='PENDING'?'Not yet in store':c.state==='GONE'?'Left store':`x ${c.pos.x.toFixed(1)}, z ${c.pos.z.toFixed(1)} · ${['','Back aisle','Middle aisle','Front / checkout area'][zoneOf(c.pos.z)]}`;
+    const basketTotal=c.basket.reduce((a,p)=>a+e.products.get(p).price,0);
+    const nextSt=c.queue.find(s=>!s.started); let next='—';
+    if(c.state==='PENDING') next='Enter store'; else if(c.state==='GONE') next='None'; else if(c.phase==='items'&&!nextSt) next='Plan next item'; else if(nextSt) next=({walk:'Walk onward',wait:{VIEWING_PRODUCT:'View product',COMPARING:'Compare price',SELECTING:'Decide on product',CHECKOUT:'Pay at checkout'}[nextSt.state]||'Continue',note:'Walk to next product'}[nextSt.k]);
+    const done=need.filter(p=>c.selected.includes(p)).length;
+    el.innerHTML=`<h3>Customer inspector</h3>
+      <div style="font-size:16px;font-weight:700">${c.id} <span class="tag">${seg}</span></div>
+      <div class="mute">Loyalty: ${c.src.loyaltyTier}</div>
+      <h3 style="margin-top:12px">Mission</h3><div><b>${esc(c.src.mission.name)}</b> <span class="tag ${c.outcome==='COMPLETED'?'ok':c.outcome?'bad':'warn'}">${c.outcome||(c.state==='PENDING'?'PENDING':'IN PROGRESS')}</span></div>
+      <div class="mute">${done} / ${need.length} required items · budget ${peso(basketTotal)} / ${peso(c.src.budget)}</div>
+      <div class="bar"><i style="width:${done/need.length*100}%"></i></div>
+      <div>${need.map(p=>chip(p,c.selected.includes(p)?'got':c.substituted.some(s=>s.from===p)?'sub':c.rejected.includes(p)?'rej':'')).join('')}</div>
+      <h3 style="margin-top:12px">Now</h3>
+      <div class="kv" style="grid-template-columns:110px 1fr;font-size:12px">
+        <div>State</div><div class="mono">${c.state}</div><div>Location</div><div>${loc}</div>
+        <div>Decision</div><div>${esc(c.decision)}</div><div>Next action</div><div>${esc(next)}</div><div>Explanation</div><div>${esc(c.explain)}</div></div>
+      <h3>Basket (${c.basket.length})</h3><div>${c.basket.length?c.basket.map(p=>chip(p,'got')).join(''):'<span class="mute">empty</span>'}</div>
+      <h3 style="margin-top:8px">Products</h3>
+      <div style="font-size:12px"><div>Viewed: ${c.viewed.length?c.viewed.map(p=>esc(e.pname(p))).join(', '):'—'}</div>
+      <div>Rejected: ${c.rejected.length?c.rejected.map(p=>esc(e.pname(p))).join(', '):'—'}</div>
+      <div>Substituted: ${c.substituted.length?c.substituted.map(s=>esc(e.pname(s.from)+' → '+e.pname(s.to))).join(', '):'—'}</div></div>
+      <h3 style="margin-top:8px">Other</h3><div style="font-size:12px"><div>Satisfaction: ${c.satisfaction==null?'<span class="na">pending mission outcome</span>':c.satisfaction}</div>
+      <div>Purchase history: <span class="na">${c.src.purchaseHistory?'':'Not available in scenario data.'}</span></div></div>`;
+  },
+  renderTimeline(){
+    this.dirtyTl=false; const evs=this.engine.events.filter(e=>this.filter==='ALL'||(this.filter==='KEY'&&!['CustomerViewedProduct','CustomerComparedProduct','InventoryUpdated','CustomerAddedToBasket'].includes(e.type))).slice(-120).reverse();
+    const col=t=>/Failed|Abandoned|Stockout|Rejected|Removed/.test(t)?'var(--bad)':/Completed|Purchase/.test(t)?'var(--good)':/Substituted/.test(t)?'var(--warn)':'var(--text)';
+    const tl=$('#timeline'); const keepTop=tl.scrollTop;
+    tl.innerHTML=`<div class="row" style="position:sticky;top:0;background:var(--panel);padding:2px 0 4px"><h3 style="margin:0">Live event timeline</h3>
+      <button class="${this.filter==='KEY'?'on':''}" onclick="UI.filter='KEY';UI.dirtyTl=true">Key events</button><button class="${this.filter==='ALL'?'on':''}" onclick="UI.filter='ALL';UI.dirtyTl=true">All</button>
+      <span class="mute">${this.engine.events.length} events</span></div>`+
+      evs.map(e=>`<div class="ev" ${e.customerId?`onclick="UI.select('${e.customerId}')"`:''}><span class="t mono">${fmtClock(e.t)}</span><span style="color:${col(e.type)}">${esc(e.text)}</span></div>`).join('');
+    tl.scrollTop=keepTop;
+  },
+};
+/* allow ?source=mock|api for demonstrating the "never silently fall back" rule */
+(function(){ const q=new URLSearchParams(location.search).get('source'); if(q==='api'){ CONFIG.dataSource='api'; } })();
+// re-resolve provider after possible override
+(function(){ if(CONFIG.dataSource==='api'){ window.provider = null; } })();
+</script>
+<script>
+// provider is const above; if ?source=api, swap behaviour by wrapping (kept simple for the sample)
+if(new URLSearchParams(location.search).get('source')==='api'){
+  const real=new RealSimulationDataProvider();
+  ['getTenants','getBranches','getScenarios','getScenario'].forEach(m=>provider[m]=real[m].bind(real));
+  provider.label=()=>real.label();
+}
+UI.wizStart();
+// ?demo=1 : skip the wizard (Tenant -> Branch -> first scenario) and start running; handy for screenshots. Optional &speed=N &select=C1005
+(async function(){
+  const q=new URLSearchParams(location.search); if(!q.get('demo')) return;
+  const w=UI.wiz; w.tenants=await provider.getTenants(); await UI.pickTenant(w.tenants[0].id);
+  await UI.pickBranch(w.branches[0].id); UI.pickScenario(w.scenarios[0].id); await UI.loadScenario();
+  UI.setSpeed(+q.get('speed')||10); UI.toggle();
+  for(let i=0;i<(+q.get('ff')||0)*4;i++) UI.engine.step(0.25);   // &ff=SECONDS pre-advances the clock
+  if(q.get('select')) UI.select(q.get('select'));
+})();
+</script>
+</body>
+</html>

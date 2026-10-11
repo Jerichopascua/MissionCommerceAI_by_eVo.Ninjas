@@ -1,0 +1,1415 @@
+
+Sim.PesoWeb is the source of truth for the simulation data.
+3D Customer Simulation is the visual/interactive simulation client.
+
+So the flow becomes:
+                    Sim.PesoWeb
+                  Simulation Data
+                         │
+                         │ API
+                         ▼
+              ┌─────────────────────┐
+              │  3D Customer        │
+              │  Simulation         │
+              │                     │
+              │  Tenant Selection   │
+              │        ↓            │
+              │  Branch Selection   │
+              │        ↓            │
+              │  Scenario Selection │
+              └──────────┬──────────┘
+                         │
+                         ▼
+                  Load Scenario
+                         │
+                         ▼
+                 3D Simulation World
+
+And I would make Tenant → Branch → Scenario the mandatory entry flow.
+Example
+LOGIN
+
+Tenant
+┌──────────────────────────────┐
+│ ABC Grocery Corporation   ▼  │
+└──────────────────────────────┘
+
+Branch
+┌──────────────────────────────┐
+│ Manila Main Branch        ▼  │
+└──────────────────────────────┘
+
+Available Sim.PesoWeb Scenarios
+
+┌──────────────────────────────────────────────┐
+│ Weekend Grocery Rush                         │
+│ 12,540 customers                             │
+│ 2,431 products                               │
+│ 7 days                                       │
+│ Status: READY                                │
+│                                    [LOAD]    │
+├──────────────────────────────────────────────┤
+│ Competitor Price Reduction                   │
+│ 12,540 customers                             │
+│ 7 days                                       │
+│ Status: READY                                │
+│                                    [LOAD]    │
+├──────────────────────────────────────────────┤
+│ Inventory Stockout                           │
+│ 12,540 customers                             │
+│ 7 days                                       │
+│ Status: READY                                │
+│                                    [LOAD]    │
+└──────────────────────────────────────────────┘
+
+Then:
+LOAD SCENARIO
+→ retrieve the scenario data from Sim.PesoWeb
+→ initialize the 3D world
+→ run the simulation
+→ visualize the actual scenario.
+Most important distinction
+There should be two layers:
+┌─────────────────────────────────────────────┐
+│              Sim.PesoWeb                    │
+│                                             │
+│ Tenant                                      │
+│ Branch                                      │
+│ Products                                    │
+│ Inventory                                   │
+│ Customers                                   │
+│ Customer Segments                           │
+│ Missions                                    │
+│ Scenarios                                   │
+│ Simulation Parameters                       │
+│ Historical Transactions                     │
+│ Business Rules                              │
+└──────────────────────┬──────────────────────┘
+                       │
+                       │ API
+                       ▼
+┌─────────────────────────────────────────────┐
+│       Sim.PesoWeb 3D Customer Viewer        │
+│                                             │
+│ Tenant selection                            │
+│ Branch selection                            │
+│ Scenario selection                          │
+│                                             │
+│ 3D Customer World                           │
+│ Customer movement                           │
+│ Customer missions                           │
+│ Shopping behavior                           │
+│ Store activity                              │
+│ Event visualization                         │
+│ Analytics                                   │
+│ Experiments                                 │
+└─────────────────────────────────────────────┘
+
+Sim.PesoWeb owns the data.
+3D Customer Simulation owns the visualization and execution experience.
+I would change the previous Claude prompt
+Don't use the previous prompt unchanged. The architecture needs to be changed from "standalone synthetic simulation" to "3D simulation client consuming Sim.PesoWeb scenario data."
+Here is the replacement master prompt I'd give Claude Code.
+Sim.PesoWeb 3D Customer Simulation
+STANDALONE PROJECT
+You are building a NEW and SEPARATE application from the existing PesoWeb / Sim.PesoWeb production solution.
+Project name:
+Sim.PesoWeb 3D Customer Simulation
+Purpose:
+Create a 3D interactive visualization and simulation application that consumes simulation-ready data from the existing Sim.PesoWeb system.
+The existing Sim.PesoWeb system is the source of truth for:
+- Tenant
+- Branch
+- Products
+- Inventory
+- Customers
+- Customer segments
+- Customer missions
+- Transactions
+- Scenarios
+- Simulation parameters
+- Simulation configuration
+- Business rules
+- Prepared scenario data
+This new application is a separate visualization/simulation client.
+DO NOT rebuild the Sim.PesoWeb data model from scratch.
+DO NOT create a second competing simulation database.
+DO NOT duplicate the production Sim.PesoWeb business system.
+The purpose of this project is to provide a 3D visual representation of the simulation data and allow the user to observe, interact with, and run a selected simulation scenario.
+
+1. CRITICAL ARCHITECTURE PRINCIPLE
+The architecture must follow:
+Sim.PesoWeb
+|
+| API
+|
+▼
+Sim.PesoWeb 3D Customer Simulation
+Sim.PesoWeb is the source of truth.
+The 3D application consumes scenario data from Sim.PesoWeb.
+The 3D application should not invent replacement business data when real scenario data is available.
+For local development only, create a MOCK API ADAPTER that follows exactly the same API contracts.
+The mock adapter exists only to allow the 3D application to run when the Sim.PesoWeb API is unavailable.
+Do not mix mock data and real API data in the same runtime.
+The application must clearly indicate:
+DATA SOURCE:
+SIM.PESOWEB API
+or:
+DATA SOURCE:
+LOCAL MOCK
+
+2. PROJECT SEPARATION
+This must be a completely separate project.
+Example:
+D:\git\Sim.PesoWeb.3D.CustomerSimulation
+
+
+Do not modify the existing Sim.PesoWeb source code.
+Do not modify:
+- PesoWeb
+- PesoApp
+- PesoPOS
+- existing Sim.PesoWeb projects
+- existing databases
+- existing migrations
+- existing configuration files
+Do not copy the existing Sim.PesoWeb project into this project.
+Do not reference existing project assemblies.
+Integration must happen through an explicit API contract.
+The new application must be independently buildable and runnable.
+
+3. TECHNOLOGY
+Use:
+React
+TypeScript
+Vite
+Three.js
+@react-three/fiber
+@react-three/drei
+Zustand
+Tailwind CSS
+Framer Motion
+Recharts
+Lucide React
+Testing:
+Vitest
+React Testing Library
+Playwright
+Use strict TypeScript.
+Keep simulation logic separate from React rendering.
+Use a Web Worker for computationally expensive simulation processing when required.
+
+4. USER JOURNEY
+The user must follow this flow:
+LOGIN / CONNECTION
+    ↓
+SELECT TENANT
+    ↓
+SELECT BRANCH
+    ↓
+LOAD AVAILABLE SCENARIOS
+    ↓
+SELECT SCENARIO
+    ↓
+VIEW SCENARIO SUMMARY
+    ↓
+LOAD SCENARIO
+    ↓
+INITIALIZE 3D WORLD
+    ↓
+RUN SIMULATION
+    ↓
+OBSERVE CUSTOMER BEHAVIOR
+    ↓
+ANALYZE RESULTS
+    ↓
+OPTIONALLY RUN EXPERIMENT
+This is the primary application workflow.
+Do not bypass tenant, branch, or scenario selection.
+
+5. TENANT SELECTION
+When the application starts, retrieve available tenants from Sim.PesoWeb.
+Conceptual API:
+GET /api/simulation/tenants
+Do not assume this exact endpoint exists in the existing Sim.PesoWeb application.
+Instead create an API abstraction:
+SimulationApiClient
+with a method such as:
+getTenants()
+The actual URL must be configurable.
+Display:
+Tenant ID
+Tenant Name
+Status
+Number of branches
+Available scenarios
+The user selects exactly ONE tenant.
+The selected tenant becomes the context for the entire session.
+Do not load data belonging to other tenants.
+
+6. BRANCH SELECTION
+After selecting a tenant:
+retrieve branches belonging to that tenant.
+Conceptual API:
+getBranches(tenantId)
+Display:
+Branch ID
+Branch name
+Location
+Status
+Store type
+Available scenarios
+The user selects exactly ONE branch.
+The selected branch becomes the simulation scope.
+The initial application MUST support:
+ONE TENANT
+ONE BRANCH
+at a time.
+Do not attempt to visualize an entire enterprise simultaneously.
+The architecture should allow expansion later.
+
+7. SCENARIO SELECTION
+After selecting the tenant and branch:
+retrieve the scenarios already prepared by Sim.PesoWeb.
+Conceptual API:
+getScenarios(
+tenantId,
+branchId
+)
+A scenario should contain information such as:
+Scenario ID
+Scenario Name
+Description
+Scenario Type
+Created Date
+Simulation Start Date
+Simulation End Date
+Duration
+Customer Population
+Product Count
+Expected Transactions
+Scenario Status
+Prepared Data Version
+Configuration Version
+Scenario Ready Status
+The UI should display only scenarios available for the selected tenant and branch.
+Example scenarios:
+NORMAL TRADING DAY
+WEEKEND GROCERY RUSH
+PROMOTIONAL CAMPAIGN
+COMPETITOR PRICE REDUCTION
+PRODUCT STOCKOUT
+LOW INVENTORY
+EXCESS INVENTORY
+CUSTOMER LOYALTY CAMPAIGN
+PRICE CHANGE
+HOLIDAY SHOPPING
+SUPPLIER DELIVERY DELAY
+The actual scenarios must come from Sim.PesoWeb.
+Do not hardcode these scenarios into the production UI.
+Mock data may contain them for development.
+
+8. SCENARIO DETAIL
+When the user selects a scenario, show a scenario summary before loading it.
+Display:
+Scenario name
+Tenant
+Branch
+Simulation period
+Customer population
+Customer segments
+Products
+Inventory
+Expected transactions
+Scenario objective
+Scenario description
+Important parameters
+Available simulation speed
+Data version
+Scenario status
+Provide:
+[LOAD SCENARIO]
+Do not initialize the 3D world until the user loads the scenario.
+
+9. SCENARIO DATA
+When the user loads a scenario, request its prepared simulation data from Sim.PesoWeb.
+Conceptual API:
+getScenario(
+tenantId,
+branchId,
+scenarioId
+)
+The response may contain:
+Scenario metadata
+Customers
+Customer segments
+Customer missions
+Products
+Product categories
+Inventory
+Prices
+Promotions
+Store layout
+Customer starting states
+Simulation parameters
+Business rules
+Historical data
+Expected event configuration
+The exact payload must be represented by versioned TypeScript interfaces.
+Do not assume the backend schema.
+Create an adapter layer so the API contract can be adjusted without rewriting the 3D renderer.
+
+10. DATA CONTRACT
+Create a versioned simulation contract.
+For example:
+SimulationScenarioV1
+Include entities such as:
+TenantRef
+BranchRef
+ScenarioMetadata
+CustomerSeedData
+CustomerSegment
+CustomerMission
+ProductSnapshot
+InventorySnapshot
+PromotionSnapshot
+StoreLayout
+SimulationParameters
+The actual fields should be based on the existing Sim.PesoWeb API once its contract is provided.
+Do not invent fields and then claim they exist in Sim.PesoWeb.
+Clearly mark mock-only fields.
+
+11. DATA PROVIDER ARCHITECTURE
+Create:
+SimulationApiClient
+SimulationDataProvider
+RealSimulationDataProvider
+MockSimulationDataProvider
+The application should use:
+RealSimulationDataProvider
+when configured for Sim.PesoWeb.
+It should use:
+MockSimulationDataProvider
+only when explicitly configured.
+Example:
+VITE_SIMULATION_DATA_SOURCE=api
+or:
+VITE_SIMULATION_DATA_SOURCE=mock
+Never silently fall back from API to mock data.
+If the API fails, display:
+"Unable to load Sim.PesoWeb data."
+Give the user an explicit option to switch to mock development mode if configured.
+
+12. AUTHENTICATION
+Do not invent authentication.
+Create an authentication abstraction.
+For development:
+Mock authentication may be used.
+For real integration:
+support a configurable authentication mechanism appropriate to the existing Sim.PesoWeb API.
+Do not hardcode credentials.
+Do not place secrets in source code.
+Do not log authentication tokens.
+Do not store production credentials in local configuration committed to Git.
+
+13. 3D WORLD
+After the scenario is loaded:
+construct the 3D environment using the scenario data.
+The 3D environment represents the selected branch.
+The environment should contain:
+Store building
+Store entrance
+Aisles
+Shelves
+Product displays
+Checkout counters
+Customers
+Shopping carts
+Employees
+Receiving area
+Inventory/storage area
+Optional parking area
+The actual store layout should come from Sim.PesoWeb when available.
+If the scenario contains layout information:
+render that layout.
+If the scenario does not contain detailed layout information:
+use a clearly documented default visualization layout.
+Do not pretend the default layout is actual physical store geography.
+
+14. CUSTOMER VISUALIZATION
+Customers come from the loaded Sim.PesoWeb scenario.
+Do not generate replacement customers when real scenario customers are supplied.
+Each visible customer represents a simulated customer/entity from the scenario.
+The renderer should map customer states to visual behavior.
+Example:
+ENTERING
+Customer walks into store.
+BROWSING
+Customer moves through an aisle.
+VIEWING_PRODUCT
+Customer approaches product display.
+COMPARING
+Customer pauses.
+SELECTING
+Customer selects product.
+SHOPPING
+Customer continues.
+CHECKOUT
+Customer moves toward checkout.
+COMPLETED
+Customer exits after successful mission.
+ABANDONED
+Customer leaves without completing the mission.
+FAILED
+Customer exits after mission failure.
+
+15. CUSTOMER INSPECTION
+When the user clicks a customer:
+display a detailed panel.
+Show data from the selected Sim.PesoWeb scenario.
+Display:
+Customer ID
+Segment
+Mission
+Mission status
+Budget
+Current basket
+Current location
+Products viewed
+Products selected
+Products rejected
+Products substituted
+Purchase history available in scenario
+Satisfaction
+Loyalty
+Current decision
+Next predicted action
+Decision explanation
+The customer panel must not display fabricated information.
+If a field is unavailable from the scenario data, show:
+"Not available in scenario data."
+
+16. CUSTOMER MISSION VISUALIZATION
+Display the current mission.
+Example:
+MISSION:
+Weekly Grocery
+Progress:
+7 / 12 required items
+Budget:
+₱1,240 / ₱1,500
+Status:
+IN PROGRESS
+Then visually highlight relevant store areas.
+If the customer needs:
+Rice
+Chicken
+Cooking Oil
+Milk
+highlight those products/aisles.
+This makes the mission visible in the 3D world.
+
+17. SIMULATION ENGINE
+The 3D application should execute the loaded scenario according to the scenario's simulation configuration.
+Do not replace Sim.PesoWeb's scenario definition with a new unrelated simulation model.
+Create an execution layer:
+ScenarioSimulationEngine
+The engine consumes:
+ScenarioSnapshot
+SimulationParameters
+CustomerStates
+ProductStates
+InventoryStates
+MissionStates
+It produces:
+SimulationEvents
+CustomerStateUpdates
+InventoryStateUpdates
+TransactionEvents
+MissionOutcomes
+AnalyticsEvents
+Keep this engine independent of the React UI.
+
+18. SIMULATION CLOCK
+Provide:
+Pause
+Resume
+Step
+1X
+5X
+10X
+50X
+100X
+Advance Day
+Advance Week
+Reset Scenario
+The simulation clock should represent scenario time, not real-world time.
+Display:
+Simulation Date
+Simulation Time
+Elapsed Simulation Time
+Simulation Speed
+
+19. IMPORTANT DATA PRINCIPLE
+The application must distinguish:
+SOURCE DATA
+SIMULATION STATE
+VISUAL STATE
+SOURCE DATA:
+Data loaded from Sim.PesoWeb.
+SIMULATION STATE:
+Current state after the simulation processes events.
+VISUAL STATE:
+Camera position, animation position, selected customer, UI panels, etc.
+Do not mutate source snapshots accidentally.
+Use immutable or cloned scenario state where appropriate.
+The 3D renderer must never directly modify source API data.
+
+20. EVENTS
+The simulation should produce events.
+Examples:
+CustomerEnteredStore
+CustomerViewedProduct
+CustomerComparedProduct
+CustomerSelectedProduct
+CustomerRejectedProduct
+CustomerAddedToBasket
+CustomerRemovedFromBasket
+CustomerSubstitutedProduct
+CustomerEnteredCheckout
+CustomerCompletedPurchase
+CustomerAbandonedBasket
+CustomerCompletedMission
+CustomerFailedMission
+ProductStockout
+PromotionApplied
+PriceChanged
+InventoryUpdated
+The events should reference the source entity IDs.
+Each event should include:
+Event ID
+Simulation timestamp
+Event type
+Tenant ID
+Branch ID
+Scenario ID
+Customer ID when applicable
+Product ID when applicable
+Transaction ID when applicable
+Relevant details
+
+21. EVENT TIMELINE
+Create a live event timeline.
+Display:
+14:32:04
+Customer C1023 entered store.
+14:32:11
+Customer C1023 viewed Product P1002.
+14:32:19
+Customer C1023 rejected Product P1002.
+14:32:25
+Customer C1023 selected Product P1003.
+14:33:04
+Customer C1023 completed mission.
+Clicking an event should select the related entity.
+If the event refers to a customer:
+highlight that customer in the 3D world.
+
+22. BRANCH COMMAND CENTER
+Create a branch dashboard.
+Display:
+Branch name
+Active customers
+Customers entering
+Customers shopping
+Customers at checkout
+Completed missions
+Failed missions
+Current revenue
+Gross profit
+Average basket
+Conversion
+Inventory status
+Stockouts
+Promotion activity
+Customer satisfaction
+MissionCommerce score
+All metrics must derive from loaded scenario data and simulation state.
+
+23. 3D CAMERA
+Provide:
+Free camera
+Top-down camera
+Store overview
+Customer follow camera
+Selected customer camera
+Reset camera
+Smooth transitions.
+When a customer is selected:
+provide:
+[FOLLOW CUSTOMER]
+The camera should follow that customer while the simulation runs.
+
+24. SCENARIO REPLAY
+If the Sim.PesoWeb scenario contains prepared historical/event data:
+allow the user to replay it.
+Example:
+START
+PAUSE
+STEP
+REPLAY
+RESET
+The user should be able to observe the scenario as a visual timeline.
+Do not regenerate events if the scenario explicitly contains a prepared event sequence and the application is configured for replay mode.
+Support two modes where appropriate:
+REPLAY
+Uses prepared scenario events.
+SIMULATE
+Executes scenario rules from prepared initial state.
+Clearly display which mode is active.
+
+25. EXPERIMENT MODE
+Experiments should use the loaded Sim.PesoWeb scenario as the baseline.
+The user can create a treatment scenario.
+Example:
+BASELINE:
+Product P1002 price = ₱100
+TREATMENT:
+Product P1002 price = ₱90
+Then run:
+CONTROL
+versus
+TREATMENT
+using the same scenario baseline.
+Do not modify the original Sim.PesoWeb scenario.
+Create an in-memory scenario copy or isolated experiment snapshot.
+Results:
+Revenue
+Gross Profit
+Conversion
+Mission Success
+Customer Satisfaction
+Basket Size
+Inventory Remaining
+Stockouts
+Repeat Purchase
+The experiment result must clearly state:
+"Simulated result based on scenario X."
+Do not claim real-world causality.
+
+26. AI RECOMMENDATION
+The AI/recommendation layer should analyze the loaded scenario and simulation results.
+Examples:
+"12% of customer missions failed because Product P1002 was unavailable."
+"Store traffic is high but conversion is below scenario baseline."
+"Customers in the Bargain Hunter segment frequently reject this product at the current price."
+"Reducing the price may improve mission completion, but the margin impact should be tested."
+The recommendation should reference actual scenario entities and metrics.
+Every recommendation must show:
+Evidence
+Observation
+Recommendation
+Expected impact
+Potential risk
+Suggested experiment
+Do not invent evidence.
+Do not call an LLM unless explicitly configured.
+A rule-based analytics engine must be sufficient for the initial release.
+
+27. SIMULATION SOURCE INDICATOR
+Always display the current source.
+Example:
+SIMULATION SOURCE
+Sim.PesoWeb API
+TENANT
+ABC Grocery
+BRANCH
+Manila Main
+SCENARIO
+Weekend Grocery Rush
+MODE
+SIMULATE
+DATA VERSION
+v1.4
+This should remain visible in the command center.
+
+28. NO GLOBAL ENTERPRISE MAP
+The initial application must NOT attempt to visualize every tenant or every branch.
+The user chooses:
+ONE TENANT
+then:
+ONE BRANCH
+then:
+ONE SCENARIO
+Only that branch is loaded into the 3D environment.
+This is deliberate.
+It keeps the 3D world understandable and performant.
+Future versions may support multiple branches.
+
+29. API CONTRACT PLACEHOLDERS
+Create a clean API service layer.
+Example methods:
+getTenants()
+getBranches(tenantId)
+getScenarios(tenantId, branchId)
+getScenario(tenantId, branchId, scenarioId)
+getScenarioEvents(tenantId, branchId, scenarioId)
+getScenarioLayout(tenantId, branchId, scenarioId)
+Do not assume these exact backend URLs.
+Create configurable endpoint mappings.
+Example configuration:
+VITE_SIMULATION_API_BASE_URL
+Document where the actual Sim.PesoWeb API endpoints must be configured.
+
+30. MOCK DEVELOPMENT MODE
+Create a complete mock provider implementing the same interface.
+The mock provider should contain:
+At least:
+3 tenants
+Multiple branches per tenant
+Multiple scenarios per branch
+Products
+Customers
+Missions
+Inventory
+Scenario events
+Store layout
+This is only for local development and testing.
+The mock provider must follow the same data contract used by the real provider.
+Do not create a separate UI architecture for mock mode.
+The UI should not know whether data came from mock or API.
+
+31. PROJECT STRUCTURE
+Use a structure similar to:
+src/
+app/
+components/
+layout/
+tenant/
+branch/
+scenario/
+dashboard/
+customer/
+mission/
+events/
+experiments/
+recommendations/
+world3d/
+StoreScene.tsx
+StoreBuilding.tsx
+Shelf.tsx
+ProductDisplay.tsx
+CustomerAvatar.tsx
+CustomerRenderer.tsx
+Checkout.tsx
+CameraController.tsx
+SelectionController.tsx
+simulation/
+ScenarioSimulationEngine.ts
+SimulationClock.ts
+SimulationEventProcessor.ts
+CustomerStateMachine.ts
+ScenarioReplayEngine.ts
+ExperimentEngine.ts
+analytics/
+AnalyticsEngine.ts
+MissionCommerceScorer.ts
+api/
+SimulationApiClient.ts
+SimulationDataProvider.ts
+RealSimulationDataProvider.ts
+MockSimulationDataProvider.ts
+contracts/
+SimulationScenarioV1.ts
+Tenant.ts
+Branch.ts
+Customer.ts
+Mission.ts
+Product.ts
+Inventory.ts
+Scenario.ts
+SimulationEvent.ts
+state/
+simulationStore.ts
+uiStore.ts
+selectionStore.ts
+workers/
+simulation.worker.ts
+tests/
+unit/
+integration/
+e2e/
+
+32. SECURITY
+Do not expose API secrets in the frontend.
+Do not hardcode credentials.
+Do not log tokens.
+Do not persist sensitive data unnecessarily.
+Use tenant and branch IDs from authenticated/contextual API responses.
+Never allow the UI to manually change tenant context without reloading authorized data from the backend.
+The backend must remain responsible for authorization.
+The frontend is not a security boundary.
+
+33. PERFORMANCE
+The architecture should eventually support large scenarios.
+Target:
+10,000 customers
+100,000 products
+millions of events
+However, the MVP should begin with the scenario sizes actually supplied by Sim.PesoWeb or mock development data.
+Use:
+Instanced rendering
+Efficient collections
+Event batching
+Simulation ticks
+Web Workers
+Virtualized lists
+Memoized analytics
+Bounded event buffers
+Do not render every historical event as a React component.
+Do not create one React component tree per customer if the scenario contains thousands of customers.
+Separate simulation state from visual representation.
+
+34. ERROR STATES
+Handle:
+Sim.PesoWeb unavailable.
+Authentication failure.
+Tenant loading failure.
+Branch loading failure.
+Scenario loading failure.
+Invalid scenario.
+Unsupported scenario version.
+Missing layout data.
+Missing customer data.
+Missing product data.
+Simulation processing error.
+Invalid event.
+Corrupted scenario.
+Display useful error messages.
+Never silently switch to mock data.
+
+35. LOADING STATES
+Provide explicit loading screens:
+Loading tenants...
+Loading branches...
+Loading scenarios...
+Loading scenario...
+Building 3D world...
+Initializing customers...
+Starting simulation...
+Do not show an empty screen while loading.
+
+36. SCENARIO VALIDATION
+Before loading a scenario:
+validate:
+Tenant consistency.
+Branch consistency.
+Scenario ID.
+Customer references.
+Product references.
+Mission references.
+Inventory references.
+Event references.
+Required simulation parameters.
+Scenario version compatibility.
+If validation fails:
+do not start the simulation.
+Display a validation report.
+
+37. OBSERVABILITY
+Create an application diagnostics panel showing:
+Data source
+API status
+Tenant
+Branch
+Scenario
+Scenario version
+Simulation mode
+Simulation clock
+Simulation speed
+Customers loaded
+Products loaded
+Events processed
+Events per second
+Current simulation state
+Errors
+Warnings
+This will help diagnose large simulations.
+
+38. TESTING
+Test:
+Tenant selection.
+Branch filtering by tenant.
+Scenario filtering by tenant and branch.
+Scenario loading.
+Scenario validation.
+Mock API provider.
+Real API adapter contract.
+Customer selection.
+3D selection synchronization.
+Simulation clock.
+Scenario replay.
+Simulation events.
+Experiment isolation.
+MissionCommerce calculations.
+API failure handling.
+Unsupported scenario versions.
+Use Playwright for:
+Login/start screen.
+Tenant selection.
+Branch selection.
+Scenario selection.
+Scenario loading.
+3D environment loading.
+Customer selection.
+Simulation start/pause.
+Experiment workflow.
+
+39. FIRST MVP
+Do not attempt the entire system immediately.
+The first working version must implement:
+1. Standalone React application.
+2. Tenant selection.
+3. Branch selection.
+4. Scenario selection.
+5. Mock Sim.PesoWeb API.
+6. Versioned scenario contract.
+7. Scenario loading.
+8. One 3D store.
+9. Customers from scenario data.
+10. Customer movement.
+11. Customer mission display.
+12. Customer selection.
+13. Customer information panel.
+14. Simulation clock.
+15. Event timeline.
+16. Branch dashboard.
+17. Scenario replay.
+18. Basic simulation mode.
+19. Basic MissionCommerce analytics.
+20. Clear API integration boundary.
+The MVP must actually run.
+
+40. IMPORTANT DEVELOPMENT RULE
+Do not build a generic 3D demo disconnected from Sim.PesoWeb.
+The entire application must be designed around this workflow:
+TENANT
+↓
+BRANCH
+↓
+SCENARIO
+↓
+SCENARIO DATA
+↓
+3D WORLD
+↓
+CUSTOMER SIMULATION
+↓
+EVENTS
+↓
+ANALYTICS
+↓
+EXPERIMENT
+↓
+MISSIONCOMMERCE RESULT
+
+41. FUTURE INTEGRATION
+The eventual architecture should look like:
+              Sim.PesoWeb
+                   |
+                   |
+             REST API / API
+                   |
+                   ▼
+      SimulationDataProvider
+                   |
+          ┌────────┴────────┐
+          │                 │
+      Scenario          Scenario
+       Loader            Validator
+          │                 │
+          └────────┬────────┘
+                   ▼
+          Simulation Engine
+                   │
+      ┌────────────┼────────────┐
+      ▼            ▼            ▼
+  Customers      Missions     Events
+      │            │            │
+      └────────────┼────────────┘
+                   ▼
+              3D Renderer
+                   │
+                   ▼
+          User / Operator
+                   │
+                   ▼
+             Experiments
+                   │
+                   ▼
+           MissionCommerce
+              Analytics
+
+---
+
+# 42. DO NOT INVENT THE SIM.PESOWEB API
+
+Until the actual Sim.PesoWeb API contract is supplied:
+
+- use an interface;
+- use mock implementations;
+- use configurable endpoints;
+- document assumptions.
+
+Do not claim that an endpoint exists.
+
+Do not modify Sim.PesoWeb to create endpoints unless explicitly instructed in a separate task.
+
+The next integration task will be to map the actual Sim.PesoWeb API to this client.
+
+---
+
+# 43. DEVELOPMENT EXECUTION
+
+Start by:
+
+1. Inspecting the new project directory.
+2. Checking Node.js and npm.
+3. Creating the React TypeScript application.
+4. Installing dependencies.
+5. Creating the domain contracts.
+6. Creating the provider abstraction.
+7. Creating the mock Sim.PesoWeb API.
+8. Implementing tenant selection.
+9. Implementing branch selection.
+10. Implementing scenario selection.
+11. Implementing scenario loading.
+12. Creating the 3D world.
+13. Mapping scenario customers into the world.
+14. Implementing simulation time.
+15. Implementing customer selection.
+16. Implementing events.
+17. Implementing dashboard metrics.
+18. Implementing scenario replay.
+19. Testing the application.
+20. Fixing all build/runtime errors.
+
+Do not stop after creating source files.
+
+Actually run the application.
+
+Actually test the core workflow.
+
+---
+
+# 44. ACCEPTANCE TEST
+
+The application is considered MVP-ready when I can perform this exact workflow:
+
+START APPLICATION
+
+↓
+
+SELECT TENANT
+
+Example:
+
+ABC Grocery
+
+↓
+
+SELECT BRANCH
+
+Example:
+
+KL Main Branch
+
+↓
+
+SEE AVAILABLE SCENARIOS
+
+↓
+
+SELECT:
+
+Weekend Grocery Rush
+
+↓
+
+SEE:
+
+Customer Count
+
+Product Count
+
+Simulation Period
+
+Scenario Description
+
+↓
+
+CLICK:
+
+LOAD SCENARIO
+
+↓
+
+3D WORLD APPEARS
+
+↓
+
+CUSTOMERS APPEAR
+
+↓
+
+CLICK A CUSTOMER
+
+↓
+
+CUSTOMER PROFILE APPEARS
+
+↓
+
+PRESS:
+
+START
+
+↓
+
+CUSTOMERS BEGIN MOVING
+
+↓
+
+EVENTS APPEAR
+
+↓
+
+CUSTOMER MISSIONS PROGRESS
+
+↓
+
+TRANSACTIONS OCCUR
+
+↓
+
+INVENTORY CHANGES
+
+↓
+
+MISSION OUTCOMES ARE GENERATED
+
+↓
+
+DASHBOARD METRICS CHANGE
+
+↓
+
+USER CAN PAUSE
+
+↓
+
+USER CAN SPEED UP
+
+↓
+
+USER CAN REPLAY
+
+↓
+
+USER CAN INSPECT EVENTS
+
+↓
+
+USER CAN RUN AN EXPERIMENT
+
+↓
+
+SYSTEM SHOWS:
+
+BASELINE
+
+VERSUS
+
+EXPERIMENT
+
+↓
+
+MISSIONCOMMERCE RESULT
+
+The complete workflow must work without manually editing source code.
+
+---
+
+# 45. FINAL DOCUMENTATION
+
+Create README.md.
+
+Document:
+
+Project purpose.
+
+Architecture.
+
+Project separation.
+
+Sim.PesoWeb integration boundary.
+
+API contracts.
+
+Mock provider.
+
+Tenant/branch/scenario workflow.
+
+Scenario data model.
+
+Simulation engine.
+
+3D architecture.
+
+Experiment engine.
+
+MissionCommerce analytics.
+
+Testing.
+
+Performance.
+
+Security.
+
+Configuration.
+
+Known limitations.
+
+Future integration steps.
+
+Also create:
+
+docs/ARCHITECTURE.md
+
+docs/API-CONTRACT.md
+
+docs/SIMULATION-MODEL.md
+
+docs/EXPERIMENT-MODEL.md
+
+---
+
+# 46. FINAL RESPONSE FROM THE CODING AGENT
+
+When development is complete, report:
+
+PROJECT LOCATION
+
+TECHNOLOGY STACK
+
+FEATURES IMPLEMENTED
+
+TENANT WORKFLOW
+
+BRANCH WORKFLOW
+
+SCENARIO WORKFLOW
+
+3D FEATURES
+
+SIMULATION FEATURES
+
+API PROVIDER STATUS
+
+MOCK PROVIDER STATUS
+
+TEST RESULTS
+
+BUILD RESULT
+
+KNOWN LIMITATIONS
+
+NEXT RECOMMENDED STEP
+
+Be completely honest about what was actually tested.
+
+Do not claim the real Sim.PesoWeb API integration is complete until an actual API contract and working endpoint have been supplied and tested.
+
+START NOW.
+
+### One thing I would do next
+
+Before Claude attempts the **real API integration**, we should eventually give it the actual **Sim.PesoWeb scenario/data structure** you are building.
+
+The ideal relationship is:
+
+```text
+             YOUR EXISTING SIM.PESOWEB
+                       │
+        ┌──────────────┼───────────────┐
+        │              │               │
+      Tenant         Branch         Scenario
+        │              │               │
+        └──────────────┼───────────────┘
+                       │
+                       ▼
+              Scenario Snapshot
+                       │
+                       ▼
+          ┌────────────────────────┐
+          │  3D Customer Simulator │
+          └────────────────────────┘
+                       │
+              ┌────────┼────────┐
+              ▼        ▼        ▼
+          Customers  Products  Missions
+              │        │        │
+              └────────┼────────┘
+                       ▼
+                 SIMULATION
+                       │
+              ┌────────┼─────────┐
+              ▼        ▼         ▼
+           Events   Analytics  Outcomes
+                       │
+                       ▼
+                MissionCommerce
+This is much cleaner than having two independent simulation systems.
+And I particularly agree with your one Tenant → one Branch → one Scenario restriction for the first version. It means the 3D world represents something understandable rather than becoming a giant enterprise map.
+The next logical step is to define exactly what data Sim.PesoWeb's Scenario contains—especially the Scenario, Customer, Mission, Product, Inventory, and SimulationEvent structures. Once those are defined, Claude can build the 3D application against a realistic contract rather than inventing one.
+
+
+
+One thing I would do next
+Before Claude attempts the real API integration, we should eventually give it the actual Sim.PesoWeb scenario/data structure you are building.
+The ideal relationship is:
+             YOUR EXISTING SIM.PESOWEB
+                       │
+        ┌──────────────┼───────────────┐
+        │              │               │
+      Tenant         Branch         Scenario
+        │              │               │
+        └──────────────┼───────────────┘
+                       │
+                       ▼
+              Scenario Snapshot
+                       │
+                       ▼
+          ┌────────────────────────┐
+          │  3D Customer Simulator │
+          └────────────────────────┘
+                       │
+              ┌────────┼────────┐
+              ▼        ▼        ▼
+          Customers  Products  Missions
+              │        │        │
+              └────────┼────────┘
+                       ▼
+                 SIMULATION
+                       │
+              ┌────────┼─────────┐
+              ▼        ▼         ▼
+           Events   Analytics  Outcomes
+                       │
+                       ▼
+                MissionCommerce
+
+This is much cleaner than having two independent simulation systems.
+And I particularly agree with your one Tenant → one Branch → one Scenario restriction for the first version. It means the 3D world represents something understandable rather than becoming a giant enterprise map.
+The next logical step is to define exactly what data Sim.PesoWeb's Scenario contains—especially the Scenario, Customer, Mission, Product, Inventory, and SimulationEvent structures. Once those are defined, Claude can build the 3D application against a realistic contract rather than inventing one.
+
