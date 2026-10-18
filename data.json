@@ -1,0 +1,2557 @@
+{
+ "store": {
+  "name": "520 Minimart",
+  "phone": "0917 000 0520",
+  "hours": "7:00 AM - 10:00 PM"
+ },
+ "products": [
+  {
+   "id": 1493,
+   "name": "Biogesic",
+   "price": 50.0
+  },
+  {
+   "id": 1091,
+   "name": "Camel Blue",
+   "price": 128.0
+  },
+  {
+   "id": 1090,
+   "name": "Camel Yellow",
+   "price": 128.0
+  },
+  {
+   "id": 1092,
+   "name": "Marlboro Crafted Ice",
+   "price": 147.0
+  },
+  {
+   "id": 1416,
+   "name": "Pride Det Pwd Fbcn Sakura 40g",
+   "price": 8.0
+  },
+  {
+   "id": 1415,
+   "name": "Pride Det Pwd Kalamansi 1000g",
+   "price": 95.0
+  },
+  {
+   "id": 1414,
+   "name": "Pride Det Pwd Wash.machine 6/40g",
+   "price": 8.0
+  },
+  {
+   "id": 1413,
+   "name": "Pride Pwd All Dayfrsh 500g",
+   "price": 55.0
+  },
+  {
+   "id": 1412,
+   "name": "Pride Pwd Fbcn Sakura 1kg",
+   "price": 99.0
+  },
+  {
+   "id": 1411,
+   "name": "Pride Pwd Fbcn Sakura 2kg",
+   "price": 199.0
+  },
+  {
+   "id": 1410,
+   "name": "Pride Pwd Fbcn Sakura 500g",
+   "price": 58.0
+  },
+  {
+   "id": 1409,
+   "name": "Pride Pwd W.machine 1kg",
+   "price": 95.0
+  },
+  {
+   "id": 1408,
+   "name": "Pride Pwd W.machine 2kg",
+   "price": 195.0
+  },
+  {
+   "id": 1407,
+   "name": "Pride Pwd W.machine 500g",
+   "price": 55.0
+  },
+  {
+   "id": 1405,
+   "name": "Pringles Original",
+   "price": 110.0
+  },
+  {
+   "id": 1406,
+   "name": "Purefoods Beef Tapa 220g",
+   "price": 85.0
+  },
+  {
+   "id": 1404,
+   "name": "Purefoods Chicken Drummets 240g",
+   "price": 105.0
+  },
+  {
+   "id": 1403,
+   "name": "Purefoods Chicken Tapa 220g",
+   "price": 72.0
+  },
+  {
+   "id": 1402,
+   "name": "Purefoods Corned Beef 210g",
+   "price": 110.0
+  },
+  {
+   "id": 1401,
+   "name": "Purefoods Corned Beef 380g",
+   "price": 175.0
+  },
+  {
+   "id": 1400,
+   "name": "Purefoods Crazy Cut Nuggets 200g",
+   "price": 80.0
+  },
+  {
+   "id": 1399,
+   "name": "Purefoods Liver Spread 85g",
+   "price": 33.0
+  },
+  {
+   "id": 1398,
+   "name": "Purefoods Lmeat Chinese 350g",
+   "price": 87.0
+  },
+  {
+   "id": 1397,
+   "name": "Purefoods Sisig 150g",
+   "price": 50.0
+  },
+  {
+   "id": 1396,
+   "name": "Purefoods Siz-Delight Sisig Chicken 250g",
+   "price": 53.0
+  },
+  {
+   "id": 1395,
+   "name": "Purefoods Siz-Delights Sisig 250g",
+   "price": 53.0
+  },
+  {
+   "id": 1394,
+   "name": "Pyrethirin Licealiz Soothing Coolness 10ml",
+   "price": 55.0
+  },
+  {
+   "id": 1393,
+   "name": "Quake Overload Black Forest 10/30g",
+   "price": 83.0
+  },
+  {
+   "id": 1392,
+   "name": "Quake Overload Black Forest 30g",
+   "price": 10.0
+  },
+  {
+   "id": 1390,
+   "name": "Quake Overload Choco Strawberry 30gx10",
+   "price": 10.0
+  },
+  {
+   "id": 1391,
+   "name": "Quake Overload Mocha 10/30g",
+   "price": 83.0
+  },
+  {
+   "id": 1389,
+   "name": "Quake Ovrld Choc-Strw 30g",
+   "price": 10.0
+  },
+  {
+   "id": 1388,
+   "name": "Quake Ovrld Favorite 10/30g",
+   "price": 85.0
+  },
+  {
+   "id": 1387,
+   "name": "Quaker Oats Inst Bnnhny 33g",
+   "price": 17.0
+  },
+  {
+   "id": 1386,
+   "name": "Quaker Oats Instant 200g",
+   "price": 48.0
+  },
+  {
+   "id": 1384,
+   "name": "Quaker Oats Instant 33g",
+   "price": 18.0
+  },
+  {
+   "id": 1385,
+   "name": "Quaker Oats Instant 800g",
+   "price": 140.0
+  },
+  {
+   "id": 1383,
+   "name": "Quaker Oats Instant Choco 200g",
+   "price": 63.0
+  },
+  {
+   "id": 1382,
+   "name": "Quaker Oats Instnt Banna&honey 200g",
+   "price": 63.0
+  },
+  {
+   "id": 1380,
+   "name": "Quaker Oats Instnt Chco 33g",
+   "price": 17.0
+  },
+  {
+   "id": 1381,
+   "name": "Quaker Oats Instnt Chco 33g",
+   "price": 17.0
+  },
+  {
+   "id": 1378,
+   "name": "Quaker Original With Milk 200g",
+   "price": 68.0
+  },
+  {
+   "id": 1379,
+   "name": "Queen All Purpose Flour 100g",
+   "price": 23.0
+  },
+  {
+   "id": 1377,
+   "name": "Queen Baking Soda 125g",
+   "price": 22.0
+  },
+  {
+   "id": 1376,
+   "name": "Queen Cornstarch 200g",
+   "price": 32.0
+  },
+  {
+   "id": 1375,
+   "name": "Quezo Real 50ml",
+   "price": 15.0,
+   "offer": {
+    "kind": "sale",
+    "percentOff": 20,
+    "price": 12.0,
+    "daysLeft": 6,
+    "note": "Weekend sale"
+   }
+  },
+  {
+   "id": 1373,
+   "name": "Racumin Ready Made Bait Kills Rats 50g",
+   "price": 50.0
+  },
+  {
+   "id": 1374,
+   "name": "Ram California Seedless Raisins 30g",
+   "price": 23.0
+  },
+  {
+   "id": 1372,
+   "name": "Ram Salted Black Beans Sup 100g",
+   "price": 16.0
+  },
+  {
+   "id": 1371,
+   "name": "Reb Hansel Crackers Single",
+   "price": 8.0
+  },
+  {
+   "id": 1370,
+   "name": "Reb Whoopee Strawberry 32g",
+   "price": 12.0,
+   "offer": {
+    "kind": "clearance",
+    "percentOff": 33,
+    "price": 8.04,
+    "daysLeft": 2,
+    "note": "Last day"
+   }
+  },
+  {
+   "id": 1369,
+   "name": "Rebisco Bravo Biscuit 10/30g",
+   "price": 65.0
+  },
+  {
+   "id": 1368,
+   "name": "Rebisco Choco Mucho (V) 30g",
+   "price": 10.0
+  },
+  {
+   "id": 1367,
+   "name": "Rebisco Choco Mucho Drk(Br) 30g",
+   "price": 10.0,
+   "offer": {
+    "kind": "clearance",
+    "percentOff": 50,
+    "price": 5.0,
+    "daysLeft": 3,
+    "note": "Last days - rush to the store"
+   }
+  },
+  {
+   "id": 1366,
+   "name": "Rebisco Chocolate 32g",
+   "price": 9.0
+  },
+  {
+   "id": 1364,
+   "name": "Rebisco Combi Trple Choc(B)10s(30g)",
+   "price": 68.0
+  },
+  {
+   "id": 1365,
+   "name": "Rebisco Crackers 33g",
+   "price": 8.0
+  },
+  {
+   "id": 1363,
+   "name": "Rebisco Crckrs Pln 10/33g",
+   "price": 65.0
+  },
+  {
+   "id": 1362,
+   "name": "Rebisco Doowee Donut Strawberry 420g",
+   "price": 105.0
+  },
+  {
+   "id": 1361,
+   "name": "Rebisco Extreme Choco-Coat 10/25g",
+   "price": 68.0
+  },
+  {
+   "id": 1360,
+   "name": "Rebisco Frootees Grapes 10/30g",
+   "price": 65.0
+  },
+  {
+   "id": 1359,
+   "name": "Rebisco Hansel Choco 10s(31g)",
+   "price": 65.0
+  },
+  {
+   "id": 1358,
+   "name": "Rebisco Hansel Chocolate 31g",
+   "price": 8.0
+  },
+  {
+   "id": 1356,
+   "name": "Rebisco Hansel Crkr Pln 10/32g",
+   "price": 65.0
+  },
+  {
+   "id": 1357,
+   "name": "Rebisco Hansel Flvr Bunch 10/31g",
+   "price": 65.0
+  },
+  {
+   "id": 1355,
+   "name": "Rebisco Hansel Milk 10s(31g)",
+   "price": 65.0
+  },
+  {
+   "id": 1354,
+   "name": "Rebisco Hansel Mocha 10/31g",
+   "price": 65.0
+  },
+  {
+   "id": 1353,
+   "name": "Rebisco Hansel Strawberry 10s",
+   "price": 65.0
+  },
+  {
+   "id": 1352,
+   "name": "Rebisco Marie Time 20s",
+   "price": 25.0
+  },
+  {
+   "id": 1351,
+   "name": "Rebisco Sndwch Choco 10's (32g)",
+   "price": 65.0
+  },
+  {
+   "id": 1350,
+   "name": "Rebisco Sndwch Flvr Bunch 10s",
+   "price": 65.0
+  },
+  {
+   "id": 1348,
+   "name": "Rebisco Sndwch Straw 10's (32g)",
+   "price": 65.0
+  },
+  {
+   "id": 1349,
+   "name": "Rebisco Wafertime Cheese",
+   "price": 75.0
+  },
+  {
+   "id": 1347,
+   "name": "Rebisco Wafertme Rchcrm Choco 10's",
+   "price": 75.0
+  },
+  {
+   "id": 1346,
+   "name": "Red Horse Beer Can 330ml",
+   "price": 55.0
+  },
+  {
+   "id": 1089,
+   "name": "Red Horse Beer Litro",
+   "price": 125.0
+  },
+  {
+   "id": 1345,
+   "name": "Regent Snack Tempura 100g",
+   "price": 28.0
+  },
+  {
+   "id": 1344,
+   "name": "Rejoice Shmp Rich Quatro 16ml",
+   "price": 8.0
+  },
+  {
+   "id": 1343,
+   "name": "Relish All Purpose Flour 200g",
+   "price": 23.0
+  },
+  {
+   "id": 1341,
+   "name": "Relish Baking Soda 50g",
+   "price": 6.0
+  },
+  {
+   "id": 1342,
+   "name": "Relish Black Beans 180g",
+   "price": 30.0
+  },
+  {
+   "id": 1340,
+   "name": "Relish Bread Crumb 230g",
+   "price": 38.0
+  },
+  {
+   "id": 1339,
+   "name": "Relish Bread Crumbs 60g",
+   "price": 15.0,
+   "offer": {
+    "kind": "clearance",
+    "percentOff": 40,
+    "price": 9.0,
+    "daysLeft": 4,
+    "note": "Clearance"
+   }
+  },
+  {
+   "id": 1338,
+   "name": "Relish Kernel Corn 425g",
+   "price": 40.0
+  },
+  {
+   "id": 1337,
+   "name": "Reno Liver Spread 230g",
+   "price": 58.0
+  },
+  {
+   "id": 1336,
+   "name": "Reno Liver Spread 85g",
+   "price": 28.0
+  },
+  {
+   "id": 1335,
+   "name": "Rexona Deo R-On I.cool Db 1+1/45-P",
+   "price": 124.0
+  },
+  {
+   "id": 1334,
+   "name": "Rexona Deo R-On Ice Cool Db 45ml",
+   "price": 124.0
+  },
+  {
+   "id": 1332,
+   "name": "Rexona Deo R-On Powder Dry 25ml",
+   "price": 75.0
+  },
+  {
+   "id": 1333,
+   "name": "Rexona Deo R-On Quantum (G) 45ml",
+   "price": 124.0
+  },
+  {
+   "id": 1331,
+   "name": "Rexona Deo-Ltn Ice Cool Db 3ml",
+   "price": 10.0
+  },
+  {
+   "id": 1330,
+   "name": "Rexona Deo-Ltn Passion (R) 3ml",
+   "price": 10.0
+  },
+  {
+   "id": 1328,
+   "name": "Rexona Deo-Ltn Powder Dry 3ml",
+   "price": 10.0
+  },
+  {
+   "id": 1329,
+   "name": "Rexona Deo-Ltn Quantum (G) 3ml",
+   "price": 10.0
+  },
+  {
+   "id": 1327,
+   "name": "Rexona Deo-Ltn Shwr Cln(Bg) 3ml",
+   "price": 10.0
+  },
+  {
+   "id": 1326,
+   "name": "Rexona Dry Serum 40ml",
+   "price": 177.0
+  },
+  {
+   "id": 1325,
+   "name": "Rexona Men 25ml",
+   "price": 75.0
+  },
+  {
+   "id": 1324,
+   "name": "Richee Snack Milk 25g(30)",
+   "price": 9.0
+  },
+  {
+   "id": 1322,
+   "name": "Richeese Cheese Wafer 48g",
+   "price": 14.0
+  },
+  {
+   "id": 1323,
+   "name": "Richoco Chocolate Wafer 48g",
+   "price": 14.0
+  },
+  {
+   "id": 1321,
+   "name": "Ricoa Flat Tops 10's",
+   "price": 22.0
+  },
+  {
+   "id": 1320,
+   "name": "Ricoa Flat Tops(Pillow-Wrap) 10's",
+   "price": 22.0
+  },
+  {
+   "id": 1319,
+   "name": "Rite N'lite Clmsi+gngr+hny 250ml",
+   "price": 30.0
+  },
+  {
+   "id": 1318,
+   "name": "Rite N'lite Cucumber In Can 250ml",
+   "price": 30.0
+  },
+  {
+   "id": 1317,
+   "name": "Rite N'lite Lemon In Can 250ml",
+   "price": 30.0
+  },
+  {
+   "id": 1315,
+   "name": "Rite N'lite Lemon Lime 250ml",
+   "price": 30.0
+  },
+  {
+   "id": 1316,
+   "name": "Rite N'lite Lychee & Rose 250ml-P",
+   "price": 30.0
+  },
+  {
+   "id": 1314,
+   "name": "Rite N'lite Orange In Can 250ml",
+   "price": 30.0
+  },
+  {
+   "id": 1313,
+   "name": "Rite N'lite Peach 250ml",
+   "price": 30.0
+  },
+  {
+   "id": 1312,
+   "name": "Rite N'lite Rootbeer In Can 250ml",
+   "price": 30.0
+  },
+  {
+   "id": 1311,
+   "name": "Rob. Casubha 10g",
+   "price": 30.0
+  },
+  {
+   "id": 1309,
+   "name": "Rob. Chili Flakes 20g",
+   "price": 23.0
+  },
+  {
+   "id": 1310,
+   "name": "Rob. Minced Garlic 50g",
+   "price": 28.0
+  },
+  {
+   "id": 1308,
+   "name": "Rob. Mushroom 20g",
+   "price": 30.0
+  },
+  {
+   "id": 1307,
+   "name": "Robinsons Accord 20g",
+   "price": 15.0,
+   "offer": {
+    "kind": "sale",
+    "percentOff": 20,
+    "price": 12.0,
+    "daysLeft": 7,
+    "note": "Sale"
+   }
+  },
+  {
+   "id": 1306,
+   "name": "Robinsons Chili Powder 30g",
+   "price": 15.0,
+   "offer": {
+    "kind": "sale",
+    "percentOff": 15,
+    "price": 12.75,
+    "daysLeft": 7,
+    "note": "Sale"
+   }
+  },
+  {
+   "id": 1305,
+   "name": "Robinsons Sesame Seeds 50g",
+   "price": 23.0
+  },
+  {
+   "id": 1304,
+   "name": "Robinsons Sibot 20g",
+   "price": 22.0
+  },
+  {
+   "id": 1303,
+   "name": "Rose Bowl Sardines Green 155g",
+   "price": 28.0
+  },
+  {
+   "id": 1302,
+   "name": "Rose Bowl Sardines Red 155g",
+   "price": 28.0
+  },
+  {
+   "id": 1301,
+   "name": "Round Barbecue Sticks",
+   "price": 20.0
+  },
+  {
+   "id": 1300,
+   "name": "Royal Sweet Celebration Pack 1's-P",
+   "price": 124.0
+  },
+  {
+   "id": 1299,
+   "name": "Runbeier Wipes",
+   "price": 15.0,
+   "offer": {
+    "kind": "sale",
+    "percentOff": 10,
+    "price": 13.5,
+    "daysLeft": 7,
+    "note": "Sale"
+   }
+  },
+  {
+   "id": 1297,
+   "name": "Saba Mackerel Nat Oil Prem 155g",
+   "price": 40.0
+  },
+  {
+   "id": 1298,
+   "name": "Saba Mackerel Nat Oil White 155g",
+   "price": 38.0
+  },
+  {
+   "id": 1296,
+   "name": "Saba Mackerel Nat Oil White 200g",
+   "price": 50.0
+  },
+  {
+   "id": 1295,
+   "name": "Saba Mackerel Nat Oil White 425g",
+   "price": 80.0
+  },
+  {
+   "id": 1293,
+   "name": "Saba Sardines",
+   "price": 28.0
+  },
+  {
+   "id": 1294,
+   "name": "Saba Sardines Green 155g",
+   "price": 27.0
+  },
+  {
+   "id": 1292,
+   "name": "Saba Sardines Red 155g",
+   "price": 27.0
+  },
+  {
+   "id": 1290,
+   "name": "Saba Squid Chili 155g",
+   "price": 53.0
+  },
+  {
+   "id": 1291,
+   "name": "Saba Squid Chili 425g",
+   "price": 113.0
+  },
+  {
+   "id": 1289,
+   "name": "Saba Squid Reg 425g",
+   "price": 113.0
+  },
+  {
+   "id": 1288,
+   "name": "Safeguard Liq H.soap Lmn Frsh 225ml",
+   "price": 74.0
+  },
+  {
+   "id": 1287,
+   "name": "Safeguard Soap Pure Wht 25g",
+   "price": 12.0
+  },
+  {
+   "id": 1286,
+   "name": "Sago Small",
+   "price": 40.0
+  },
+  {
+   "id": 1285,
+   "name": "Salad Macaroni",
+   "price": 38.0
+  },
+  {
+   "id": 1284,
+   "name": "Salad Shots Caesar 15g",
+   "price": 30.0
+  },
+  {
+   "id": 1282,
+   "name": "Salad Shots Roasted Sesame 15g",
+   "price": 24.0
+  },
+  {
+   "id": 1283,
+   "name": "Salonpas Patch 10's",
+   "price": 18.0
+  },
+  {
+   "id": 1281,
+   "name": "Samyang Buldak Cheese 140g",
+   "price": 75.0
+  },
+  {
+   "id": 1280,
+   "name": "Samyang Buldak Cheese 700g",
+   "price": 70.0
+  },
+  {
+   "id": 1279,
+   "name": "Samyang Buldak Cream Carbonara 140g",
+   "price": 70.0
+  },
+  {
+   "id": 1278,
+   "name": "Samyang Buldak Hot Chicken 140g",
+   "price": 65.0
+  },
+  {
+   "id": 1277,
+   "name": "Samyang Hot Chicken Ramen Big Bowl 105g",
+   "price": 93.0
+  },
+  {
+   "id": 1276,
+   "name": "Samyang Quattro Cheese Buldak 145g",
+   "price": 70.0
+  },
+  {
+   "id": 1275,
+   "name": "Samyang Tangle",
+   "price": 65.0
+  },
+  {
+   "id": 1274,
+   "name": "San Marino Chili Corned Tuna Yellow 85g",
+   "price": 32.0
+  },
+  {
+   "id": 1273,
+   "name": "San Marino Chli Cor.tuna Ylw 150g",
+   "price": 42.0
+  },
+  {
+   "id": 1272,
+   "name": "San Marino Corned Tuna Red 180g",
+   "price": 52.0
+  },
+  {
+   "id": 1271,
+   "name": "San Marino Corned Tuna Red 85g",
+   "price": 32.0
+  },
+  {
+   "id": 1270,
+   "name": "San Marino Tuna Paella 180g",
+   "price": 49.0
+  },
+  {
+   "id": 1269,
+   "name": "San Mig 7g",
+   "price": 75.0
+  },
+  {
+   "id": 1267,
+   "name": "San Miguel Beer In Can 330ml",
+   "price": 55.0
+  },
+  {
+   "id": 1268,
+   "name": "San Miguel Beer Light In Can 330ml",
+   "price": 55.0
+  },
+  {
+   "id": 1266,
+   "name": "Sanicare Baby Wipes",
+   "price": 20.0
+  },
+  {
+   "id": 1007,
+   "name": "Sanicare Cotton",
+   "price": 78.0
+  },
+  {
+   "id": 1265,
+   "name": "Sanicare Cottonbuds Mini 200tip",
+   "price": 28.0
+  },
+  {
+   "id": 1263,
+   "name": "Sanmig Coffee Strong Sfree 9g",
+   "price": 85.0
+  },
+  {
+   "id": 1264,
+   "name": "Santini Parmesan Cheese 85g",
+   "price": 172.0
+  },
+  {
+   "id": 1262,
+   "name": "Sardines Rosebowl Green",
+   "price": 28.0
+  },
+  {
+   "id": 1261,
+   "name": "Sardines Rosebowl Spicy",
+   "price": 28.0
+  },
+  {
+   "id": 1259,
+   "name": "Scissor",
+   "price": 38.0
+  },
+  {
+   "id": 1260,
+   "name": "Scotch Brite Bottle Cleaner Refill",
+   "price": 182.0
+  },
+  {
+   "id": 1258,
+   "name": "Scotch Brite Easy Clean",
+   "price": 48.0
+  },
+  {
+   "id": 1257,
+   "name": "Scotch Brite Scrub Pad Mini 1s",
+   "price": 14.0
+  },
+  {
+   "id": 1256,
+   "name": "Scotch Brite Scrub Sponge Mini 1s",
+   "price": 26.0
+  },
+  {
+   "id": 1255,
+   "name": "Scott's Vitamin C Pastilles Mixed Berries 15pcs",
+   "price": 100.0
+  },
+  {
+   "id": 1254,
+   "name": "Sebo De Macho 12g",
+   "price": 40.0
+  },
+  {
+   "id": 1253,
+   "name": "Sebo De Macho 7g",
+   "price": 23.0
+  },
+  {
+   "id": 1252,
+   "name": "Sensodine 60g",
+   "price": 78.0
+  },
+  {
+   "id": 1251,
+   "name": "Seventh Generation Disinfectant 394g",
+   "price": 190.0
+  },
+  {
+   "id": 1250,
+   "name": "Sevilla California Raisins Seedless 100g",
+   "price": 50.0
+  },
+  {
+   "id": 1249,
+   "name": "Sfgd Liq Hand Soap Lmnfrsh Rf 200ml",
+   "price": 55.0
+  },
+  {
+   "id": 1248,
+   "name": "Sfgd Liq Hand Soap Wht Rfl 200ml",
+   "price": 67.0
+  },
+  {
+   "id": 1247,
+   "name": "Sfgd Soap Arctic Fresh 175g(160g",
+   "price": 70.0
+  },
+  {
+   "id": 1246,
+   "name": "Sfgd Soap Clc Beige 85g",
+   "price": 40.0
+  },
+  {
+   "id": 1245,
+   "name": "Sfgd Soap Floral Pink 160g",
+   "price": 70.0
+  },
+  {
+   "id": 1244,
+   "name": "Sfgd Soap Floral Pink 55g",
+   "price": 22.0
+  },
+  {
+   "id": 1243,
+   "name": "Sfgd Soap Floral Pink 78g",
+   "price": 40.0
+  },
+  {
+   "id": 1242,
+   "name": "Sfgd Soap Pure White 175g",
+   "price": 70.0
+  },
+  {
+   "id": 1241,
+   "name": "Sfgd Soap Pure White 3pid 3/85g",
+   "price": 95.0
+  },
+  {
+   "id": 1240,
+   "name": "Sfgd Soap Pure White 60g",
+   "price": 23.0
+  },
+  {
+   "id": 1238,
+   "name": "Sfgd Soap White Camellia 115g",
+   "price": 45.0
+  },
+  {
+   "id": 1239,
+   "name": "Sfgd Soap White Camellia 82g",
+   "price": 33.0
+  },
+  {
+   "id": 1237,
+   "name": "Shades Powder Hair Dye 9g",
+   "price": 85.0
+  },
+  {
+   "id": 1236,
+   "name": "Shiitake Mushroom 156g",
+   "price": 52.0
+  },
+  {
+   "id": 1235,
+   "name": "Shin Kimchi 120g",
+   "price": 65.0
+  },
+  {
+   "id": 1234,
+   "name": "Shin Ramyun",
+   "price": 65.0
+  },
+  {
+   "id": 1233,
+   "name": "Shin Ramyun 120g",
+   "price": 65.0
+  },
+  {
+   "id": 1232,
+   "name": "Sibuyas Red",
+   "price": 6.0
+  },
+  {
+   "id": 1231,
+   "name": "Silka 150ml",
+   "price": 42.0
+  },
+  {
+   "id": 1230,
+   "name": "Silka 200ml",
+   "price": 160.0
+  },
+  {
+   "id": 1229,
+   "name": "Silka 25ml",
+   "price": 40.0
+  },
+  {
+   "id": 1228,
+   "name": "Silka 40ml",
+   "price": 50.0
+  },
+  {
+   "id": 1226,
+   "name": "Silka 50ml",
+   "price": 50.0
+  },
+  {
+   "id": 1227,
+   "name": "Silka 75ml",
+   "price": 32.0
+  },
+  {
+   "id": 1225,
+   "name": "Silka Deodorant 25ml",
+   "price": 40.0
+  },
+  {
+   "id": 1224,
+   "name": "Silka Deodorant Greenpapaya 40ml",
+   "price": 20.0
+  },
+  {
+   "id": 1223,
+   "name": "Silka Deodorant Whitening 40ml",
+   "price": 50.0
+  },
+  {
+   "id": 1222,
+   "name": "Silka Lotion Papaya (Orange) 200ml",
+   "price": 105.0
+  },
+  {
+   "id": 1221,
+   "name": "Silka Premium Whitening Lotion Papaya 50ml",
+   "price": 50.0
+  },
+  {
+   "id": 1220,
+   "name": "Silka Soap Mstrzngmlk Avcdo 65g",
+   "price": 25.0
+  },
+  {
+   "id": 1219,
+   "name": "Silka Soap Mstrzngmlk Avcdo 90g",
+   "price": 40.0
+  },
+  {
+   "id": 1218,
+   "name": "Silka Soap Papaya (Orange) 65g",
+   "price": 20.0
+  },
+  {
+   "id": 1217,
+   "name": "Silka Soap Papaya (Orange) 90g",
+   "price": 36.0
+  },
+  {
+   "id": 1216,
+   "name": "Silka Soap Whtning (Sheabutter) 135g",
+   "price": 43.0
+  },
+  {
+   "id": 1215,
+   "name": "Silka Whitening Lotion Papaya 10ml",
+   "price": 10.0
+  },
+  {
+   "id": 1214,
+   "name": "Silver Swan Cane Vinegar 385ml",
+   "price": 23.0
+  },
+  {
+   "id": 1213,
+   "name": "Silver Swan Hot Sauce 100g",
+   "price": 30.0
+  },
+  {
+   "id": 1212,
+   "name": "Silver Swan Patis Seasoning 100ml",
+   "price": 9.0
+  },
+  {
+   "id": 1211,
+   "name": "Silver Swan Saltd Blck Beans 100g",
+   "price": 20.0
+  },
+  {
+   "id": 1210,
+   "name": "Silver Swan Soy Sauce 500ml",
+   "price": 20.0
+  },
+  {
+   "id": 1209,
+   "name": "Silver Swan Soysauce 1lit",
+   "price": 56.0
+  },
+  {
+   "id": 1208,
+   "name": "Silver Swan Soysauce 350ml",
+   "price": 22.0
+  },
+  {
+   "id": 1207,
+   "name": "Silver Swan Soysauce Pack 200ml",
+   "price": 13.0
+  },
+  {
+   "id": 1206,
+   "name": "Silver Swan Sukangputi 1000ml",
+   "price": 46.0
+  },
+  {
+   "id": 1205,
+   "name": "Silver Swan Sukangputi Pack 200ml",
+   "price": 11.0
+  },
+  {
+   "id": 1203,
+   "name": "Singer All Purpose Oil 100",
+   "price": 45.0
+  },
+  {
+   "id": 1204,
+   "name": "Sisters Npkn Day(P)+nyt(V) W 2/8-P",
+   "price": 65.0
+  },
+  {
+   "id": 1202,
+   "name": "Sisters Npkn Sf Nyt Budget Pck 4s",
+   "price": 18.0,
+   "offer": {
+    "kind": "sale",
+    "percentOff": 25,
+    "price": 13.5,
+    "daysLeft": 5,
+    "note": "Weekend sale"
+   }
+  },
+  {
+   "id": 1201,
+   "name": "Sisters Npkn Silk Day Wing(P) 8's",
+   "price": 25.0
+  },
+  {
+   "id": 1200,
+   "name": "Sisters Npkn Slkday Nonwng(G) 8s",
+   "price": 23.0
+  },
+  {
+   "id": 1199,
+   "name": "Sky Flakes Garlic Flvr 10/25g",
+   "price": 9.0
+  },
+  {
+   "id": 1198,
+   "name": "Sky Flakes Reg 10/25g",
+   "price": 65.0
+  },
+  {
+   "id": 1197,
+   "name": "Sky Flakes Reg 25g",
+   "price": 8.0
+  },
+  {
+   "id": 1196,
+   "name": "Skyflakes Condensada 30g",
+   "price": 9.0
+  },
+  {
+   "id": 1195,
+   "name": "Skyflakes Crckr Swch Condnsada 10s",
+   "price": 72.0
+  },
+  {
+   "id": 1194,
+   "name": "Skyflakes Garlic 25g",
+   "price": 9.0
+  },
+  {
+   "id": 1193,
+   "name": "Skyflakes Oat Fiber Crckers10/25g",
+   "price": 72.0
+  },
+  {
+   "id": 1192,
+   "name": "Smart Clear Plastic Cups 12oz",
+   "price": 27.0
+  },
+  {
+   "id": 1191,
+   "name": "Smart Clear Plastic Cups 8oz",
+   "price": 25.0
+  },
+  {
+   "id": 1190,
+   "name": "Smart Dshwsh Paste Kalamansi 400g",
+   "price": 43.0
+  },
+  {
+   "id": 1189,
+   "name": "Smart Dshwsh Paste Lemon 200g",
+   "price": 28.0
+  },
+  {
+   "id": 1188,
+   "name": "Smart Dshwsh Paste Lemon 400g",
+   "price": 48.0
+  },
+  {
+   "id": 1187,
+   "name": "Smart Duty Candle",
+   "price": 40.0
+  },
+  {
+   "id": 1185,
+   "name": "Smart Duty Stainless Steel",
+   "price": 26.0
+  },
+  {
+   "id": 1186,
+   "name": "Smirnoff Mule Vodka 330ml",
+   "price": 55.0
+  },
+  {
+   "id": 1184,
+   "name": "Snacku Vegetable Snack 60g",
+   "price": 20.0
+  },
+  {
+   "id": 1183,
+   "name": "Snake Brand Relaxing Soap 100g",
+   "price": 180.0
+  },
+  {
+   "id": 1182,
+   "name": "Snap Jelly With Nata 230g",
+   "price": 10.0
+  },
+  {
+   "id": 1181,
+   "name": "Snb Tortilla Bbq 380g",
+   "price": 90.0
+  },
+  {
+   "id": 1180,
+   "name": "Snowbear Candy 100s",
+   "price": 95.0
+  },
+  {
+   "id": 1179,
+   "name": "Snowbear Candy 50s",
+   "price": 52.0
+  },
+  {
+   "id": 1178,
+   "name": "Sodium Chlorine Muconase 30ml",
+   "price": 99.0
+  },
+  {
+   "id": 1177,
+   "name": "Sofee Assrtd. Jelly 100pcs.",
+   "price": 50.0
+  },
+  {
+   "id": 1176,
+   "name": "Soffell 60ml",
+   "price": 96.0
+  },
+  {
+   "id": 1175,
+   "name": "Softdrinks Straw",
+   "price": 20.0
+  },
+  {
+   "id": 1174,
+   "name": "Sofy Cool Fresh 26cm",
+   "price": 48.0
+  },
+  {
+   "id": 1172,
+   "name": "Sofy Cool Fresh 29cm",
+   "price": 65.0
+  },
+  {
+   "id": 1173,
+   "name": "Sofy Cool Fresh 35cm",
+   "price": 75.0
+  },
+  {
+   "id": 1171,
+   "name": "Sofy Npkn P.frsh Non-Wing 23cm 8+1s",
+   "price": 23.0
+  },
+  {
+   "id": 1008,
+   "name": "Soup Base For Seafood Hot Pot 50g",
+   "price": 70.0
+  },
+  {
+   "id": 1009,
+   "name": "Souper Meal Beef Brisket 90g",
+   "price": 42.0
+  },
+  {
+   "id": 1010,
+   "name": "Souper Meal Hot & Spicy 90g",
+   "price": 42.0
+  },
+  {
+   "id": 1011,
+   "name": "Spam",
+   "price": 150.0
+  },
+  {
+   "id": 1012,
+   "name": "Spam Lucnheon Meat Regular 12oz.",
+   "price": 225.0
+  },
+  {
+   "id": 1013,
+   "name": "Spam Luncheonmeat Lesssodium1120z",
+   "price": 225.0
+  },
+  {
+   "id": 1014,
+   "name": "Speed Bar Blue 145g",
+   "price": 12.0
+  },
+  {
+   "id": 1015,
+   "name": "Speed Bar White 145g",
+   "price": 12.0
+  },
+  {
+   "id": 1016,
+   "name": "Spicy Spareribs Seasoning Mix 32g",
+   "price": 45.0
+  },
+  {
+   "id": 1017,
+   "name": "Spray Bottle Blue",
+   "price": 40.0
+  },
+  {
+   "id": 1100,
+   "name": "Spring Cooking Oil 40ml",
+   "price": 10.0
+  },
+  {
+   "id": 1018,
+   "name": "Sprite Reg Can (Slim) 320ml",
+   "price": 35.0
+  },
+  {
+   "id": 1019,
+   "name": "Squid Flakes Crackers",
+   "price": 25.0,
+   "offer": {
+    "kind": "clearance",
+    "percentOff": 40,
+    "price": 15.0,
+    "daysLeft": 3,
+    "note": "Last days - rush to the store"
+   }
+  },
+  {
+   "id": 1020,
+   "name": "Ssk Shmp Smth&mngable P 2/180ml-P",
+   "price": 210.0
+  },
+  {
+   "id": 1021,
+   "name": "Ssk Shmp Smth&mngble P 15ml",
+   "price": 8.0
+  },
+  {
+   "id": 1022,
+   "name": "Ssk Shmp Strng&lng G 15ml",
+   "price": 8.0
+  },
+  {
+   "id": 1023,
+   "name": "Ssk Shmp Strng&lng G 2/180ml-P",
+   "price": 210.0
+  },
+  {
+   "id": 1101,
+   "name": "Stainless Steel Scourer",
+   "price": 30.0
+  },
+  {
+   "id": 1024,
+   "name": "Star Corned Beef 150g",
+   "price": 36.0
+  },
+  {
+   "id": 1025,
+   "name": "Star Margarine Chocolate 100g",
+   "price": 37.0
+  },
+  {
+   "id": 1027,
+   "name": "Star Margarine Reg 100g",
+   "price": 35.0
+  },
+  {
+   "id": 1026,
+   "name": "Star Margarine Sweet Blend 100g",
+   "price": 37.0
+  },
+  {
+   "id": 1028,
+   "name": "Star Ulam Bicol Express 150g",
+   "price": 32.0
+  },
+  {
+   "id": 1029,
+   "name": "Star Ulam Caldereta 150g",
+   "price": 32.0
+  },
+  {
+   "id": 1030,
+   "name": "Star Ulam Humba 150g",
+   "price": 32.0
+  },
+  {
+   "id": 1031,
+   "name": "Sticky Mouse Board",
+   "price": 20.0
+  },
+  {
+   "id": 1032,
+   "name": "Sticky Notes",
+   "price": 25.0
+  },
+  {
+   "id": 1033,
+   "name": "Sting Enrgy Drnk Strwbry 290ml",
+   "price": 22.0
+  },
+  {
+   "id": 1102,
+   "name": "Strepsils Children 6+ Strawberry Sugar Free",
+   "price": 80.0
+  },
+  {
+   "id": 1035,
+   "name": "Strepsils Cool 8's",
+   "price": 80.0
+  },
+  {
+   "id": 1034,
+   "name": "Strepsils Extra Strong 8's",
+   "price": 80.0
+  },
+  {
+   "id": 1036,
+   "name": "Strepsils Orange Vit-C 8's",
+   "price": 80.0
+  },
+  {
+   "id": 1037,
+   "name": "Stylex Styling Gel 125g",
+   "price": 36.0
+  },
+  {
+   "id": 1038,
+   "name": "Sugo Garlic Adobo Peanuts 100g",
+   "price": 32.0
+  },
+  {
+   "id": 1045,
+   "name": "Sugo Garlic Flavor 100g",
+   "price": 32.0
+  },
+  {
+   "id": 1048,
+   "name": "Suka Paombong 1liter",
+   "price": 20.0
+  },
+  {
+   "id": 1047,
+   "name": "Suka Pinakurat 250ml",
+   "price": 76.0
+  },
+  {
+   "id": 1046,
+   "name": "Sulating Pangwakas",
+   "price": 15.0
+  },
+  {
+   "id": 1051,
+   "name": "Sulfur Soap 135g",
+   "price": 55.0
+  },
+  {
+   "id": 1050,
+   "name": "Sunbest Cocomilk 400g",
+   "price": 77.0
+  },
+  {
+   "id": 1049,
+   "name": "Sunmac Spaghetti 1kg(900g)",
+   "price": 65.0
+  },
+  {
+   "id": 1066,
+   "name": "Sunmac Superghetti Combo 1's-P",
+   "price": 108.0
+  },
+  {
+   "id": 1118,
+   "name": "Super Bowl",
+   "price": 42.0
+  },
+  {
+   "id": 1117,
+   "name": "Super Delights Brownie Bites 200g",
+   "price": 52.0
+  },
+  {
+   "id": 1116,
+   "name": "Super Delights Brownie Bites Dark Chocolate 180g",
+   "price": 55.0
+  },
+  {
+   "id": 1115,
+   "name": "Super Delights Butterscotch Bites 180g",
+   "price": 52.0
+  },
+  {
+   "id": 1065,
+   "name": "Super Delights Chocolate Chip Cookies 400g",
+   "price": 98.0
+  },
+  {
+   "id": 1064,
+   "name": "Super Masking Tape",
+   "price": 20.0
+  },
+  {
+   "id": 1063,
+   "name": "Super Q Golden Bihon 227g",
+   "price": 25.0
+  },
+  {
+   "id": 1062,
+   "name": "Super Q Golden Bihon 500g",
+   "price": 36.0
+  },
+  {
+   "id": 1061,
+   "name": "Superior Quality Binibag Trash Bag Medium",
+   "price": 45.0
+  },
+  {
+   "id": 1060,
+   "name": "Superstix Choco Jr 352g(330g)",
+   "price": 75.0
+  },
+  {
+   "id": 1059,
+   "name": "Superstix Jr. Cheese 330g",
+   "price": 75.0
+  },
+  {
+   "id": 1058,
+   "name": "Superstix Pandan Jr 330g",
+   "price": 75.0
+  },
+  {
+   "id": 1057,
+   "name": "Superstix Ube Jr 330g",
+   "price": 75.0
+  },
+  {
+   "id": 1114,
+   "name": "Surf Bar Bf 120g",
+   "price": 14.0
+  },
+  {
+   "id": 1113,
+   "name": "Surf Bar Tawas B 360g",
+   "price": 26.0
+  },
+  {
+   "id": 1112,
+   "name": "Surf Bar W/Fbcn Prpleblms 120g",
+   "price": 14.0
+  },
+  {
+   "id": 1056,
+   "name": "Surf Fbcn Antibac W/Mint W 25ml",
+   "price": 7.0
+  },
+  {
+   "id": 1055,
+   "name": "Surf Fbcn Blosfrsh P 25ml (28ml)",
+   "price": 10.0
+  },
+  {
+   "id": 1054,
+   "name": "Surf Fbcn Blosfrsh P 3wash 69ml",
+   "price": 18.0
+  },
+  {
+   "id": 1053,
+   "name": "Surf Fbcn Blosfrsh P 800ml",
+   "price": 137.0
+  },
+  {
+   "id": 1052,
+   "name": "Surf Fbcn Chrcoal Frsh Blk 25ml",
+   "price": 18.0
+  },
+  {
+   "id": 1069,
+   "name": "Surf Fbcn Luxe Prfm R 25ml",
+   "price": 7.0
+  },
+  {
+   "id": 1068,
+   "name": "Surf Fbcn Luxe Prfm R 3wash 69ml",
+   "price": 18.0
+  },
+  {
+   "id": 1067,
+   "name": "Surf Fbcn Luxe Prfm R Bot 800ml",
+   "price": 137.0
+  },
+  {
+   "id": 1039,
+   "name": "Surf Liq. Det. Rose Fresh 900ml",
+   "price": 99.0
+  },
+  {
+   "id": 1070,
+   "name": "Surf Pwd Antibac Db 82g",
+   "price": 7.0
+  },
+  {
+   "id": 1040,
+   "name": "Surf Pwd Antibac W 60g",
+   "price": 8.0
+  },
+  {
+   "id": 1081,
+   "name": "Surf Pwd Cherry Blsm R 6+1/65g-P",
+   "price": 8.0
+  },
+  {
+   "id": 1080,
+   "name": "Surf Pwd Kalamansi Lg 57g",
+   "price": 8.0
+  },
+  {
+   "id": 1129,
+   "name": "Surf Pwd Rose Fresh 6+1/65g-P",
+   "price": 45.0
+  },
+  {
+   "id": 1079,
+   "name": "Surf Pwd W/Fabcon Blosfrsh 82g-P",
+   "price": 7.0
+  },
+  {
+   "id": 1078,
+   "name": "Surf Pwd W/Fbcn Snfrsh Y 65g",
+   "price": 8.0
+  },
+  {
+   "id": 1077,
+   "name": "Surf Pwd W/Fbcon Blosfrsh P 550g",
+   "price": 65.0
+  },
+  {
+   "id": 1128,
+   "name": "Sweater Tape",
+   "price": 25.0
+  },
+  {
+   "id": 1127,
+   "name": "Sweet California Raisins",
+   "price": 20.0
+  },
+  {
+   "id": 1126,
+   "name": "Sweet Pea Kiss 400ml",
+   "price": 208.0
+  },
+  {
+   "id": 1125,
+   "name": "Swiss Miss Dark Chocolate 31g",
+   "price": 18.0
+  },
+  {
+   "id": 1076,
+   "name": "Taco Seasoning Mix 40g",
+   "price": 50.0
+  },
+  {
+   "id": 1124,
+   "name": "Tagumpay Herbs&spices Paintings Durog 20g",
+   "price": 20.0
+  },
+  {
+   "id": 1123,
+   "name": "Tagumpay Laurel Leaves 15g",
+   "price": 12.0
+  },
+  {
+   "id": 1122,
+   "name": "Tang Fruit + Orange 14g",
+   "price": 27.0
+  },
+  {
+   "id": 1121,
+   "name": "Tang Pwd Jce Calamansi 19g",
+   "price": 22.0
+  },
+  {
+   "id": 1106,
+   "name": "Tang Pwd Jce Dalandan 19g",
+   "price": 22.0
+  },
+  {
+   "id": 1132,
+   "name": "Tang Pwd Jce Four Seasons 19g",
+   "price": 22.0
+  },
+  {
+   "id": 1131,
+   "name": "Tang Pwd Jce Grape 19g",
+   "price": 22.0
+  },
+  {
+   "id": 1130,
+   "name": "Tang Pwd Jce Guyabano 19g",
+   "price": 22.0
+  },
+  {
+   "id": 1082,
+   "name": "Tang Pwd Jce Lychee 19g",
+   "price": 22.0
+  },
+  {
+   "id": 1133,
+   "name": "Tang Pwd Jce Mango 19g",
+   "price": 22.0
+  },
+  {
+   "id": 1083,
+   "name": "Tang Pwd Jce Melon 19g",
+   "price": 22.0
+  },
+  {
+   "id": 1041,
+   "name": "Tang Pwd Jce Orange 19g",
+   "price": 22.0
+  },
+  {
+   "id": 1088,
+   "name": "Tang Pwd Jce Pineapple 19g",
+   "price": 22.0
+  },
+  {
+   "id": 1087,
+   "name": "Tang Pwd Jce Pomelo 19g",
+   "price": 22.0
+  },
+  {
+   "id": 1086,
+   "name": "Tapioca Starch 500g",
+   "price": 52.0
+  },
+  {
+   "id": 1085,
+   "name": "Target Multi Insect Killer 600ml",
+   "price": 369.0
+  },
+  {
+   "id": 1084,
+   "name": "Tasty Boy Breading Mix Garlic 67g",
+   "price": 14.0
+  },
+  {
+   "id": 1134,
+   "name": "Tasty Palamig Calamansi 500g",
+   "price": 123.0
+  },
+  {
+   "id": 1136,
+   "name": "Tastyboy Breadngmx Reg 67g (65g)",
+   "price": 14.0
+  },
+  {
+   "id": 1135,
+   "name": "Tender Care Pwd Clsc Mild 25g",
+   "price": 20.0
+  },
+  {
+   "id": 1005,
+   "name": "Test4",
+   "price": 10.0
+  },
+  {
+   "id": 1107,
+   "name": "Those Days S.napkin Reg Nw 8's",
+   "price": 18.0
+  },
+  {
+   "id": 1108,
+   "name": "Those Days S.napkin Thins 8's",
+   "price": 18.0
+  },
+  {
+   "id": 1109,
+   "name": "Those Days S.napkin Wings 8's",
+   "price": 22.0
+  },
+  {
+   "id": 1433,
+   "name": "Those Days S.npkin Wings Allnyt 8's",
+   "price": 28.0
+  },
+  {
+   "id": 1432,
+   "name": "Tic Tac Spearmint 14.5g",
+   "price": 35.0
+  },
+  {
+   "id": 1137,
+   "name": "Tide Bar Fod Gdn Blm 125g",
+   "price": 16.0
+  },
+  {
+   "id": 1431,
+   "name": "Tide Bar Fod Pfm Fntsy 125g",
+   "price": 12.0
+  },
+  {
+   "id": 1435,
+   "name": "Tide Liqdet Brillnt Whts 64g",
+   "price": 16.0
+  },
+  {
+   "id": 1434,
+   "name": "Tiki-Tiki Drops 15ml",
+   "price": 60.0
+  },
+  {
+   "id": 1441,
+   "name": "Tipco Pro Fiber 5x Half Veg. &half Fruit 1l",
+   "price": 140.0
+  },
+  {
+   "id": 1440,
+   "name": "Tita Ely Kaong 340g",
+   "price": 83.0
+  },
+  {
+   "id": 1439,
+   "name": "Tita Ely Nata De Coco 340g",
+   "price": 62.0
+  },
+  {
+   "id": 1438,
+   "name": "Todays Mixed Fruit 1400g",
+   "price": 149.0
+  },
+  {
+   "id": 1437,
+   "name": "Tolak Angin 15ml",
+   "price": 15.0,
+   "offer": {
+    "kind": "sale",
+    "percentOff": 15,
+    "price": 12.75,
+    "daysLeft": 6,
+    "note": "Weekend sale"
+   }
+  },
+  {
+   "id": 1436,
+   "name": "Tolak Angin Anak 10ml",
+   "price": 15.0
+  },
+  {
+   "id": 1143,
+   "name": "Tomi Snack Sweet Corn 110g",
+   "price": 30.0
+  },
+  {
+   "id": 1142,
+   "name": "Toothpick",
+   "price": 25.0
+  },
+  {
+   "id": 1445,
+   "name": "Top Cafe Cof Whte Twn 2/29g",
+   "price": 15.0
+  },
+  {
+   "id": 1141,
+   "name": "Top Cafe Palm Sugar 22g",
+   "price": 15.0
+  },
+  {
+   "id": 1444,
+   "name": "Topps Sarap Peach Mango Pop 10 X 32g",
+   "price": 9.0
+  },
+  {
+   "id": 1140,
+   "name": "Toptibay Candle",
+   "price": 35.0
+  },
+  {
+   "id": 1139,
+   "name": "Trash Bag Small",
+   "price": 30.0
+  },
+  {
+   "id": 1443,
+   "name": "Tropicana Twister Orange 1l",
+   "price": 65.0
+  },
+  {
+   "id": 1138,
+   "name": "Tuff Pld Concentrated Laundry Detergent 800g",
+   "price": 175.0
+  },
+  {
+   "id": 1442,
+   "name": "Tuff Tbc Toilet Bowl Cleanserc 1000ml",
+   "price": 285.0
+  },
+  {
+   "id": 1110,
+   "name": "Tuyo",
+   "price": 10.0
+  },
+  {
+   "id": 1447,
+   "name": "Ufc Banana Catsup 320g",
+   "price": 30.0
+  },
+  {
+   "id": 1144,
+   "name": "Ufc Banana Catsup 550g(530g)",
+   "price": 48.0
+  },
+  {
+   "id": 1446,
+   "name": "Ufc Banana Catsup Savers Pck 200g",
+   "price": 22.0
+  },
+  {
+   "id": 1448,
+   "name": "Ufc Fun Chow Beef Bulgogi 25g",
+   "price": 25.0
+  },
+  {
+   "id": 1146,
+   "name": "Ufc Fun Chow Bibimbap 27g",
+   "price": 25.0
+  },
+  {
+   "id": 1451,
+   "name": "Ufc Fun Chow Rice Mix 20g",
+   "price": 20.0
+  },
+  {
+   "id": 1145,
+   "name": "Ufc Fun Chow Seafood Yngchow 20g",
+   "price": 20.0
+  },
+  {
+   "id": 1450,
+   "name": "Ufc Golden Fiesta Oil Canola Pet 1l",
+   "price": 140.0
+  },
+  {
+   "id": 1449,
+   "name": "Ufc Hapi Fiesta Oil 500ml",
+   "price": 68.0
+  },
+  {
+   "id": 1457,
+   "name": "Ufc Hapi Fiesta Oil Sup 1l (900ml)",
+   "price": 120.0
+  },
+  {
+   "id": 1456,
+   "name": "Ufc Ready Recipes Afritada Sauce 200g",
+   "price": 35.0
+  },
+  {
+   "id": 1148,
+   "name": "Ufc Ready Recipes Menudo Sauce 200g",
+   "price": 35.0
+  },
+  {
+   "id": 1455,
+   "name": "Ufc Ready Recipes Sauce Caldereta Sauce 200g",
+   "price": 35.0
+  },
+  {
+   "id": 1454,
+   "name": "Ufc Soup Crab And Corn 60g",
+   "price": 55.0
+  },
+  {
+   "id": 1453,
+   "name": "Ufc Soup Cream Of Mushroom 70g",
+   "price": 43.0
+  },
+  {
+   "id": 1452,
+   "name": "Ufc Spaghetti Sauce 1kg",
+   "price": 92.0
+  },
+  {
+   "id": 1147,
+   "name": "Ufc Super Fsta Coconut Oil Pet 350ml",
+   "price": 45.0
+  },
+  {
+   "id": 1042,
+   "name": "Ufc Sweet Chili Sauce 340g",
+   "price": 45.0
+  },
+  {
+   "id": 1479,
+   "name": "Ufc Sweet Chili Sauce 340g",
+   "price": 45.0
+  },
+  {
+   "id": 1478,
+   "name": "Ufc Tamis Anghang",
+   "price": 35.0
+  },
+  {
+   "id": 1477,
+   "name": "Ultra Sulit White Pepper Powder 30g",
+   "price": 18.0,
+   "offer": {
+    "kind": "sale",
+    "percentOff": 20,
+    "price": 14.4,
+    "daysLeft": 6,
+    "note": "Sale"
+   }
+  },
+  {
+   "id": 1476,
+   "name": "Umbrella For Kids",
+   "price": 129.0
+  },
+  {
+   "id": 1475,
+   "name": "Unique Maximum Fluoride 10ml",
+   "price": 6.0
+  },
+  {
+   "id": 1474,
+   "name": "Unique Tpaste Max (W) 150ml",
+   "price": 72.0
+  },
+  {
+   "id": 1157,
+   "name": "Unique Tpaste Red Gel 150ml",
+   "price": 72.0
+  },
+  {
+   "id": 1156,
+   "name": "Unscented Baby Wipes",
+   "price": 35.0
+  },
+  {
+   "id": 1155,
+   "name": "Vanilla Crush 350ml",
+   "price": 208.0
+  },
+  {
+   "id": 1154,
+   "name": "Vaseline 50ml",
+   "price": 63.0
+  },
+  {
+   "id": 1153,
+   "name": "Vaseline Essential Healing 400ml",
+   "price": 270.0
+  },
+  {
+   "id": 1473,
+   "name": "Vegi Good Breading Mix Orig. 62g",
+   "price": 22.0
+  },
+  {
+   "id": 1472,
+   "name": "Very Good Calamansi 500ml",
+   "price": 38.0
+  },
+  {
+   "id": 1471,
+   "name": "Very Good Lemon 500ml",
+   "price": 38.0
+  },
+  {
+   "id": 1470,
+   "name": "Vicks 25g",
+   "price": 135.0
+  },
+  {
+   "id": 1469,
+   "name": "Vicks Vaporub 5g",
+   "price": 43.0
+  },
+  {
+   "id": 1468,
+   "name": "Vida Bacon 250g",
+   "price": 105.0
+  },
+  {
+   "id": 1467,
+   "name": "Vida Sweet Ham 250g",
+   "price": 65.0
+  },
+  {
+   "id": 1466,
+   "name": "Vista Pure Cornstarch 400g",
+   "price": 45.0
+  },
+  {
+   "id": 1465,
+   "name": "Vitakrtin Brzlnstrt Gld 24ml",
+   "price": 8.0
+  },
+  {
+   "id": 1464,
+   "name": "Vitakrtin Color Shine R 24ml",
+   "price": 8.0
+  },
+  {
+   "id": 1463,
+   "name": "Vitakrtin Deep Rpr Blk 24ml",
+   "price": 8.0
+  },
+  {
+   "id": 1462,
+   "name": "Vitamilk Soymilk Double Choco 250ml",
+   "price": 28.0
+  },
+  {
+   "id": 1152,
+   "name": "Vitress 50ml",
+   "price": 70.0
+  },
+  {
+   "id": 1461,
+   "name": "Vitress Cuticle Coat 30ml",
+   "price": 72.0
+  },
+  {
+   "id": 1151,
+   "name": "Watermelon Slice 60ml",
+   "price": 10.0
+  },
+  {
+   "id": 1460,
+   "name": "Watson Love My Skin 50ml",
+   "price": 250.0
+  },
+  {
+   "id": 1459,
+   "name": "Watson Love My Softness",
+   "price": 10.0
+  },
+  {
+   "id": 1150,
+   "name": "Whatta Tops Chocolahat",
+   "price": 10.0
+  },
+  {
+   "id": 1149,
+   "name": "Whatta Tops Cookies And Cream 35g X 10",
+   "price": 10.0
+  },
+  {
+   "id": 1458,
+   "name": "Whatta Tops Mango Graham 35g X 10",
+   "price": 10.0
+  },
+  {
+   "id": 1043,
+   "name": "Whatta Tops Vanilla Cream 35g X 10",
+   "price": 10.0
+  },
+  {
+   "id": 1111,
+   "name": "Whisper Spr Cln&dry Long W 8s",
+   "price": 76.0
+  },
+  {
+   "id": 1430,
+   "name": "White Board Pen",
+   "price": 42.0
+  },
+  {
+   "id": 1429,
+   "name": "White Folder Long",
+   "price": 10.0
+  },
+  {
+   "id": 1428,
+   "name": "White Folder Short",
+   "price": 8.0
+  },
+  {
+   "id": 1427,
+   "name": "White Glue",
+   "price": 12.0
+  },
+  {
+   "id": 1426,
+   "name": "White Pepper Ground",
+   "price": 28.0
+  },
+  {
+   "id": 1425,
+   "name": "White Rabbit Candy 50's",
+   "price": 55.0
+  },
+  {
+   "id": 1424,
+   "name": "White Rose Soap Papaya 120g",
+   "price": 35.0
+  },
+  {
+   "id": 1423,
+   "name": "White Tissue Bundle",
+   "price": 20.0
+  },
+  {
+   "id": 1422,
+   "name": "Whiteboard",
+   "price": 55.0
+  },
+  {
+   "id": 1421,
+   "name": "Whoopie Mallow Cake Choco Loco 10 X 34g",
+   "price": 98.0
+  },
+  {
+   "id": 1420,
+   "name": "Wilkins Dis.water 500ml",
+   "price": 16.0
+  },
+  {
+   "id": 1419,
+   "name": "Wings Pwd Slv Clmnsi Cln Lg 60g",
+   "price": 7.0
+  },
+  {
+   "id": 1418,
+   "name": "Wings Pwd Slv Flrl Frsh O 60g",
+   "price": 7.0
+  },
+  {
+   "id": 1168,
+   "name": "Wings Pwd Tcre Blmgdn R 57g",
+   "price": 7.0
+  },
+  {
+   "id": 1417,
+   "name": "Wings Pwd Tcre Lavdrm V 57g",
+   "price": 7.0
+  },
+  {
+   "id": 1093,
+   "name": "Winston Legend Blue",
+   "price": 165.0
+  },
+  {
+   "id": 1167,
+   "name": "Winston Mint Burst Max",
+   "price": 165.0
+  },
+  {
+   "id": 1166,
+   "name": "Winston Red Cpb 20s",
+   "price": 165.0
+  },
+  {
+   "id": 1165,
+   "name": "Wow Ulam Adobo 155g",
+   "price": 26.0
+  },
+  {
+   "id": 1492,
+   "name": "Wow Ulam Afritada Eoe 155g",
+   "price": 26.0
+  },
+  {
+   "id": 1164,
+   "name": "Wow Ulam Caldereta Eoe 155g",
+   "price": 26.0
+  },
+  {
+   "id": 1163,
+   "name": "Wow Ulam Menudo 155g",
+   "price": 26.0
+  },
+  {
+   "id": 1491,
+   "name": "Writing Pad Grade 3",
+   "price": 20.0
+  },
+  {
+   "id": 1162,
+   "name": "Yakult",
+   "price": 12.0
+  },
+  {
+   "id": 1490,
+   "name": "Yakult Light",
+   "price": 15.0
+  },
+  {
+   "id": 1489,
+   "name": "Yatai Soft Eraser",
+   "price": 8.0
+  },
+  {
+   "id": 1161,
+   "name": "Yen & Yen",
+   "price": 40.0
+  },
+  {
+   "id": 1488,
+   "name": "Youngs Bouquet Fantasy 25ml",
+   "price": 26.0
+  },
+  {
+   "id": 1487,
+   "name": "Youngs Fantasy 25ml",
+   "price": 26.0
+  },
+  {
+   "id": 1486,
+   "name": "Young's Town Sard Red Eoc 155g",
+   "price": 27.0
+  },
+  {
+   "id": 1485,
+   "name": "Ys Nata De Coco White 340g",
+   "price": 62.0
+  },
+  {
+   "id": 1160,
+   "name": "Zesto Choc-O Drink 200ml(180ml)",
+   "price": 28.0
+  },
+  {
+   "id": 1159,
+   "name": "Zim Cleaning Pads",
+   "price": 15.0
+  },
+  {
+   "id": 1158,
+   "name": "Zim Cleaning Pads Scrub Pad",
+   "price": 20.0
+  },
+  {
+   "id": 1483,
+   "name": "Zim Cleanser 350g",
+   "price": 35.0
+  },
+  {
+   "id": 1484,
+   "name": "Zim Cleanser 350g",
+   "price": 35.0
+  },
+  {
+   "id": 1482,
+   "name": "Zim Cleanser 359g",
+   "price": 45.0
+  },
+  {
+   "id": 1481,
+   "name": "Zonrox Bleach Colorsafe(V) 225ml",
+   "price": 30.0
+  },
+  {
+   "id": 1480,
+   "name": "Zonrox Bleach Colorsafe(V) 450ml",
+   "price": 44.0
+  },
+  {
+   "id": 1099,
+   "name": "Zonrox Bleach Colorsafe(V) 900ml",
+   "price": 70.0
+  },
+  {
+   "id": 1170,
+   "name": "Zonrox Bleach Floral (P) 1000ml",
+   "price": 45.0
+  },
+  {
+   "id": 1169,
+   "name": "Zonrox Bleach Floral (P) 100ml",
+   "price": 13.0
+  },
+  {
+   "id": 1098,
+   "name": "Zonrox Bleach Floral (P) 250ml",
+   "price": 20.0
+  },
+  {
+   "id": 1097,
+   "name": "Zonrox Bleach Floral (P) 500ml",
+   "price": 28.0
+  },
+  {
+   "id": 1096,
+   "name": "Zonrox Bleach Gentle Clean 225ml",
+   "price": 26.0
+  },
+  {
+   "id": 1095,
+   "name": "Zonrox Bleach Gentle Clean 900ml",
+   "price": 56.0
+  },
+  {
+   "id": 1094,
+   "name": "Zonrox Bleach Lemon (G) 1000ml",
+   "price": 45.0
+  },
+  {
+   "id": 1044,
+   "name": "Zonrox Bleach Lemon (G) 100ml",
+   "price": 13.0
+  },
+  {
+   "id": 1103,
+   "name": "Zonrox Bleach Lemon (G) 250ml",
+   "price": 20.0
+  },
+  {
+   "id": 1104,
+   "name": "Zonrox Bleach Lemon (G) 500ml",
+   "price": 28.0
+  },
+  {
+   "id": 1105,
+   "name": "Zonrox Bleach Original(R) 1000ml",
+   "price": 45.0
+  },
+  {
+   "id": 1071,
+   "name": "Zonrox Bleach Original(R) 100ml",
+   "price": 12.0
+  },
+  {
+   "id": 1072,
+   "name": "Zonrox Bleach Original(R) 250ml",
+   "price": 18.0
+  },
+  {
+   "id": 1119,
+   "name": "Zonrox Bleach Original(R) 500ml",
+   "price": 26.0
+  },
+  {
+   "id": 1073,
+   "name": "Zonrox Bleach Plus 225ml",
+   "price": 20.0
+  },
+  {
+   "id": 1075,
+   "name": "Zonrox Colorsafe 95ml",
+   "price": 15.0
+  },
+  {
+   "id": 1074,
+   "name": "Zonrox Multi Clean Floral Blast 900ml",
+   "price": 122.0
+  },
+  {
+   "id": 1120,
+   "name": "Zonrox Multi Clean Lemon Splash 900ml",
+   "price": 122.0
+  }
+ ],
+ "customers": [
+  {
+   "userId": "juan",
+   "phone": "09171234567",
+   "password": "demo123",
+   "name": "Juan Dela Cruz",
+   "email": "juan@example.test",
+   "owes": [
+    {
+     "ref": "INV-2031",
+     "description": "Groceries on account",
+     "amount": 1250.0,
+     "dueInDays": 4
+    },
+    {
+     "ref": "INV-1988",
+     "description": "Rice and cooking oil",
+     "amount": 780.5,
+     "dueInDays": -3
+    }
+   ]
+  },
+  {
+   "userId": "maria",
+   "phone": "09181234567",
+   "password": "demo123",
+   "name": "Maria Santos",
+   "email": "",
+   "owes": []
+  }
+ ]
+}

@@ -1,0 +1,51 @@
+:root {
+  --primary: #1f6bff; --primary-dark: #0058f8; --primary-light: #b8d0f8;
+  --bg: #eef4ff; --card: #ffffff; --text: #16294d; --muted: #5b6b8c;
+  --border: rgba(31, 107, 255, .16); --ok: #16a34a; --warn: #d97706; --bad: #dc2626;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+body { padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
+h1, h2, h3 { margin: 0; }
+button, input { font: inherit; }
+.top { background: linear-gradient(135deg, #3880f8, #0058f8); color: #fff; padding: 14px 16px; padding-top: calc(14px + env(safe-area-inset-top)); display: flex; align-items: center; gap: 10px; }
+.top h1 { font-size: 18px; flex: 1; }
+.top .who { font-size: 13px; opacity: .9; }
+.wrap { padding: 14px 16px; max-width: 720px; margin: 0 auto; }
+.card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 14px; margin-bottom: 12px; box-shadow: 0 6px 20px rgba(31, 107, 255, .07); }
+.banner { border-radius: 16px; overflow: hidden; margin-bottom: 12px; background: #dbe8ff; }
+.banner img { width: 100%; display: block; }
+.row { display: flex; align-items: center; gap: 10px; }
+.grow { flex: 1; min-width: 0; }
+.muted { color: var(--muted); font-size: 14px; }
+.price { font-weight: 700; font-size: 18px; }
+.was { color: var(--muted); text-decoration: line-through; font-size: 14px; margin-left: 6px; }
+.tag { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 700; color: #fff; background: var(--primary); }
+.tag.clearance { background: var(--bad); }
+.tag.ok { background: var(--ok); } .tag.warn { background: var(--warn); } .tag.bad { background: var(--bad); }
+.btn { border: 0; border-radius: 10px; padding: 10px 14px; background: linear-gradient(135deg, #3880f8, #0058f8); color: #fff; font-weight: 600; cursor: pointer; }
+.btn.ghost { background: #fff; color: var(--primary-dark); border: 1px solid var(--primary-light); }
+.btn.small { padding: 6px 10px; font-size: 14px; }
+.btn:disabled { opacity: .5; }
+.qty { display: flex; align-items: center; gap: 6px; }
+.qty button { width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--primary-light); background: #fff; color: var(--primary-dark); font-size: 18px; }
+input[type=text], input[type=password], input[type=tel], input[type=search] { width: 100%; padding: 11px 12px; border: 1px solid var(--primary-light); border-radius: 10px; background: #fff; color: var(--text); }
+input[readonly] { background: #f3f6fc; color: var(--muted); }
+label { display: block; font-size: 13px; color: var(--muted); margin: 10px 0 4px; }
+.err { color: var(--bad); font-size: 14px; margin-top: 8px; }
+.okmsg { color: var(--ok); font-size: 14px; margin-top: 8px; }
+nav { position: fixed; left: 0; right: 0; bottom: 0; background: #fff; border-top: 1px solid var(--border); display: flex; padding-bottom: env(safe-area-inset-bottom); }
+nav button { flex: 1; border: 0; background: none; padding: 10px 2px 8px; color: var(--muted); font-size: 12px; position: relative; }
+nav button b { display: block; font-size: 20px; line-height: 1.1; }
+nav button.on { color: var(--primary-dark); font-weight: 700; }
+nav .dot { position: absolute; top: 4px; right: 22%; min-width: 18px; height: 18px; border-radius: 9px; background: var(--bad); color: #fff; font-size: 11px; line-height: 18px; text-align: center; }
+.login { max-width: 420px; margin: 8vh auto 0; padding: 0 16px; }
+.login .logo { width: 72px; height: 72px; border-radius: 18px; display: block; margin: 0 auto 10px; }
+.big { font-size: 38px; font-weight: 800; letter-spacing: 3px; text-align: center; color: var(--primary-dark); }
+.qr { display: flex; justify-content: center; padding: 10px; }
+.qr svg, .qr img { width: 220px; height: 220px; }
+.note { background: #fff8e6; border: 1px solid #f5d98b; border-radius: 12px; padding: 10px 12px; font-size: 13px; color: #7a5b00; margin-bottom: 12px; }
+.seg { display: flex; background: #fff; border: 1px solid var(--primary-light); border-radius: 12px; padding: 3px; margin-bottom: 12px; }
+.seg button { flex: 1; border: 0; background: none; padding: 9px; border-radius: 9px; font-weight: 600; color: var(--muted); cursor: pointer; }
+.seg button.on { background: linear-gradient(135deg, #3880f8, #0058f8); color: #fff; }
+.card.msg { border-left: 4px solid var(--primary); }
